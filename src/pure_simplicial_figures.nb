@@ -7,9 +7,9 @@
 
 Notebook[{
 
-Cell["Pure Simplicial Figures (Figures 3+)", "Title"],
+Cell["Pure Simplicial Figures (Figures 3-15)", "Title"],
 
-Cell["Loads per-p sample CSVs produced by pure_simplicial_compute.wl and renders each paper figure as a 3x1 column grid (one panel per p in {2, 3, 4}). Each panel overlays three weighted histograms: vertex-labeled, facet-labeled, unlabeled. This notebook does not touch the figure-2 pipeline.", "Text"],
+Cell["Notebook version of render_all_figures.wl. Loads the per-p sample CSVs and renders each figure as a 3x1 stacked column of translucent overlaid weighted histograms, matching paper Figure 2 style. Each panel overlays three series on the same axes: vertex-labeled (yellow), facet-labeled (blue), unlabeled (red).", "Text"],
 
 Cell[CellGroupData[{
 Cell["Setup", "Section"],
@@ -19,309 +19,244 @@ $HistoryLength = 0;
 
 qVal = 10;
 pList = {2, 3, 4};
-sampleSize = 10000;
-exportFigures = True;
-outputDir = NotebookDirectory[];
+sampleSize = 500000;
 
-(* Colors: keep figure-2 palette and add a third for the unlabeled series *)
-colorVertex    = RGBColor[0.984, 0.757, 0.369];  (* golden yellow *)
-colorFacet     = RGBColor[0.122, 0.471, 0.706];  (* muted blue   *)
-colorUnlabeled = RGBColor[0.890, 0.290, 0.200];  (* muted red    *)
+(* CSV location: prefer sibling ../data/ (repo layout), else fall back to
+   NotebookDirectory[] (zip-alongside-CSVs layout). *)
+dataDir = With[
+  {sibling = FileNameJoin[{ParentDirectory[NotebookDirectory[]], \"data\"}]},
+  If[DirectoryQ[sibling], sibling, NotebookDirectory[]]];
 
-seriesColors = {colorVertex, colorFacet, colorUnlabeled};
-seriesNames  = {\"vertex-labeled\", \"facet-labeled\", \"unlabeled\"};
+(* Paper Figure 2 palette *)
+colorVertex    = RGBColor[0.984, 0.757, 0.369];
+colorFacet     = RGBColor[0.122, 0.471, 0.706];
+colorUnlabeled = RGBColor[0.890, 0.290, 0.200];
 
-(* Shared frame/font options, matching histograms_paper_figures.nb *)
+seriesColorsTrans = {
+  Directive[colorVertex,    Opacity[0.55], EdgeForm[Directive[colorVertex,    AbsoluteThickness[0.4]]]],
+  Directive[colorFacet,     Opacity[0.55], EdgeForm[Directive[colorFacet,     AbsoluteThickness[0.4]]]],
+  Directive[colorUnlabeled, Opacity[0.55], EdgeForm[Directive[colorUnlabeled, AbsoluteThickness[0.4]]]]};
+seriesNames    = {\"vertex-labeled\", \"facet-labeled\", \"unlabeled\"};
+legendSwatches = {colorVertex, colorFacet, colorUnlabeled};
+
 frameOpts = Sequence[
-  Frame      -> True,
+  Frame -> True,
   FrameStyle -> Directive[Black, AbsoluteThickness[1]],
   LabelStyle -> Directive[FontFamily -> \"Times\", FontSize -> 11, Black],
-  ImageSize  -> {360, 270},
-  PlotRange  -> All,
-  ImageMargins -> 5
-];", "Input"]
+  ImageSize -> {360, 270},
+  PlotRange -> All,
+  ImageMargins -> 5];
+
+panelLabel[p_] := Style[\"p = \" <> ToString[p],
+  FontFamily -> \"Times\", FontSize -> 12, Bold];
+
+translucentLegend = SwatchLegend[
+  Directive[#, Opacity[0.55]] & /@ legendSwatches,
+  seriesNames,
+  LegendMarkerSize -> 14,
+  LabelStyle -> Directive[FontFamily -> \"Times\", FontSize -> 10, Black]];", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
-Cell["Load sample data", "Section"],
+Cell["Load sample CSVs", "Section"],
 
 Cell["loadSamples[p_Integer] := Module[{path, raw, headers, body, cols, parseCol},
-  path = FileNameJoin[{outputDir,
+  path = FileNameJoin[{dataDir,
     \"p\" <> ToString[p] <> \"q\" <> ToString[qVal] <>
     \"_n\" <> ToString[sampleSize] <> \"_samples.csv\"}];
   If[!FileExistsQ[path],
     Print[\"Missing: \", path]; Return[$Failed]];
+  Print[\"  loading \", FileNameTake[path]];
   raw = Import[path, \"CSV\"];
   headers = First[raw];
-  body = Rest[raw];
-  cols = Transpose[body];
-  (* CSV parser: \"\"->Missing, stringified rationals (\"1/720\")->numeric Real,
-     other strings/numbers passed through. *)
+  body    = Rest[raw];
+  cols    = Transpose[body];
   parseCol[col_] := Map[Function[x, Which[
     x === \"\", Missing[],
     StringQ[x], N[ToExpression[x]],
     True, x]], col];
-  AssociationThread[headers -> (parseCol /@ cols)]
-];
+  AssociationThread[headers -> (parseCol /@ cols)]];
 
 sampleData = AssociationMap[loadSamples, pList];", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
-Cell["Helper functions", "Section"],
+Cell["ESS sanity check", "Section"],
 
-Cell["(* Filter mask: returns a list of True/False per sample.
-   filterSpec is one of:
-     None              - keep all
-     \"connected\"     - keep only complexes with 1 vertex-connected component
-*)
-filterMask[s_Association, filterSpec_] := Switch[filterSpec,
-  None, ConstantArray[True, Length[s[\"numV\"]]],
-  \"connected\", # == 1 & /@ s[\"connected\"],
-  _, ConstantArray[True, Length[s[\"numV\"]]]
-];
-
-(* Returns {WeightedData_vertex, WeightedData_facet, WeightedData_unlabeled}
-   for the given column, after applying filter and dropping Missing entries. *)
-weightedSeries[s_Association, col_String, filterSpec_:None] := Module[
-  {mask, vals, wV, wF, wU, keep},
-  mask = filterMask[s, filterSpec];
-  vals = Pick[s[col], mask];
-  wV = Pick[s[\"wVertex\"], mask];
-  wF = Pick[s[\"wFacet\"], mask];
-  wU = Pick[s[\"wUnlabeled\"], mask];
-  keep = ! MissingQ[#] & /@ vals;
-  vals = Pick[vals, keep];
-  wV = Pick[wV, keep];
-  wF = Pick[wF, keep];
-  wU = Pick[wU, keep];
-  If[Length[vals] == 0, Return[$Failed]];
-  {WeightedData[vals, wV],
-   WeightedData[vals, wF],
-   WeightedData[vals, wU]}
-];
-
-(* Aggregate (value, weight) pairs by value; returns sorted {{v, prob}, ...}
-   normalized so probabilities sum to 1. *)
-weightedDist[vals_List, weights_List] := Module[{paired, agg, tot},
-  paired = MapThread[List, {vals, weights}];
-  agg = GroupBy[paired, First -> Last, Total];
-  tot = Total[Values[agg]];
-  SortBy[KeyValueMap[{#1, #2/tot} &, agg], First]
-];", "Input"]
+Cell["(* ESS = (Sum w)^2 / Sum w^2 — effective sample size for each weighting.
+   Low ESS => reweighted histogram bar heights have high Monte-Carlo variance
+   even though total integrated area is still 1. *)
+Do[
+  Module[{s = sampleData[p], wV, wF, wU, essV, essF, essU, n, fmt},
+    wV = s[\"wVertex\"]; wF = s[\"wFacet\"]; wU = s[\"wUnlabeled\"];
+    n = Length[wV];
+    essV = N[Total[wV]^2 / Total[wV^2]];
+    essF = N[Total[wF]^2 / Total[wF^2]];
+    essU = N[Total[wU]^2 / Total[wU^2]];
+    fmt[ess_] := ToString[Round[ess]] <> \" / \" <> ToString[n] <>
+      \" (\" <> ToString[NumberForm[100. ess / n, {4, 3}]] <> \"%)\";
+    Print[\"p=\", p, \"  ESS_vertex=\", fmt[essV]];
+    Print[\"       ESS_facet =\", fmt[essF]];
+    Print[\"       ESS_unlab =\", fmt[essU]]],
+  {p, pList}];", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
-Cell["Panel and figure builders", "Section"],
+Cell["Panel builders", "Section"],
 
-Cell["(* makePanel: one p-value, one statistic.
-   panelType in {\"discrete\", \"logdiscrete\", \"continuous\"}.
-   For \"discrete\": grouped BarChart at each integer x value.
-   For \"logdiscrete\": one bar per decade of x value (for |Aut|, |Aut_F|).
-   For \"continuous\": Histogram with shared bins, three overlaid series. *)
+Cell["filterMask[s_, None]        := ConstantArray[True, Length[s[\"numV\"]]];
+filterMask[s_, \"connected\"] := (# == 1 &) /@ s[\"connected\"];
 
-makePanel[p_Integer, col_String, xLabel_String, panelType_String,
-          filterSpec_:None, opts___?OptionQ] := Module[
-  {s = sampleData[p], series, vals, wV, wF, wU, dV, dF, dU,
-   allX, mat, mask, keep},
-
+extractSeries[s_, col_, filterSpec_] := Module[{mask, vals, wV, wF, wU, keep},
   mask = filterMask[s, filterSpec];
   vals = Pick[s[col], mask];
-  wV = Pick[s[\"wVertex\"], mask];
-  wF = Pick[s[\"wFacet\"], mask];
-  wU = Pick[s[\"wUnlabeled\"], mask];
-  keep = ! MissingQ[#] & /@ vals;
-  vals = Pick[vals, keep];
-  wV = Pick[wV, keep]; wF = Pick[wF, keep]; wU = Pick[wU, keep];
+  wV   = Pick[s[\"wVertex\"], mask];
+  wF   = Pick[s[\"wFacet\"], mask];
+  wU   = Pick[s[\"wUnlabeled\"], mask];
+  keep = (! MissingQ[#]) & /@ vals;
+  {Pick[vals, keep], Pick[wV, keep], Pick[wF, keep], Pick[wU, keep]}];
 
-  If[Length[vals] == 0,
-    Return[Graphics[Text[Style[\"no data for p=\" <> ToString[p],
-      \"Times\", 11, Gray]], frameOpts]]];
+emptyPanel[p_, msg_] := Graphics[
+  Text[Style[msg <> \" (p=\" <> ToString[p] <> \")\",
+    FontFamily -> \"Times\", FontSize -> 11, Gray]],
+  frameOpts];
 
-  Switch[panelType,
-    \"discrete\",
-    dV = weightedDist[vals, wV];
-    dF = weightedDist[vals, wF];
-    dU = weightedDist[vals, wU];
-    allX = Sort[DeleteDuplicates[
-      Join[dV[[All, 1]], dF[[All, 1]], dU[[All, 1]]]]];
-    mat = Table[
-      Lookup[Association @@ (Rule @@@ d), x, 0.],
-      {x, allX}, {d, {dV, dF, dU}}];
-    BarChart[mat,
-      ChartLayout    -> \"Grouped\",
-      ChartStyle     -> seriesColors,
-      ChartLabels    -> {allX, None},
-      ChartLegends   -> Placed[seriesNames, Top],
-      FrameLabel     -> {{\"Probability\", None}, {xLabel, None}},
-      PlotLabel      -> Style[\"p = \" <> ToString[p],
-                         FontFamily -> \"Times\", FontSize -> 12, Bold],
-      frameOpts, opts],
+(* Three panel flavors — all use Histogram with three WeightedData series
+   overlaid on the same axes with translucent fill. *)
 
-    \"logdiscrete\",
-    Module[{logVals, lo, hi, nBins, binIdx, sumW, dists, labels},
-      logVals = Log10[N[vals]];
-      lo = Floor[Min[logVals]];
-      hi = Ceiling[Max[logVals]];
-      If[hi <= lo, hi = lo + 1];
-      nBins = hi - lo;
-      binIdx = Clip[Ceiling[(logVals - lo)], {1, nBins}];
-      sumW[w_] := Module[{out = ConstantArray[0., nBins]},
-        MapThread[(out[[#1]] += #2) &, {binIdx, w}]; out / Total[w]];
-      dists = sumW /@ {wV, wF, wU};
-      labels = Table[
-        Style[Superscript[10, k], FontFamily -> \"Times\", FontSize -> 10],
-        {k, lo, hi - 1}];
-      BarChart[Transpose[dists],
-        ChartLayout    -> \"Grouped\",
-        ChartStyle     -> seriesColors,
-        ChartLabels    -> {labels, None},
-        ChartLegends   -> Placed[seriesNames, Top],
-        FrameLabel     -> {{\"Probability\", None},
-                           {xLabel <> \"  (per-decade bin)\", None}},
-        PlotLabel      -> Style[\"p = \" <> ToString[p],
-                           FontFamily -> \"Times\", FontSize -> 12, Bold],
-        frameOpts, opts]],
+makePanelDiscrete[p_, col_, xLabel_, filterSpec_:None] := Module[
+  {s = sampleData[p], vals, wV, wF, wU, lo, hi},
+  {vals, wV, wF, wU} = extractSeries[s, col, filterSpec];
+  If[Length[vals] == 0, Return[emptyPanel[p, \"no data\"]]];
+  lo = Floor[Min[vals]];
+  hi = Ceiling[Max[vals]];
+  If[hi <= lo, hi = lo + 1];
+  Histogram[
+    {WeightedData[vals, wV],
+     WeightedData[vals, wF],
+     WeightedData[vals, wU]},
+    {lo - 0.5, hi + 0.5, 1}, \"PDF\",
+    ChartStyle   -> seriesColorsTrans,
+    ChartLegends -> Placed[translucentLegend, Top],
+    FrameLabel   -> {{\"Probability\", None}, {xLabel, None}},
+    PlotLabel    -> panelLabel[p],
+    frameOpts]];
 
-    \"continuous\",
-    Histogram[
-      {WeightedData[vals, wV], WeightedData[vals, wF], WeightedData[vals, wU]},
-      Automatic, \"PDF\",
-      ChartStyle   -> seriesColors,
-      ChartLegends -> Placed[seriesNames, Top],
-      FrameLabel   -> {{\"Density\", None}, {xLabel, None}},
-      PlotLabel    -> Style[\"p = \" <> ToString[p],
-                       FontFamily -> \"Times\", FontSize -> 12, Bold],
-      frameOpts, opts],
+makePanelLogBin[p_, col_, xLabel_, filterSpec_:None] := Module[
+  {s = sampleData[p], vals, wV, wF, wU, logVals, lo, hi, ticks},
+  {vals, wV, wF, wU} = extractSeries[s, col, filterSpec];
+  If[Length[vals] == 0, Return[emptyPanel[p, \"no data\"]]];
+  logVals = Log10[N[vals]];
+  lo = Floor[Min[logVals]];
+  hi = Ceiling[Max[logVals]];
+  If[hi <= lo, hi = lo + 1];
+  ticks = Table[{k + 0.5,
+      Style[Superscript[10, k], FontFamily -> \"Times\", FontSize -> 10]},
+    {k, lo, hi - 1}];
+  Histogram[
+    {WeightedData[logVals, wV],
+     WeightedData[logVals, wF],
+     WeightedData[logVals, wU]},
+    {lo, hi, 1}, \"PDF\",
+    ChartStyle   -> seriesColorsTrans,
+    ChartLegends -> Placed[translucentLegend, Top],
+    FrameLabel   -> {{\"Probability per decade\", None}, {xLabel, None}},
+    FrameTicks   -> {{Automatic, None}, {ticks, None}},
+    PlotLabel    -> panelLabel[p],
+    frameOpts]];
 
-    _, Graphics[Text[\"unknown panelType\"], frameOpts]
-  ]
-];
+makePanelContinuous[p_, col_, xLabel_, filterSpec_:None] := Module[
+  {s = sampleData[p], vals, wV, wF, wU},
+  {vals, wV, wF, wU} = extractSeries[s, col, filterSpec];
+  If[Length[vals] == 0, Return[emptyPanel[p, \"no data\"]]];
+  Histogram[
+    {WeightedData[vals, wV],
+     WeightedData[vals, wF],
+     WeightedData[vals, wU]},
+    Automatic, \"PDF\",
+    ChartStyle   -> seriesColorsTrans,
+    ChartLegends -> Placed[translucentLegend, Top],
+    FrameLabel   -> {{\"Density\", None}, {xLabel, None}},
+    PlotLabel    -> panelLabel[p],
+    frameOpts]];
 
-(* makeFigure: stack panels for the given p values into a 3x1 column.
-   Pass pSubset to restrict (e.g. {3,4} for 2-path, {4} for 3-path). *)
-makeFigure[col_String, xLabel_String, panelType_String,
-           pSubset_:Automatic, filterSpec_:None, opts___?OptionQ] := Module[
+panelDispatch[\"discrete\", args__]    := makePanelDiscrete[args];
+panelDispatch[\"logdiscrete\", args__] := makePanelLogBin[args];
+panelDispatch[\"continuous\", args__]  := makePanelContinuous[args];
+
+(* Build a 3x1 stacked column for a given statistic across pList (or subset). *)
+makeFigure[col_, xLabel_, panelType_, pSubset_:Automatic, filterSpec_:None] := Module[
   {ps, panels},
   ps = If[pSubset === Automatic, pList, pSubset];
-  panels = makePanel[#, col, xLabel, panelType, filterSpec, opts] & /@ ps;
+  panels = Table[panelDispatch[panelType, p, col, xLabel, filterSpec], {p, ps}];
   GraphicsGrid[List /@ panels,
-    Spacings -> {0.3, 0.3},
-    ImageSize -> {380, 290 * Length[ps]}]
-];
-
-(* exportFigure: render and write a PDF. *)
-exportFigure[name_String, fig_] := If[exportFigures,
-  Export[FileNameJoin[{outputDir, name <> \".pdf\"}], fig];
-  Print[\"Exported: \", name <> \".pdf\"]];", "Input"]
+    Spacings  -> {0.3, 0.3},
+    ImageSize -> {380, 290 * Length[ps]}]];", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 3 - Number of vertices", "Section"],
-
-Cell["fig3 = makeFigure[\"numV\", \"Number of vertices\", \"discrete\"];
-exportFigure[\"fig3_numVertices\", fig3];
-fig3", "Input"]
+Cell["makeFigure[\"numV\", \"Number of vertices\", \"discrete\"]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 4 - Automorphism group order |Gamma(X)|", "Section"],
-
-Cell["fig4 = makeFigure[\"aut\", \"|\\[CapitalGamma](X)|\", \"logdiscrete\"];
-exportFigure[\"fig4_autOrder\", fig4];
-fig4", "Input"]
+Cell["makeFigure[\"aut\", \"|\\[CapitalGamma](X)|\", \"logdiscrete\"]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 5 - Facet-automorphism group order |Gamma_F(X)|", "Section"],
-
-Cell["fig5 = makeFigure[\"autF\", \"|\\[CapitalGamma]_F(X)|\", \"logdiscrete\"];
-exportFigure[\"fig5_autFOrder\", fig5];
-fig5", "Input"]
+Cell["makeFigure[\"autF\", \"|\\[CapitalGamma]_F(X)|\", \"logdiscrete\"]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
-Cell["Figure 6 - |Gamma(X)| for connected complexes", "Section"],
-
-Cell["fig6 = makeFigure[\"aut\", \"|\\[CapitalGamma](X)|, connected only\",
-  \"logdiscrete\", Automatic, \"connected\"];
-exportFigure[\"fig6_autOrder_connected\", fig6];
-fig6", "Input"]
+Cell["Figure 6 - |Gamma(X)| (connected complexes only)", "Section"],
+Cell["makeFigure[\"aut\", \"|\\[CapitalGamma](X)|, connected\", \"logdiscrete\", Automatic, \"connected\"]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
-Cell["Figure 7 - |Gamma_F(X)| for connected complexes", "Section"],
-
-Cell["fig7 = makeFigure[\"autF\", \"|\\[CapitalGamma]_F(X)|, connected only\",
-  \"logdiscrete\", Automatic, \"connected\"];
-exportFigure[\"fig7_autFOrder_connected\", fig7];
-fig7", "Input"]
+Cell["Figure 7 - |Gamma_F(X)| (connected complexes only)", "Section"],
+Cell["makeFigure[\"autF\", \"|\\[CapitalGamma]_F(X)|, connected\", \"logdiscrete\", Automatic, \"connected\"]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 8 - Number of 1-vertex connected components", "Section"],
-
-Cell["fig8 = makeFigure[\"num1VConnComps\", \"Number of 1-vertex connected components\", \"discrete\"];
-exportFigure[\"fig8_num1VConnComps\", fig8];
-fig8", "Input"]
+Cell["makeFigure[\"num1VConnComps\", \"Number of 1-vertex conn. components\", \"discrete\"]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 9 - Number of 2-vertex connected components", "Section"],
-
-Cell["fig9 = makeFigure[\"num2VConnComps\", \"Number of 2-vertex connected components\", \"discrete\"];
-exportFigure[\"fig9_num2VConnComps\", fig9];
-fig9", "Input"]
+Cell["makeFigure[\"num2VConnComps\", \"Number of 2-vertex conn. components\", \"discrete\"]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 10 - Largest-component vertex ratio", "Section"],
-
-Cell["fig10 = makeFigure[\"largestCompRatio\", \"Largest component vertices / total vertices\", \"continuous\"];
-exportFigure[\"fig10_largestCompRatio\", fig10];
-fig10", "Input"]
+Cell["makeFigure[\"largestCompRatio\", \"Largest-component vertex ratio\", \"continuous\"]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 11 - Number of 2-path connected components (p in {3, 4})", "Section"],
-
-Cell["fig11 = makeFigure[\"num2PathConnComps\", \"Number of 2-path connected components\",
-  \"discrete\", {3, 4}];
-exportFigure[\"fig11_num2PathConnComps\", fig11];
-fig11", "Input"]
+Cell["makeFigure[\"num2PathConnComps\", \"Number of 2-path conn. components\", \"discrete\", {3, 4}]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 12 - Number of 3-path connected components (p = 4)", "Section"],
-
-Cell["fig12 = makeFigure[\"num3PathConnComps\", \"Number of 3-path connected components\",
-  \"discrete\", {4}];
-exportFigure[\"fig12_num3PathConnComps\", fig12];
-fig12", "Input"]
+Cell["makeFigure[\"num3PathConnComps\", \"Number of 3-path conn. components\", \"discrete\", {4}]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 13 - First Betti number Beta_1", "Section"],
-
-Cell["fig13 = makeFigure[\"Betti1\", \"\\[Beta]_1\", \"discrete\"];
-exportFigure[\"fig13_Betti1\", fig13];
-fig13", "Input"]
+Cell["makeFigure[\"Betti1\", \"\\[Beta]_1\", \"discrete\"]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 14 - Second Betti number Beta_2 (p in {3, 4})", "Section"],
-
-Cell["fig14 = makeFigure[\"Betti2\", \"\\[Beta]_2\", \"discrete\", {3, 4}];
-exportFigure[\"fig14_Betti2\", fig14];
-fig14", "Input"]
+Cell["makeFigure[\"Betti2\", \"\\[Beta]_2\", \"discrete\", {3, 4}]", "Input"]
 }, Open]],
 
 Cell[CellGroupData[{
 Cell["Figure 15 - Third Betti number Beta_3 (p = 4)", "Section"],
-
-Cell["fig15 = makeFigure[\"Betti3\", \"\\[Beta]_3\", \"discrete\", {4}];
-exportFigure[\"fig15_Betti3\", fig15];
-fig15", "Input"]
+Cell["makeFigure[\"Betti3\", \"\\[Beta]_3\", \"discrete\", {4}]", "Input"]
 }, Open]]
 
 }, WindowSize -> {1100, 800}, FrontEndVersion -> "14.3 for Microsoft Windows (64-bit) (July 8, 2025)", StyleDefinitions -> "Default.nb"]
