@@ -1,0 +1,23 @@
+# --- Large generated data (regenerable from src/pure_simplicial_compute.wl) ---
+data/*.csv
+data/*_chunk_*.csv
+data/*.tmp
+archive/superseded_data/*.csv
+
+# --- Compute checkpoint artifacts ---
+*.tmp
+
+# --- Wolfram cruft ---
+*.nb~
+.MathematicaSettings/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+
+# --- Claude Code local state (per-machine, not for sharing) ---
+.claude/

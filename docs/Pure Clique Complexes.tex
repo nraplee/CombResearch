@@ -1,0 +1,1110 @@
+%\documentclass[prd,12pt,nofootinbib]{revtex4}
+%\documentclass[aps, 12pt, eqsecnum]{revtex4}
+\documentclass[12pt]{article}
+\usepackage[english]{babel}
+%\counterwithin{figure}{section}  %% uncomment to make figure numbering by section
+%\counterwithout{figure}{section}   %% the default for article document class is for numbering of figures to be continuous, not by section
+\usepackage{biblatex} %Imports biblatex package
+%\usepackage{hyperref}
+%\usepackage{footnote}
+%\usepackage{epstopdf}
+\usepackage{setspace}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{latexsym, amssymb}
+%\usepackage{verbatim}
+%\usepackage{lscape}
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\MakeRobust{\Call}
+    %allows nested function calls, need to check that this doesn't mess with formatting of other algorithms
+\usepackage{hhline}
+
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\graphicspath{{./}}
+\usepackage{tabularx, booktabs}
+%\usepackage{float}
+%\usepackage[export]{adjustbox}
+%\usepackage{subfloat}
+%\usepackage{xcolor}
+\def\bibsection{\section*{References}}
+\addbibresource{bibliography.bib} %Import the bibliography file
+
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+%\newtheorem{lem}[thm]{Lemma}
+\newtheorem{lem}{Lemma}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}{Corollary}[section]
+
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+\newtheorem{conj}{Conjecture}[section]
+\newtheorem{exmp}{Example}[section]
+
+\theoremstyle{remark}
+\newtheorem*{rem}{Remark}
+\newtheorem*{note}{Note}
+
+\renewcommand{\thesection}{\arabic{section}}
+%\renewcommand{\thesubsection}{\arabic{subsection}}
+
+% Needed so that continue can be a keyword in our algorithms.
+% See: https://tex.stackexchange.com/questions/30363/how-do-i-define-a-new-command-in-algorithmicx
+\algnewcommand\Continue{\textbf{continue}}
+\algnewcommand{\True}{\textbf{true}}
+\algnewcommand{\False}{\textbf{false}}
+
+\newcommand{\CR}{\nonumber\\}
+\newcommand{\setn}[1]{[[{#1}]]}
+
+%\begin{titlepage}
+\title{Random Pure Simplicial Complexes with a Fixed Number of Facets}
+\author{Kassahun Betre$^1$, Carter T. Edmond$^1$, Elijah N. Raplee$^1$\\1 San Jose State University, 1 Washington Square, Sci 148, San Jose, CA 95192}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study vertex-labeled, facet-labeled, and unlabeled random pure simplicial complexes with a fixed number of facets. The study of random simplicial complexes has been restricted to simplicial complexes with a fixed number of labeled vertices. This paper expands this study to complexes with fixed number of facets as well as to cases where only the facets are labeled and also complexes that are unlabeled. We provide an algorithm to sample the space of uniform random pure simplicial complexes with fixed number of facets and a choice to label the vertices, facets, or neither. We find that, over a number of combinatorial and topological properties, the vertex-labeled uniform random pure complex is significantly different from the facet-labeled and unlabeled uniform random pure complex. Furthermore, the facet-labeled and unlabeled distributions converge over all properties studied to a greater degree of convergence for increasing the dimension of the facets.  
+\end{abstract}
+\clearpage
+\def\thefootnote{\fnsymbol{footnote}}
+\setcounter{footnote}{0}
+%
+\tableofcontents
+\newpage
+\setcounter{page}{1}
+
+% To do:
+% 1. Code the more efficient unranking algorithm based on permuations from reference \cite{donnot2020unranking}
+\section{Questions}
+\begin{enumerate}
+    \item The Lineal-Mushlam random 2d simplicial complexes has established sharp thresholds in $p$ for when a random 2-pure simplicial complex with fixed $n$ becomes topologically interesting; such as being simply connected, having a free fundamental group, and vanishing second homology group. Question for us is, how, if any, would this story change for fixed facet order, and for vertex-labeled, facet-labeled, and unlabeled.
+\end{enumerate}
+
+\section{Introduction}
+Simplicial complexes have a wide ranging application in combinatorics, algebraic topology, and algebraic geometry. This paper discusses pure simplicial complexes with a fixed number of facets. We consider three different choices for labeling the complexes; vertex-labeled, facet-labeled, and unlabeled. After discussing their enumeration, we provide an algorithm to generate a random pure simplicial with a fixed number of facets for cases where the vertices or facets may be labeled or the complex may be unlabeled. We then numerically investigate statistics of several combinatorial and topological properties over the space of these random pure simplicial complexes. 
+
+Part of the motivation for this investigation is application in  combinatorial geometry and emergent quantum gravity. In quantum gravity, it has been argued that not only geometry, but also topology may be stochastic near spacetime singularities \cite{wheeler1955geons}. In such cases computation of observables requires one to compute expectation values over all geometries and topologies of a fixed spacetime dimension \cite{gibbons1977action}.  Random pure simplicial complexes provide an important model for stochastic topology and geometry. 
+
+However, facet-labeled and unlabeled pure complexes with a fixed number of facets are natural combinatorial objects to study in and of themselves. As an example, one may start with $q$ identical equilateral triangles and consider all shapes that can be formed by joining the pieces along edges or vertices. In so doing, one is often not interested in distinguishing between two shapes that differ only by rotations or other reorientations. The set of all such shapes then forms the space of all 2-dimensional unlabeled pure simplicial complexes with $q$ facets. For large $q$, one may wish to study the typical or average property of such pure complexes. This requires a way to sample from a uniform probability distribution over the set of 2-dimensional unlabeled pure simplicial complexes. Alternatively, the $q$ equilateral triangles may be labeled using $q$ colors, and one may wish to again study the space of colored shapes that can be formed modulo reorientations.
+
+Since the introduction of random simplicial complexes by Linial and Meshulam \cite{linial2006homological, meshulam2009homological}, many different models of random simplicial complexes have been studied \cite{kahle2017random, bobrowski2022random,  markstrom2020random, kahle2014topology,brooke2013infinite}. Many of these models are generalizations of the Erd\H{o}s-R\'{e}nyi-Gilbert $G(n,p)$ random graph models \cite{erdds1959random, gilbert1959random}. However, a survey of the literature on random simplicial complexes reveals that in almost all cases the space of simplicial complexes studied has a fixed number $n$ of vertices. Furthermore, in almost all cases the vertices are labeled (distinguishable). This paper provides a way to analytically and numerically study random pure simplicial for various choices of labeling. 
+
+In section \ref{sec:facet-labeled} we define the relevant terms and notation conventions that will be used throughout the paper. We define facet-labeled pure simplicial complexes as equivalence classes of vertex-labeled complexes. In section \ref{sec:counting} we count vertex-labeled simplicial complexes and find an efficient recursive formula for their enumeration. We also discuss a method for counting facet-labeled and unlabeled complexes. Section \ref{sec:randomPure} is devoted to the discussion of random pure simplicial complexes. We summarize the main results and conclude in section \ref{sec:conclusion}.
+
+
+\section{Equivalence Classes of Labeled Complexes}
+\label{sec:facet-labeled}
+An abstract simplicial complex $(S,\Delta)$ is a set $S$ (the base set) together with a collection $\Delta$ of subsets of $S$ closed under taking subsets, i.e., if $\sigma\in \Delta$ and $\tau\subset\sigma$ are non-empty, then $\tau\in\Delta$. Elements of $\Delta$ are the faces or simplices of the complex. The facets of the complex are the maximal simplices, i.e., those simplices in $\Delta$ that are not proper subsets of other simplices. For $p$ a positive integer, a simplicial complex is called $p$-{\em pure} if all its facets have the same cardinality of $p$. The number of facets of a simplicial complex is its {\em facet-order}. When it is clear from context, we may drop the ``facet" and simply say the order of a complex to refer to its facet-order. In this paper we will focus on the enumeration and random sampling pure simplicial complexes of a fixed facet-order. However, we will not utilize their simplicial structure and so all the discussion can apply to uniform hypergraphs of a fixed edge count. A $p-pure$ simplicial complex with $q$ facets is a $p-$uniform hypergraph with $q$ edges, together with all subsets of the edges.
+
+
+%If $G$ is a finite simple graph, the clique complex (or Flag complex or Whitney complex) $\mathcal{W}(G)$ of $G$ is the abstract simplicial complex with the vertex set $V(G)$ of the graph as the base set and the cliques of $G$ as the simplices. 
+
+A simplicial complex with $n$ vertices and $q$ facets is said to be {\em vertex-labeled} if each vertex in the simplex is distinguishable, for example, by labeling them using the set $[n]=\{1,2,\ldots,n\}$. If the vertices are not labeled, but the $q$ facets are labeled (e.g., using the set $[q]=\{1,\dots,q\}$), then the complex is said to be {\em facet-labeled}. When both the vertices and the facets are labeled, we will call the complex simply {\em labeled}. If neither the facets nor the vertices are labeled, then the complex is {\em unlabeled}. We will use the notation $\mathcal{S}(p,q,n), \mathcal{S}_v(p,q,n), \mathcal{S}_f(p,q,n), \mathcal{S}_u(p,q,n)$ to denote the set of $p-$pure simplicial complexes with $q$ facets and $n$ vertices that are labeled (both vertices and facets), vertex-labeled, facet-labeled, and unlabeled respectively.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}   \hline
+\includegraphics[width=0.085\textwidth]{Images/facet-labeled/1.pdf}  &  \includegraphics[width=0.085\textwidth]{Images/facet-labeled/2.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/3.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/4.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/5.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/6.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/7.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/8.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/9.pdf}  \\
+\hline
+\includegraphics[width=0.085\textwidth]{Images/facet-labeled/1a.pdf}  &  \includegraphics[width=0.085\textwidth]{Images/facet-labeled/2a.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/3a.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/4a.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/5a.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/6a.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/7a.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/8a.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/9a.pdf}\\
+\includegraphics[width=0.085\textwidth]{Images/facet-labeled/1b.pdf}  &  \includegraphics[width=0.085\textwidth]{Images/facet-labeled/2b.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/3b.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/4b.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/5b.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/6b.pdf}  &{}  &{}  &{}\\
+\includegraphics[width=0.085\textwidth]{Images/facet-labeled/1c.pdf}  &  \includegraphics[width=0.085\textwidth]{Images/facet-labeled/2c.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/3c.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/4c.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/5c.pdf}  &\includegraphics[width=0.085\textwidth]{Images/facet-labeled/6c.pdf}  &{}  &{}  &{}\\
+{}&{}&\includegraphics[width=0.085\textwidth]{Images/facet-labeled/3d.pdf}&{}&{}&{}&{}&{}&{}\\
+{}&{}&\includegraphics[width=0.085\textwidth]{Images/facet-labeled/3e.pdf}&{}&{}&{}&{}&{}&{}\\
+{}&{}&\includegraphics[width=0.085\textwidth]{Images/facet-labeled/3f.pdf}&{}&{}&{}&{}&{}&{}\\
+\hline
+
+\end{tabular}
+\caption{The 9 unlabeled 3-pure simplicial complexes of facet-order 3 (top row) and their facet labelings (bottom row).}
+\label{fig:sampleRandomComplexes}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{figure}[H]
+% \centering
+% \includegraphics[width=\textwidth]{Images/unlabeled3pureOrder3.pdf}
+% \caption{The 9 unlabeled 3-pure clique complexes of clique order 3.}
+% \label{fig:unlabeled3pureOrder3}
+% \end{figure}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \begin{defn}
+%     A {\em facet-ordered simplicial complex} $\vec X = ( F_1,F_2,\dots,F_q)$ is a simplicial complex whose facets have an order (though the facets themselves are unordered sets) and let $\vec{\mathcal{S}}_v(p,q,n)$ be the set of all $p-$pure facet-ordered simplicial complexes with $n$ vertices.
+% \end{defn}
+
+We can uniquely represent a labeled simplicial complex as an ordered set of facets, $\vec{X}=(F_1,\dots,F_q)$, where $F_1,\dots, F_q$ are unordered sets. We can also represent it using its {\em facet-incidence} matrix, a $q\times n$, $(0,1)$ matrix $B$, whose entries $B_{ij}$ are given by 
+\begin{align}
+B_{ij} = \begin{cases}
+1&\text{vertex $i$ is contained in facet $j$}\\
+0&\text{otherwise}
+\end{cases}
+\end{align}
+None of the rows in $B$ are identical, and if the simplicial complex is $p-$pure, then the sums of the rows are all $p$.  
+
+\subsection{Vertex-labeled and Facet-labeled Complexes}
+Vertex-labeled, facet-labeled, and unlabeled complexes are equivalence classes of labeled  complexes. The equivalence relation is defined using the following two maps:
+\begin{defn}
+    Let $\vec X\in\mathcal{S}(p,q,n)$ be a labeled complex and $B$ its facet-incidence matrix, the {\em row set} $R(B)=\{F_1,\dots,F_q\}$ is is a map from each row $B_i$ to a set $F_i$, where the elements of $F_i=\{v_{i1},\dots,v_{ip}\}$ are the column indices in row $B_{i}$ with entry of 1 (see Fig.\ref{fig:vertexAndFacetLabeledFromFacetIncidence})
+\end{defn}
+\begin{defn}
+    Let $\vec X\in\mathcal{S}(p,q,n)$ be a labeled complex and $B$ its facet-incidence matrix, the {\em column multiset} $C(X)=\{V_1,\dots,V_n\}$ is a map from each column $B_j$ of $B$ to a set,$V_j=\{v_{1j},v_{2j},\dots v_{dj}\}$ where $v_{ij}$ is the row index of $B_j$ with entry of 1. The set $\{V_1,V_2,\dots,V_n\}$ is a multiset of $n$ sets $V_i$ each with a cardinality of at most $q$ (see Fig.\ref{fig:vertexAndFacetLabeledFromFacetIncidence})
+\end{defn}
+
+Vertex-labeled complexes are equivalence classes of labeled complexes where the equivalence relation $\sim$ is the equality of the row sets, i.e., two labeled complexes $\vec{X}_1, \vec{X}_2$, are equivalent if $R(X_1)=R(X_2)$. A representative vertex-labeled complex of each equivalence class can be picked by imposing a lexicographic ordering of the set of facets. Effectively, this removes the separate labeling of the facets and identifies each facet solely by its vertex content.
+
+A map between the vertex sets of two vertex-labeled simplicial complexes is a {\em simplicial} map if the image of a simplex in the domain is always a simplex in the target. Two simplicial complexes are isomorphic if there is a bijection of their vertex sets which induces a bijection of all their faces. An automorphism of a simplicial complex is a permutation  of the vertices that induces a permutation of its simplices. In other words, for a complex $X$, a permutation $\pi\in S_{|V(X)|}$ of the vertices $V(X)$ is an automorphism if for all simplices
+
+$\sigma_k=\{i_1,i_2,\dots,i_k\} \in X$,  \begin{align}
+\label{eq:SnAction}
+    P(\sigma_k)\equiv\{P(i_{1}),P(i_2),\dots,P(i_k)\}
+\end{align}
+is also a simplex in $X$. The set of automorphisms of a simplicial complex forms a group under composition, the {\em automorphism group} denoted by $\Gamma(X)$.
+
+The number of vertex-labeled $p$-pure simplicial complexes with $n$ vertices and facet order $q$ is computed in \cite{betre2024pure},
+\begin{align}
+    s_v(p,q,n)=\sum_{k=0}^n(-1)^{k+n}\binom{n}{k}\binom{\binom{k}{p}}{q}.
+\end{align}
+When $p$ and $n$ are fixed, and $q$ allowed to range over all allowed values, the size of the resulting set $\mathcal{S}_v(p,n)$ is 
+\begin{align}
+    s_v(p,n)&\equiv |\mathcal{S}_v(p,n)|=\left|\bigcup_{q}\mathcal{S}_v(p,n)\right|\CR
+    &=\sum_{k=0}^n(-1)^{n+k}\binom{n}{k}2^{\binom{k}{p}}
+\end{align} 
+In the section below we give an efficient recursive formula of $s_v(p,q,n)$.
+\subsubsection{Recursive formula for $s_v(p,q,n)$}
+Let $X=\{F_1,\dots,F_q\}$ be a vertex-labeled complex and assume the facets are arranged lexicographically. Let $n_i$ count the number of new vertices in $F_i$, i.e., $n_i = |F_i\backslash\bigcup_{j=1}^{i-1}F_j|$. Then, the sequence $(n_1,\dots,n_q)$ is a weak composition of the number of vertices $n = |V(X)|$. Not all weak compositions of $n$ come from vertex labeled complexes. Only weak compositions obeying the restrictions below result from complexes through the construction discussed above:  
+\begin{align}
+\label{eq:restrictedCompositions}
+    1.\;\;& n_1=p\CR
+    2.\;\;& n_i \le p \;\;\forall i\in[q]\CR
+    3.\;\;&\binom{\sum_{j=1}^i n_j}{p}\ge i ,\;\;\forall i\in[q]. 
+\end{align}
+The third restriction limits the number of 0's in the weak composition that can be found up to the $i$'th position; for example, there cannot be a 0 in the second position since the second facet must always have at least one new vertex.
+
+Given a restricted composition $(n_1,\dots,n_q)$, we can construct all vertex labeled complexes $\{F_1,\dots,F_q\}$ consistent with the compositions in $q-1$ steps as follows. To begin, make two sets of vertices, {\em used} $U$, and {\em unused} $\bar U$. Initialize $U = {}, \bar U = [n]$. First, choose $n_1=p$ vertices from $[n]$ and call the resulting set $F_1$. Update $U \rightarrow U\cup F_1, \bar U \rightarrow \bar U\backslash F_1$. Next, to make the second facet $F_2$, select the $n_2$ vertices from $\bar U$ and $p-n_2$ vertices from $U$. Update $U\rightarrow U\cup F_2$, $\bar U\rightarrow \bar U\backslash F_2$. Continue until $F_q$ is constructed. This process will produce the same vertex labeled complex $X$ in $q!$ ways. Let $W_\ell(p,q,n;n_1,n_2,\dots,n_q)$ be the number of ways of forming labeled $p$-pure complexes of facet order $q$ and $n$ vertices such that the new vertex composition of their ordered facets is $(n_1,\dots,n_q)$, we have
+\begin{align}
+    W_\ell(p,q,n;n_1,\dots,n_q)=&\left[\binom{n}{p}\right]\left[\binom{n-n_1}{n_2}\binom{n_1}{p-n_2}\right]\CR
+    &\left[\binom{n-n_1-n_2}{n_3}\binom{n_1+n_2}{p-n_3}-\delta_{n_3,0}(2)\right]\dots\CR
+    &\left[\binom{n-n_1-\dots-n_{q-1}}{n_q}\binom{n_1+\dots+n_{q-1}}{p-n_q}-\delta_{n_q,0}(q-1)\right]
+\end{align}
+
+
+Observe that $W_\ell(p,q,n;n_1,\dots,n_q)$ can be factorized into the number of ways of making the first $q-1$ times the number of ways to add the last facet. 
+\begin{align}
+\label{eq:waysToLabelFactorization}
+    W_\ell(p,q,n;n_1,\dots,n_q)=&W_\ell(p,q-1,n-n_q;n_1,\dots,n_{q-1})\binom{n}{n_{q}}\CR
+    &\left[\binom{n-n_1-\dots-n_{q-1}}{n_q}\binom{n_1+\dots+n_{q-1}}{p-n_q}-\delta_{n_q,0}(q-1)\right]\CR
+    =&W_\ell(p,q-1,n-n_q;n_1,\dots,n_{q-1})\left[\binom{n}{n_q}\binom{n-n_{q}}{p-n_q}-\delta_{n_q,0}(q-1)\right]
+\end{align}
+
+Let ${C}_{q}(n)$ be the set of restricted weak compositions of $n$ satisfying Eqn.(\ref{eq:restrictedCompositions}), the number $s_v(p,q,n)$ of vertex-labeled complexes is found using the different ways of filling in vertices consistent with the compositions. 
+\begin{align}
+    \label{eq:vertexLabeledFromWaysToLabel}
+    s_l(p,q,n)=q!s_v(p,q,n)=\sum_{(n_1,\dots,n_q)\in C_q(n)}W_\ell(p,q,n;n_1,\dots,n_q)
+\end{align} 
+Using the factorization in Eqn.(\ref{eq:waysToLabelFactorization}), 
+\begin{align}
+    s_l(p,q,n)=&q!s_v(p,q,n)=\sum_{(n_1,\dots,n_q)\in C_q(n)}W_\ell(p,q,n;n_1,\dots,n_q)\CR
+    =&\sum_{n_q=0}^p\;\;\sum_{(n_1,\dots,n_{q-1})\in C_{q-1}(n-n_q)}W_\ell(p,q-1,n-n_q)\left[\binom{n}{n_q}\binom{n-n_{q}}{p-n_q}-\delta_{n_q,0}(q-1)\right]\CR
+    =&-(q-1)\sum_{(n_1,\dots,n_{q-1})\in C_{q-1}(n)}W_\ell(p,q-1,n)\CR
+    &+\binom{n}{p}\sum_{n_q=0}^p\binom{p}{n_q}\sum_{(n_1,\dots,n_{q-1})\in C_{q-1}(n-n_q)}W_\ell(p,q-1,n-n_q;n_1,\dots,n_{q-1})\CR
+    =&-(q-1)s_l(p,q-1,n)+\binom{n}{p}\sum_{k=0}^p\binom{p}{k}s_l(p,q-1,n-k)
+\end{align}
+Therefore, we get the following recursion:
+\begin{align}
+    % s_l(p,q,n)&=-(q-1)s_l(p,q-1,n)+\binom{n}{p}\sum_{k=0}^p\binom{p}{k}s_l(p,q-1,n-k)\CR
+    qs_v(p,q,n)&=-(q-1)s_v(p,q-1,n)+\binom{n}{p}\sum_{k=0}^p\binom{p}{k}s_v(p,q-1,n-k)
+\end{align}
+{\color{red}{\bf CONTINUE FROM HERE}}
+
+
+% \subsection{Facet-incidence and facet-adjacency matrices}
+% Facet-labeled and unlabeled simplicial complexes are equivalent classes of vertex-labeled simplicial complexes where the equivalence relation is given by the action of permutation group as we will describe below.  
+% Consider a complex of facet-order $q$ such that the $q$ facets are labeled. Let $n$ be the number of vertices in the complex and assume that the vertices are also labeled. 
+
+% The {\em facet-incidence matrix} $B$ for this complex is $q\times n$ matrix where the matrix elements $B_{ij}$ are 
+% \begin{align}
+% B_{ij} = \begin{cases}
+% 1&\text{vertex $i$ is contained in facet $j$}\\
+% 0&\text{otherwise}
+% \end{cases}
+% \end{align}
+% We call the $q\times q$ square symmetric matrix $Q = BB^T$ the {\em facet-adjacency matrix}.  
+% The value of $Q_{ij}$ is the size of the intersection of cliques $i$ and $j$, so the diagonals are the facet cardinalities. All entries on row $i$ and column $j$ have values between $0$ and $Q_{ii}-1$. On the other hand, the $n\times n$ square symmetric matrix $T = B^TB$ has entries $T_{ij}$ that range between $0$ and the clique order $q$, and give the number of facets containing vertices $i$ and $j$ both. The adjacency matrix $A$ of the underlying graph corresponding to the complex has entries $A_{ij}$ given by 
+% \begin{align}
+%     A_{ij} = \begin{cases}
+%     1 & \text{if }i\neq j \text{ and }T_{ij}\ge 1\\
+%     0& i=j \text{ or }T_{ij} = 0
+%     \end{cases}
+% \end{align}
+% The matrices $B, Q,$ and $T$ corresponding to the 3-pure complex in Fig. \ref{fig:cliquecomplex} are:
+
+% \begin{align}
+% B&=\left(\begin{matrix}
+% 1&1&1&0\\
+% 1&0&1&1
+% \end{matrix}\right)\quad Q=BB^T=\left(\begin{matrix} 3&2\\2&3\end{matrix} \right)\quad T=B^TB=\left(
+% \begin{matrix}
+%  2 & 1 & 2 & 1 \\
+%  1 & 1 & 1 & 0 \\
+%  2 & 1 & 2 & 1 \\
+%  1 & 0 & 1 & 1 \\
+% \end{matrix}
+% \right)
+% \end{align}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.8\textwidth]{Images/facets.pdf}
+% \caption{A simplicial complex with two facets and four vertices. The facet automorphism group $\Gamma(\mathcal{W}(G))$ has two elements that permute the facets $a$ and $b$ keeping the complex the same. The vertex automorphism group $\Gamma(G)$ has four elements that permute the vertices keeping the graph the same.}
+% \label{fig:cliquecomplex}
+% \end{figure}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% The adjacency matrix $A$ of the labeled graph in Fig. \ref{fig:cliquecomplex}  derived from the matrix $T$ is 
+% \begin{align}
+%    A&=\left( \begin{matrix}
+%         0&1&1&1\\
+%         1&0&1&0\\
+%         1&1&0&1\\
+%         1&0&1&0
+%     \end{matrix}
+%     \right)
+% \end{align}
+
+% The facet-adjacency matrix assigns a square symmetric integer matrix to each simplicial complex. We can think of it as a map from the set of facet-labeled  complexes of facet order $q$ to the set of $q\times q$ symmetric matrices with integer entries. This adjacency  map is neither injective nor surjective. There are unique simplicial complexes with identical facet-adjacency matrix, and there are square symmetric integer matrices that do not belong to any simplicial complex. The set of square symmetric integer matrices that are the adjacency matrices of simplicial complexes are characterized by the following properties.
+
+
+\subsection{Facet-labeled Complexes}
+
+
+% \begin{defn}
+% If $A$ and $B$ are two vertex-labeled simplicial complexes, a map $f:A^0\rightarrow B^0$ between their $0$-simplices or vertex sets is a {\em facet map} if it is a simplicial map that induces a map from the facets of $A$ to facets of $B$, i.e., given a facet $\sigma = \{i_1,i_2,\dots,i_k\}\in A$, its image  $f(\sigma) = \{f(i_1),\dots,f(i_k)\}\in B$ is also a facet in $B$. 
+% \end{defn}
+% Note, a facet map is a simplicial map, but a simplicial map need not be a facet map.
+
+% \begin{defn}
+% A bijection $f:A^0\rightarrow B^0$ between the vertex sets of two complexes $A$ and $B$ is a  {\em facet-isomorphism} if it is a simplicial map that is also a bijection of the facets such that both $f$ and $f^{-1}$ are facet maps. A {\em facet-automorphism} of a complex $X$ is a permutation of the vertices $X^0$ which induces a permutation of the facets of $X$. Such permutations form a permutation group under composition.
+% We define the {\bf facet-automorphism group}, $\Gamma_f(X)$ of a simplicial complex $X$ to be the set of facet-automorphisms with composition as the group operation. 
+% \end{defn}
+
+%A facet-automorphism has a unitary matrix representation defined using the facet adjacency matrix as follows. A permutation $P$ of the facets of a complex is a facet automorphism if $Q = PQP^T$ where $Q$ is the facet adjacency matrix of the complex. 
+
+Facet-labeled complexes are equivalence classes of labeled complexes under the column multiset map, i.e. $X_1\sim X_2$ if $C(X_1)=C(X_2)$.  
+
+\begin{defn}
+A permutation of the vertices of a complex is said to be {\em facet stabilizer} if its induced action on the facets is the identity map, i.e., if for all facets $F_i\in X$, $P(F_i) = F_i$. The facet stabilizers of a complex $X$ form a group $Stab(X)$ under composition.
+\end{defn}
+
+\begin{prop}
+ The facet-stabilizer group $Stab(X)$ is a normal subgroup of the automorphism group $\Gamma(X)$. 
+\end{prop}
+
+\begin{proof}
+    Let $P\in Stab(X)$, $\pi\in\Gamma(X)$, and let $X=\{F_1,\dots F_q\}$. For any facet $F_i$, $\pi^{-1}(F_i)=F_k\in X$ and $P(F_i)=F_i$
+    \begin{align}
+        (\pi P\pi^{-1})(F_i)&=(\pi P)(\pi^{-1}(F_i))=(\pi P)(F_k)\CR
+        &=(\pi (F_k))=F_i
+    \end{align}
+    Therefore $\pi P \pi^{-1}\in Stab(X)$.
+\end{proof}
+
+\begin{defn}
+    The {\bf facet-automorphism group}, $\Gamma_f(X)$ is the quotient group 
+    \begin{align}
+        \Gamma_f(X)=\Gamma(X)/Stab(X).
+    \end{align}
+\end{defn}
+
+\begin{prop}
+    The set $\mathcal{S}_f(p,q,n)$ of facet-labeled complexes is the set of orbits
+\begin{align}
+    \mathcal{S}_f(p,q,n)=\mathrm{Orb}_{S_n}\vec{\mathcal{S}}_v(p,q,n)
+\end{align}
+\end{prop}
+There is a natural way to pick a representative of each orbit by, for example, choosing a canonical ordering. 
+\begin{defn}
+    A multiset $M=\{V_1^{m_1},\dots,V_n^{m_n}\}$ is said to be in canonical order if for all $i<j$ either $|V_i|>|V_j|$ or $|V_i|=|V_j| \& V_i \prec V_j$ in lexicographic order.
+\end{defn}
+There is a one-to-one map between canonically ordered multisets and facet-labeled pure complexes. All facet-ordered complexes in the same orbit of $S_n$ have the same column multiset. Given a multiset $M$, we can construct its the facet-incidence matrix by mapping each $V_i$ into a $q\times 1$ column matrix $a_i$ of 0's and 1's where there are 1's at each element of $V_i$ and 0's otherwise; and by arranging $m_i$ copies of each $a_i$ as the columns of the facet-incidence matrix. Therefore, we will represent facet-labeled pure complexes as canonically ordered multisets. 
+
+The symmetric group $S_q$ acts on the facet-labeled pure complexes in a natural way through its induced action on the multisets. If $\pi\in S_q$, and $C(X)=\{V_1^{m_1},\dots,V_n^{m_n}\}$ then $\pi\left(C(X)\right) = \{\pi(V_1)^{m_1},\dots,\pi(V_n)^{m_n}\}$, where as before, $\pi(V_i) = \{\pi(v_{i1}),\dots,\pi(v_{i\ell})\}$. Then, the facet-automorphism group becomes simply a subgroup of $S_q$, $\Gamma_f(X) = \{\pi\in S_q | \pi(M(X)) = M(X)\}$. The stabilizer group also naturally on the column multiset $C(X)$ of a complex. If $P\in S_n$, and $C(X)=\{V_1^{m_1},\dots,V_n^{m_n}\}$ then $P\left(C(X)\right) = \{V_{P(1)}^{m_1},\dots,V_{P(n)}^{m_n}\}$. The stabilizer group is then the subset $Stab(X) = \{P\in S_n|P(C(X))=C(X)\}$.
+% \begin{proof}
+% There is a group homomorphism from the automorphism  group $\Gamma(X)$ to the facet-automorphism group $\Gamma_f(X)$.  Let $B$ be the incidence matrix of the complex $X$. Define the map  $\phi: \Gamma(X)\rightarrow \Gamma_f(X)$ as follows. An element $P\in \Gamma(X)$ and an element $\Pi\in\Gamma_f(X)$ are identified by the map $\phi$ if $B = \Pi B P^T $. This map is a homomorphism since, 
+% \begin{align}
+% \phi(P_1) &= \Pi_1, \phi(P_2) = \Pi_2\implies B = \Pi_1 B P_1^T, B = \Pi_2 B P_2^T\CR
+% B&=\Pi_1 B P_1^T = \Pi_1( \Pi_2 B P_2^T) P_1^T = (\Pi_1\Pi_2)B(P_1P_2)^T\CR
+% \phi(P_1P_2) &= \Pi_1\Pi_2 = \phi(P_1)\phi(P_2)
+% \end{align}
+% The kernel of the homomorphism is the facet stabilizer group because $Ker(\phi) = \{P\in\Gamma(X)|B = BP^T\}$, which means that each row of $B$ remains unchanged under the matrix multiplication, meaning all vertices incident with a facet remain incident with the same facet. Therefore $P$ shuffles the vertices keeping them in the same facet, and so is in the facet-stabilizer group $Stab(X)$. 
+
+% Therefore, the facet stabilizer subgroup of the graph automorphism group is a normal subgroup, and the quotient group $\Gamma(G)/Stab(G)$ is isomorphic to the image of the $\phi$, which is the facet-automorphism group $\Gamma_f(X)$. 
+% \end{proof}
+
+\begin{prop}
+    The number $s_f(p,q,n)$ of facet-labeled $p-$pure complexes of order $q$ is given by 
+    \begin{align}
+        s_f(p,q,n)=\frac{q!}{n!}\sum_{X\in\mathcal{S}_v(p,q,n)}|Stab(X)|
+    \end{align}
+    Similarly, the number $s_v(p,q,n)$ of vertex-labeled $p-$pure complexes of order $q$ is given by 
+    \begin{align}
+        s_v(p,q,n)=\frac{n!}{q!}\sum_{X\in\mathcal{S}_f(p,q,n)}\frac{1}{|Stab(X)|}
+    \end{align}
+\end{prop}
+
+
+Although finding the automorphism group of graphs is an NP problem, there are efficient algorithms to find it that perform very well for most graphs. One of the most efficient and widely used algorithms is that of McKay's \cite{mckay2014practical}. Such algorithms can be used to find the automorphism group and facet-automorphism group of simplicial complexes. If the complex is a clique complex, then its automorphism group is the same as that of its underlying graph. On the other hand, if the complex is a simplicial complex that is not a clique complex, one can compute its automorphim group by first finding the automorphism group of its underlying graph, then choosing those elements of the group that induce permutations of the facets.
+
+Computing the facet-automorphism group of a complex can in principle be done by first finding the automorphism group of the complex, then finding the cosets of the facet stabilizer group. The process can be made more efficient by exploiting the following proposition. Define a {\em leaf} to be any vertex that is contained in only one facet. Let $L(X)$ be the set of leaves of the complex $X$. A {\em pruning} of a facet $\sigma\in X$ is the identification of all leafs in the facet. A pruning $\mathcal{P}(X)$ of complex a $X$ is another complex $\mathcal{P}(X)$ whose facets are the pruned facets of $X$. For example, the pruning of the complex $X=\{\{1,2,3\},\{1,4,5\}\}$ is $\mathcal{P}(X)=\{\{1,2'\},\{1,4'\}\}$, where $2'$ is the identification of the leaves $2,3$ and $4'$ that of leaves $4,5$.
+
+\begin{prop}
+If $\mathcal{P}(X)$ is a pruning of $X$, then $\mathcal{P}(X)$ and $X$ have isomorphic facet-automorphism groups. 
+\end{prop}
+\begin{proof}
+Define the {\em leaf-stabilizer group} of $X$, denoted by $\Lambda(X)$ to be the subgroup of $\Gamma(X)$ that only permutes leaves keeping them in their respective facets, i.e., $\Lambda(X) = \{P\in\Gamma(X)|P(v)=v \forall v \notin L(X) \& (v\in L(X) \& v\in F) \implies (P(v)\in L(X) \& P(v)\in F)\}$. Schematically, what we will prove is the following isomorphisms among quotient groups: $$\Gamma_f(X)\equiv \Gamma(X)/Stab(X)\sim\frac{\Gamma(X)/\Lambda(X)}{Stab(X)/\Lambda(X)}\sim \frac{\Gamma(\mathcal{P}(X))}{Stab(\mathcal{P}(X))}\equiv \Gamma_f(\mathcal{P}(X)$$ 
+
+The leaf-stabilizer group $\Lambda(X)\subset Stab(X) \subset \Gamma(X)$ is a normal subgroup of $Stab(X)$ which is in turn a normal subgroup of $\Gamma(X)$. Therefore the quotient group $Stab(X)/\Lambda(X)$ is a normal subgroup of the quotient group $\Gamma(X)/\Lambda(X)$. Define a map $h:\Gamma(X)\rightarrow \Gamma(\mathcal{P}(X))$ as follows. Let $L_i\subset F_i$ be the set of leaves in the $i$th facet. Pick a representative from each $L_i$, for example, the smallest element. Let $P\in\Gamma(X)$ have the cycle notation $(i^1_1,\dots i^1_k)\dots(i^\ell_1\dots i^\ell_j)$. For each integer $i$ in the cycle, if it is a leaf $i\in L_i$, replace it with its representative. Then remove all duplicates within a cycle, then remove all duplicate cycles. For example, for $X=\{\{1,2,3\},\{1,4,5\}\}$ and $\mathcal{P}(X)=\{\{1,2\},\{1,4\}\}$, $h((23)(45))\rightarrow (22)(44)\rightarrow (2)(4) = e$ and $\mathcal{P}(X)=\{\{1,2\},\{1,4\}\}$, $h((24)(24))\rightarrow (24)$. The result is a permutation of the vertices of $\mathcal{P}(X)$. The map is a homomorphism. The kernel of the map is$\mathrm{ker}(h) = \Lambda(X)$.  Further, the image of the restriction $h|_{Stab(X)}$ is $Stab(\mathcal{P}(X)$ with $\mathrm{ker}(h|_{Stab(X)}) = \Lambda(X)$.
+\end{proof}
+
+As a result, a more efficient approach to computing the facet-automorphism group of a complex is to compute the facet automorphism group of its pruning.
+
+\subsection{Unlabeled Complexes}
+Eqn. (\ref{eq:SnAction}) defines an action of the symmetric group on vertex-labeled complexes. 
+Let $\mathcal{S}_v(p,q,n)$ be the set of all vertex-labeled $p-$pure simplicial complexes with $q$ facets and $n$ vertices, and assume that the vertices are labeled using the set $[n]$, then the set $\mathcal{S}_u(p,q,n)$ of unlabeled $p-$pure simplicial complexes with $q$ facets and $n$ vertices is the set of orbits of $\mathcal{S}_u(p,q,n)$ under the action of the symmetric group $S_n$.
+\begin{align}
+    \mathcal{S}_u(p,q,n) = \mathrm{Orb}_{S_n}(\mathcal{S}_v(p,q,n)).
+\end{align}
+
+It is also the set of orbits of $\mathcal{S}_f(p,q,n)$ under the right action of the symmetric group $S_q$ on the set of facet-labeled complexes.
+\begin{align}
+    \mathcal{S}_u(p,q,n) = \mathrm{Orb}_{S_q}(\mathcal{S}_f(p,q,n)).
+\end{align}
+
+The size $s_u(p,n)=|\mathcal{S}_u(p,n)|$ of unlabeled $p-$pure simplicial complexes with $n$ vertices is computed using Polya's enumeration theorem and Bernside's lemma as the size of $p-$uniform hypergraphs with $n$ vertices in \cite{QIAN201466}.
+
+\section{Random Uniform Pure Complexes}
+\label{sec:randomPure}
+In this section, we study the probability space $\mathcal{Y}_{L}(p,q)$ of all $p-$pure simplicial complexes of facet order $q$ for the three different choices of labeling $L\in\{v, f, u\}$ of vertex-labeled ($v$), facet-labeled ($f$), or unlabeled ($u$). In each case, we consider the probability measure to be uniform.  We study distributions of combinatorial and topological statistics. To that end, we provide an algorithm that generates a pure complex at random from $\mathcal{Y}_v(p,q)$ with a known probability measure and use reweighting to find distributions over a uniform measure.
+
+Random simplicial complexes are studied as generalizations of Erd\H{o}s-R\'{e}nyi-Gilbert $G(n,p)$ random graph models. In \cite{linial2006homological} the model $Y_2(n,p)$ for random pure $2-$dimensional simplicial complexes over $n$ vertices was introduced where starting with the complete graph $K_n$ and the 1-skeleton, a 2-simplex $\sigma=\{i,j,k\}$ is turned on independently with probability $p$. This model is generalized to the model $Y_d(n,p)$ in \cite{meshulam2009homological} to random $d$-dimensional pure complexes by starting with the complete $(d-1)$-skeleton on the set of vertices $[n]$ and turning on each $d$-simplex independently with probability $p$. However, these models do not assign a uniform measure on all $d$-dimensional pure simplicial complexes. A model for random uniform simplicial complexes $\mathcal{M}(n)$ is discussed in \cite{markstrom2020random}. However, the complexes are not restricted to pure simplicial complexes. Furthermore, all of the models in the references above consider complexes with a fixed number of labeled vertices, and they are not restricted to pure clique complexes.
+ 
+The models we introduce here for uniform random pure simplicial complexes $\mathcal{Y}_L(p,q)$ will differ in four ways from the random complex models $Y_d(n,p)$ and $\mathcal{M}(n)$. 1. The complexes in our model are pure complexes, 2. We consider cases where the vertices or the facets can be labeled or unlabeled, 3. The number of facets, not the number of vertices, is fixed, and 4. A uniform measure on all pure simplicial complexes is considered. 
+ 
+\subsection{The algorithm}
+
+We begin with an algorithm that generates a random pure complex in $\mathcal{Y}(p,q)$ not with a uniform distribution, but with a probability for each complex with $n$ vertices that is higher by a factor of $\binom{pq}{n}$. There is a one-to-one mapping between the set of integers in $\binom{\binom{[pq]}{p}}{q}=\{1,\dots,\binom{\binom{pq}{p}}{q}\}$ and the set of $p-$pure simplicial complexes of order $q$ whose vertices are labeled in all possible ways using $pq$ labels. Such a one-to-one mapping is furnished by the combinatorial number system \cite{lehmer1964machine, kreher1999combinatorial, mccaffrey2004generating, donnot2020unranking}. In general, let $n,m$ be two integers such that $m\le n$. There are $\binom{n}{m}$ $m-$combinations of the  set $[n]$. Without loss of generality we will take the subsets to be sorted in ascending order. These subsets are mapped to integers in $\{0,1,\dots,\binom{n}{m}-1\}$. For convenience, we will work with $m$-subsets of $\{0,1,\dots,n-1\}$ ordered in the lexicographic order. Let us use the notation  $\setn{n}$ to represent this set, $\setn{n}=\{0,1,\dots,n-1\}$. %Let us denote the set of $m-$combinations of $\setn{n}$ by $\binom{\setn{n}}{m}\equiv\{\{0,1,\dots,m-1\},\dots,\{n-m,\dots,n-1\}\}$. 
+
+Here we provide versions of the ``ranking" and ``unranking" maps that go back and forth between $\binom{\setn{n}}{m}\equiv\{\{0,1,\dots,m-1\},\dots,\{n-m,\dots,n-1\}\}$ and the integers in $\setn{\binom{n}{m}}=\{0,1,\dots,\binom{n}{m}-1\}$. The map $Rank_{n,m}:\binom{\setn{n}}{m}\rightarrow \setn{\binom{n}{m}}$ is given by 
+	\begin{align}
+    \label{eq:rank}
+	    Rank_{n,m}(\{i_1,i_2,\dots,i_m\})
+	    &=\sum_{k=1}^{m}\sum_{j=1}^{i_k-k+1}\binom{n-k-j}{m-k}
+	\end{align}
+The inverse map $Unrank_{n,m}:\setn{\binom{n}{m}}\rightarrow \binom{\setn{n}}{m}$ takes a given number $\ell\in\setn{\binom{n}{m}}=\{0,1,\dots,\binom{n}{m}-1\}$ and gives the $m-$combination that corresponds to it as the set $\{i_1,i_2,\dots,i_m\}$ where the $i_k$ are found with the following algorithm. 
+
+\begin{algorithm}[H]
+\caption{\label{alg:unrank}Find the combination corresponding to a non-negative integer}
+    \begin{algorithmic}
+        \Function{Unrank}{$\ell$,$m$,$n$}
+        \State $\ell'\gets\ell$
+        \State $i_0 \gets -1$
+        \State $\Delta i \gets 0$
+        \For{$k$ from $1$ to $m$}
+        \State $\Delta i \gets \min\{j|\ell' < \sum_{a=1}^{j}\binom{n-i_{k-1}-1-a}{m-k}\}$
+        \State $i_k\gets i_{k-1}+\Delta i $
+        \State $\ell'\gets \ell'-\sum_{a=1}^{\Delta i -1}\binom{n-i_{k-1}-1-a}{m-k}$
+        
+        \EndFor    
+        \State\Return $\{i_1,i_2,\dots,i_m\}$
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+We can use this one-to-one correspondence between positive integers and combinations to generate a random pure complex. We first pick a random integer between $0$ and $\binom{\binom{pq}{p}}{q}-1$. Then we use (Alg. (\ref{alg:unrank}) to unrank that integer and get a list of $q$ integers. We again unrank each of the $q$ integers to get a list of sets corresponding to the vertex labeled facets of the complex.  
+
+ \begin{algorithm}[H]
+ \caption{\label{alg:random-pure-complex}Generates a random pure complex in $\mathcal{Y}_v(p,q)$}
+    \begin{algorithmic}[1]
+        \Function{RandomPureComplex}{$p$,$q$}
+        \State $r \gets$ \Call{RandomInteger}{$[0 , \binom{\binom{pq}{p}}{q}-1]$}
+        \State $S \gets $ \Call{Unrank}{$r$,$q$, $\binom{pq}{p}$}
+        \For{$i$ from $1$ to $q$}
+        \State$result[i] \gets$ \Call{Unrank}{$S[i]$,$p$, $pq$} 
+        \EndFor
+        \State\Return $result$
+        \EndFunction
+     \end{algorithmic}
+ \end{algorithm}
+
+This algorithm generates a vertex-labeled $p-$pure simplicial complexes of order $q$, but not with a uniform distribution. Each complex with $n$ vertices will be over-sampled with a weight equal to the number of ways to pick a set of $n$ from $pq$. To get a random vertex-labeled pure complex, we use re-weighting to flatten the distribution. Each complex with $n$ vertices will be sampled with a weight  
+\begin{align}
+\label{eq:sumsvpq}
+    w_v = \frac{1}{\binom{pq}{n}},
+\end{align}
+where $|V(k)|$ is the number of vertices of the $k$th complex.
+
+In a similar way, we can generate random facet-labeled and unlabeled pure simplicial complexes with a uniform measure by re-weighting. Take an unlabeled complex $X \in \mathcal{S}_u(p,q)$ and let $n$ be the number of vertices of $X$. Let $\Gamma(X)$  and $\Gamma_f(X)$ be the the automorphism group and facet-automorphism group of $X$. The number of ways to label the vertices of $X$ using exactly $n$ labels is given by 
+\begin{align}  \label{eq:numVertexLabelsN}
+    \frac{n!}{|\Gamma(X)|}
+\end{align}
+If instead of $n$ we use $pq$  labels, then the number of all ways to label the vertices of $X$ using $n$ labels increases by the number of ways to choose $n$ labels from $pq$ possibilities. So we get  
+\begin{align}
+    \label{eq:numVertexLabelsPQ}
+    \binom{pq}{n}\frac{n!}{|\Gamma(X)|}
+\end{align}
+On the other hand, the number of ways to label the $q$ facets of $X \in S_u(p,q)$ using exactly $q$ labels is the following. 
+\begin{align}
+\label{eq:eq:numFacetLabels}
+    \frac{q!}{|\Gamma_f(X)|}
+\end{align}
+Therefore, sampling a complex $X$ by the appropriate weight factors given below generates random pure complexes in $\mathcal{S}_v(p,q)$ $\mathcal{S}_f(p,q)$ and $\mathcal{S}_u(p,q)$ with a uniform measure. 
+% Let $n$ be the number of vertices and $q$ the number of facets of the complex $X$, then
+
+\begin{align}
+\label{eq:unweightingFactors}
+    w_v(X)&=\frac{1}{\binom{pq}{n}}\\
+    w_u(X)&=\frac{1}{\binom{pq}{n}}\frac{|\Gamma(X)|}{n!}\\
+    w_f(X)&=\frac{1}{\binom{pq}{n}}\left(\frac{q!}{n!}\right)\left(\frac{|\Gamma(X)|}{|\Gamma_f(X)|}\right),
+\end{align} 
+
+We can modify the algorithm to generate a pure complex from $\mathcal{Y}_L(p,q)$ or $\mathcal{Q}_L(p,q)$ drawn from a uniform distribution by rejecting the complex generated in Alg. (\ref{alg:random-pure-complex}) with a relative probability given by the appropriate weights $w_v, w_u, w_f$  given by Eqn. (\ref{eq:unweightingFactors})
+That leads us to the modified algorithm given in Alg. (\ref{alg:random-pure-complex-uniform}).
+
+ \begin{algorithm}
+ \caption{\label{alg:random-pure-complex-uniform}Generates a random pure complex from $\mathcal{Y}_L(p,q)$ with a uniform distribution.}
+    \begin{algorithmic}[1]
+        \Function{RandomPureComplexUniform}{$p$,$q$,$L$}\Comment{$L$ takes values in $\{v,u,f\}$.}
+        \State $r \gets$ \Call{RandomInteger}{$[0 , \binom{\binom{pq}{p}}{q}-1]$}
+        \State $S \gets $ \Call{Unrank}{$r$,$q$, $\binom{pq}{p}$}
+        \For{$i$ from $1$ to $q$}
+        \State$result[i] \gets$ \Call{Unrank}{$S[i]$,$p$, $pq$} 
+        \EndFor
+        \If{$L=v$}
+                \State $w \gets \frac{1}{\binom{pq}{n}}$
+            \ElsIf{$L=u$}
+                \State $w \gets \frac{1}{\binom{pq}{n}}\frac{|\Gamma(g)|}{n!}$
+            \ElsIf{$L=f$}
+                \State $w \gets \frac{1}{\binom{pq}{n}}\frac{|\Gamma(g)|}{n!} \frac{q!}{|\Gamma(\mathcal{W}(g))}$
+            \EndIf
+
+            \State $r \gets $\Call{RandomReal}{$[0,1]$}
+            \If{$r<w$}
+                \State\Return $result$
+                \Else
+                \State\Call{RandomPureComplexUniform}{$p$,$q$,$L$}
+                \EndIf
+        \EndFunction
+     \end{algorithmic}
+ \end{algorithm}
+
+
+In Fig. (\ref{fig:simplexdistributions})  we show the distributions of $3-$pure complexes of facet order $3$ generated with Alg. (\ref{alg:random-pure-complex-uniform}). The plots are made as follows. The 12 unlabeled 3-pure simplicial complexes of order 3 shown in Fig. (\ref{fig:sampleRandomComplexes}) are numbered 1 through 12 and used as the labels on the horizontal axis. The ordering is arbitrarily fixed to be in descending order in the value of $\binom{pq}{n}(n!/|\Gamma(X)|)$. Any 3-pure complex of order 3 is isomorphic to one of the 12. After generating $N=10000$ complexes at random for each of the cases $L\in\{v,f,u\}$ we tally the generated graphs based on their isomorphism class and plot the frequency of each isomorphism class having normalized the total to 1. The histogram in yellow is plotted from the frequencies of the randomly generated complexes whereas the solid dots are the distributions calculated based on the weights in Eqns. (\ref{eq:numVertexLabelsPQ}),(\ref{eq:numVertexLabelsN}),(\ref{eq:eq:numFacetLabels}).
+
+Fig. (\ref{fig:simplexdistributions}) shows similarly constructed histograms for the 12 3-pure simplicial complexes of clique order 3.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabularx}{\textwidth}{cc}
+    \includegraphics[width=0.48\textwidth]{Images/distSXUnweighted.pdf}  &  \includegraphics[width=0.48\textwidth]{Images/distSXVertexlabeled.pdf}\\
+    {}&{}\\
+    \includegraphics[width=0.48\textwidth]{Images/distSXFacetlabeled.pdf} & \includegraphics[width=0.48\textwidth]{Images/distSXUnlabeled.pdf} 
+\end{tabularx}
+\caption{Normalized distribution of the clique complex isomorphism classes for $p=3, q=3$ generated by  Algorithm \ref{alg:random-pure-complex} (Top left) and Algorithm \ref{alg:random-pure-complex-uniform} for each of the three cases: vertex-labeled (Top right), facet-labeled (Bottom left), and unlabeled (Bottom right). The histograms are calculated by  generating $N=10000$ complexes. The dots are the calculated probabilities based on Eqns. (\ref{eq:numVertexLabelsPQ})(Top left),(\ref{eq:numVertexLabelsN})(Top right),(\ref{eq:eq:numFacetLabels}) (Bottom left).}
+\label{fig:simplexdistributions}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+While Alg. (\ref{alg:random-pure-complex-uniform}) provides a way to generate vertex-labeled, facet-labeled, or unlabeled graphs with a uniform distribution, it is extremely inefficient due to the very high rate of rejection caused by the low values of the weights. Since the distribution of graphs generated by Alg. (\ref{alg:random-pure-complex}) is known, it is much more efficient to generate random complexes using it and apply appropriate reweighting to compute expectation values and distributions of any statistics of interest. This is the approach taken in the following subsection discussing distributions of various combinatorial and topological properties of the probability space $\mathcal{Y}_L(p,q)$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabularx}{\textwidth}[t]{c|c|c|c}
+    {}&Vertex-labeled&Facet-labeled&Unlabeled\\
+    \toprule
+
+% \hhline{=|=|=|=}
+    \centering $p=2$&\includegraphics[width=0.3\textwidth]{Images/randomSXp2q10vlabeled.pdf}  &  \includegraphics[width=0.3\textwidth]{Images/randomSXp2q10flabeled.pdf}
+    &\includegraphics[width=0.3\textwidth]{Images/randomSXp2q10unlabeled.pdf}\\
+     \hline
+
+% \hhline{=|=|=|=}
+    $p=3$&\includegraphics[width=0.3\textwidth]{Images/randomSXp3q10vlabeled.pdf}  &  \includegraphics[width=0.3\textwidth]{Images/randomSXp3q10flabeled.pdf}
+    &\includegraphics[width=0.3\textwidth]{Images/randomSXp3q10unlabeled.pdf} \\
+    \hline
+% \hhline{=|=|=|=}
+    $p=4$&\includegraphics[width=0.3\textwidth]{Images/randomSXp4q10vlabeled.pdf}  &  \includegraphics[width=0.3\textwidth]{Images/randomSXp4q10flabeled.pdf}
+    &\includegraphics[width=0.3\textwidth]{Images/randomSXp4q10unlabeled.pdf}
+\end{tabularx}
+\caption{Randomly selected pure simplicial complexes with $q=10$ for purity values $p=2,3,4$. The selection is done by first generating a sample of $N=5\times10^5$ uniformly using algorithm (\ref{alg:random-pure-complex}) and then selecting one graph with weights according to Eqns. (\ref{eq:numVertexLabelsPQ}), (\ref{eq:numVertexLabelsN}), and (\ref{eq:eq:numFacetLabels}). The typical random pure facet-labeled and unlabeled complex is more connected than the typical vertex-label complex. In addition, the typical simplicial complex is more connected for higher purity values in all labeling schemes. }
+\label{fig:sampleRandomComplexes}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Sequential Generation of random pure complexes}
+
+The algorithm above is inefficient both due to the computational cost of unranking and the large fraction of complexes that are rejected to get a uniform measure. Here we use the formula Eqn. (\ref{}) and recursion Eqn. (\ref{}) to create an algorithm that generates random vertex-labeled pure complexes with a uniform measure. 
+
+Given $p$ and $q$, we first pick a random number $n$ for the number of vertices of the complex between $n_{0} = \min{\{n \in \mathbb{Z} \mid \binom{n}{p}\geq q \}}$ and $n_{max} = pq$. Each $n$ will have weight $w_n$ proportional to the number of vertex-labeled pure complexes with $n$ vertices, $w_n=s_v(p,q,n)/\sum_{n'=n_0}^{pq}s_v(p,q,n')$. After choosing $n$, we choose a random restricted weak composition $(n_1,n_2,\dots,n_q)\in C_q(n)$ of $n$ satisfying Eqn.(\ref{eq:restrictedCompositions}) using Alg. \ref{alg:weak-composition} below. The algorithm proceeds iteratively starting with $n_q$ down to $n_1$ and exploits Eqns (\ref{eq:waysToLabelFactorization}) and (\ref{eq:vertexLabeledFromWaysToLabel}). First, the probability $P(n_q=n_q^*)$ to pick the value $n_q^*$ for $n_q$ is the fraction of the total number of the number of vertex labeled complexes with $n_q=n_q^*$ to the total number of vertex labeled complexes.
+\begin{align}
+    P(n_q=n_q^*)&=\frac{\sum_{(n_1,\dots,n_{q-1})\in C_{q-1}(n-n_q^*)}W_\ell(p,q,n;n_1,\dots,n_q^*)}{\sum_{(n_1,\dots,n_q)\in C_{q}(n)}W_\ell(p,q,n;n_1,\dots,n_q)}\CR
+    &=\frac{1}{q!s_v(p,q,n)}(q-1)!s_v(p,q-1,n-n_q^*)\left[\binom{n}{n_q^*}\binom{n-n_q^*}{p-n_q^*}-\delta_{n_q^*,0}(q-1)\right]\CR
+    &=\frac{s_v(p,q-1,n-n_q^*)}{qs_v(p,q,n)}\left[\binom{n}{p}\binom{p}{n_q^*}-\delta_{n_q^*,0}(q-1)\right]
+\end{align}
+So we pick $n_{q}$ at random from the possible values $\{0,1,\dots,p\}$ with relative weights $w(n_q)$.
+\begin{align}
+    w(n_{q}) &= s_v(p,q-1,n-n_q)\left[\binom{n}{p}\binom{p}{n_q}-\delta_{n_q,0}(q-1)\right]
+\end{align}
+The remaining factors are constant over all possibilities at this stage and will not affect the relative weights. Having picked $n_q=n_q^*$, we pick a value for $n_{q-1}$ with relative weights $w(n_{q-1})$ given by. 
+\begin{align}
+    w(n_{q-1}) &= s_v(p,q-2,n-n_q^*-n_{q-1})\left[\binom{n-n_q^*}{p}\binom{p}{n_{q-1}}-\delta_{n_{q-1},0}(q-2)\right],
+\end{align}
+so and so forth. The entry $n_{q'}$ of the composition is picked from $\{0,1,\dots,p\}$ with relative weights
+\begin{align}
+    w(n_{q'}) &= s_v(p,q'-1,n_r-k)\left[\binom{n_r}{k}\binom{n_r-k}{p-k}-\delta_{n_{q'},0}(q'-1)\right],\CR
+    n_r&=n-\sum_{i=q'+1}^{q}n_i
+\end{align}
+This gives the final probability $P(n_1=p,n_2,n_3,\dots,n_q)$ to be the correct probability,
+\begin{align}
+    P(n_1,n_2,\dots,n_q)&=P(n_q)P(n_{q-1}|n_q)\dots P(n_2|n_3,\dots,n_q)\CR
+    &=\frac{W_\ell(p,q,n;n_1,n_2,\dots,n_q)}{q!s_v(p,q,n)}
+\end{align}
+
+\begin{algorithm}
+\caption{\label{alg:weak-composition} Generates a weak composition of $n$.}
+    \begin{algorithmic}[1]
+        \Function{WeakComposition}{$p$,$q$,$n$}
+        \For{$q'$ from $q$ to $2$}\Comment{Initialize $comp$ to $(0,0,\dots,0)$, $q-1$ times.}
+        \State$comp[q'] \gets$ $0$ 
+        \EndFor
+        \State $n_r \gets$ $n-p$ \Comment{Initialize $n_r$ to $n-p$.}
+        \For{$q'$ from $q$ to $2$}
+        \State$n_r \gets$ $n_r - \sum_i comp[i]$ 
+            \For{$k$ from $0$ to $p$}
+                \State $weights[k] \gets s_v(p,q'-1,n_r-k)\binom{n_r}{n_r-k}\binom{n_r-k}{p-k}$ 
+            \EndFor
+            \State $comp[q'] \gets $\Call{RandomInteger}{$[\{0,p\}, weights]$}
+
+        \EndFor
+        \State $comp \gets $\Call{Prepend($p,comp$)}{}
+        \EndFunction
+     \end{algorithmic}
+ \end{algorithm}
+
+\begin{algorithm}
+\caption{\label{alg:efficientRandomVertexLabeled} Samples a random pure vertex-labeled complex from a uniform distribution sequentially.}
+    \begin{algorithmic}[1]
+        \Function{RandomVertexLabeledComplex}{$p$,$q$}
+        \State $w[n] \gets s_v(p,q,n)$
+        \State $n \gets $\Call{RandomInteger}{$[\{n_0,pq\}, w[n]]$}\Comment{Pick $n\in \{n_0,\dots,pq\}$ with weight $w[n]$.}
+        \State $comp \gets $\Call{WeakComposition}{$p,q,n$}
+        \State $usedVertices \gets$ $\{\}$
+        \State $unusedVertices \gets$ $[n]$
+        \Comment{Initialize}
+        \For{$k$ from $1$ to $q$}
+            \State$F_k \gets$ \Call{RandomSample}{$unusedVertices,comp[k]$}$\cup$ \Call{RandomSample}{$usedVertices,p-comp[k]$}
+        \EndFor
+        
+        \Call{Return}{ $\{F_1,\dots,F_q\}$}
+        \EndFunction
+     \end{algorithmic}
+ \end{algorithm}
+
+
+This algorithm eliminates the need to reject any samples and produces random vertex-labeled pure complexes with a uniform distribution. In Fig.\ref{fig:} we generate 100K samples of random vertex-labeled complexes for $p=3, q=4$ and plot the frequency of their isomorphism class. An arbitrary order is defined on the isomorphism classes in descending order of $n!/|\Gamma(X)|$
+
+{\color{red}{\bf CONTINUE FROM HERE}}
+
+
+\subsection{Statistics on uniform random pure complexes}
+
+In this section we perform numerical investigations of the statistics of some combinatorial and topological properties of the uniform random pure simplicial complexes. We are particularly interested in seeing the effect of the choice of labeling the vertices or facets on the probability distributions. We restricted the study to purity values of $p=2,3,4,5$ and facet-order 10. A sample of vertex-labeled random pure complexes is generated using Alg. (\ref{alg:efficientRandomVertexLabeled}) and the weights in Eqn. (\ref{eq:unweightingFactors}) used to find the distribution corresponding to facet-labeled and unlabeled random pure complexes. We then plot the distributions of various combinatorial and topological properties including vertex count,  automorphism group order, facet-automorphism group order, 1- and 2-vertex connected component count, Betti numbers, and shellability.
+
+A general observation in all the statistics investigated is that the vertex-labeled pure complexes typically have more disconnected components followed by the unlabeled complexes followed by the facet-labeled complexes. Qualitatively, the reason for that can be seen by considering an unlabeled pure complex and the number of ways to label its facets and vertices. If the unlabeled complex has, for example, $k$ isolated facets, then there are $(pk)!/(p!)^k k!$ ways to label the vertices of these isolated simplices, but there is only one way to label these $k$ facets. This is reflected on all the distributions we investigate below with the values of the statistic peaking at those for connected graphs for unlabeled and facet-labeled complexes verses at values of disconnected complexes in the vertex-labeled case.
+
+\subsubsection{Number of vertices}
+The distribution of the number of vertices for a fixed values of $p,q$ has a Gaussian asymptotic form as can be derived in the limit of $q\rightarrow \infty, n\rightarrow\infty, n<q$ of Eqn.\ref{eq:}.
+\begin{align}
+    
+\end{align}
+    
+The histograms in Fig.(\ref{fig:distNumVertices}) show the distribution of the number of vertices of $\mathcal{Y}_L(p,q)$ for values of $p=2,3,4,5$ and $q=10$. As expected the vertex-labeled complexes have peaks at higher values of vertex count compared to the facet-labeled and unlabeled complexes. This is again due to the fact that there are many more ways to label the vertices of a disconnected simplicial complex than connected.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\ 
+\hhline{=|=|=}
+    $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10SXNumVertices.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10ClqXNumVertices.pdf}\\   
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10SXNumVertices.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXNumVertices.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXNumVertices.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXNumVertices.pdf}
+
+\end{tabular}
+\caption{Distribution of the number of vertices of the pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distNumVertices}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Automorphism and  Facet-automorphism Group Order}
+A particularly interesting property of the random simplicial complexes is the amount of symmetry of the typical complex. This is captured by looking at the distribution of the order of the automorphism and facet-automorphism groups of the random pure complexes. The distributions on log plots in Figs.(\ref{fig:distAutGorder}) and (\ref{fig:distFacetAutGorder}) show that the typical vertex-labeled clique complex has a very large automorphism and facet-automorphism group. But the main reason for this again comes down to the fact that the typical vertex-labeled complex is highly disconnected with  many isolated facets. Permuting the vertices of an isolated facet is an automorphism. As such the large size of these automorphism groups of the vertex-labeled complexes is not interesting. A more interesting observation is to condition these properties on the complexes being 1-vertex connected, i.e., to look at the distributions of the automorphism and facet-automorphism group sizes for connected complexes. Figs. (\ref{fig:distConnectedAutGorder}) and (\ref{fig:distConnectedFacetAutGorder}) show these distributions. The typical connected simplicial or clique complex still has large automorphism group order, but close to 1 facet-automorphism group order. The mean values of the facet-automorphism group order are $\langle|\Gamma_f|_v \rangle_{p}=\{3.45, 1.89,1.52\}$ for $p=\{2,3,4\}$ respectively for vertex-labeled random simplicial complexes, $\langle|\Gamma_f|_f \rangle_{p}=\{2.12, 1.16, 1.02\}$ for facet-labeled random simplicial complexes, and $\langle|\Gamma_f|_u \rangle_{p}=\{10.7, 1.34, 1.03\}$ for $p=\{2,3,4\}$ for unlabeled random simplicial complexes. For $p>2$ this suggests that the typical facet-labeled and unlabeled connected simplicial complex has trivial facet-automorphism group order. Therefore, the large automorphism group order of these complexes  must come from the facet-stabilizer subgroup that permutes vertices within facets. This requires the complexes to have lots of leaves.    
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabularx}{\textwidth}[t]{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\ 
+\hhline{=|=|=}
+    $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10SXAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10ClqXAutGorder.pdf}\\   
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10SXAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXAutGorder.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXAutGorder.pdf}
+
+\end{tabularx}
+\caption{Distribution of the order of the automorphism group $|\Gamma(X)|$ of the pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distAutGorder}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\ 
+\hhline{=|=|=}
+    $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10SXfacetAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10ClqXfacetAutGorder.pdf}\\   
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10SXfacetAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXfacetAutGorder.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXfacetAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXfacetAutGorder.pdf}
+
+\end{tabular}
+\caption{Distribution of the order of the facet-automorphism group $|\Gamma_f(X)|$ of the pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distFacetAutGorder}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\ 
+\hhline{=|=|=}
+    $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10connSXAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10connClqXAutGorder.pdf}\\   
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10connSXAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10connClqXAutGorder.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10connSXAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10connClqXAutGorder.pdf}
+
+\end{tabular}
+\caption{Distribution of the order of the automorphism group $|\Gamma(X)|$ of the pure connected simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distConnectedAutGorder}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\ 
+\hhline{=|=|=}
+    $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10connSXfacetAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10connClqXfacetAutGorder.pdf}\\   
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10connSXfacetAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10connClqXfacetAutGorder.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10connSXfacetAutGorder.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10connClqXfacetAutGorder.pdf}
+
+\end{tabular}
+\caption{Distribution of the order of the facet-automorphism group $|\Gamma_f(X)|$ of the pure connected simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distConnectedFacetAutGorder}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Some of the connected simplicial and clique complexes are highly symmetric as shown in Fig. \ref{fig:symmetricComplexes}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{figure}[H]
+% \centering
+% \includegraphics[width=\textwidth]{Images/cliqueFindingAlgIllustration.pdf}
+% \caption{Illustration of the algorithm for finding all clique of a graph. $\Delta^1 = E(G)=\{\{1,4\},\{1,5\},\{4,5\},\{2,6\},\{3,4\},\{3,5\},\{3,6\},\{4,5\},\{4,6\},\{5,6\}\}$, $\Delta^2=\Delta^1\cup\{\{1,4,5\},\{3,4,5\},\{3,4,6\},\{4,5,6\}\}$, $ \Delta^3=\Delta^2\cup\{\{3,4,5,6\}\}$, \Delta^4 = \Delta^3.
+% }
+% \label{fig:symmetricComplexes}
+% \end{figure}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsubsection{Vertex-connectivity}
+There are at least two ways in which we can think about connectivity in simplicial complexes. One is to think about the connectivity of the underlying graph (or the 1-skeleton) of the complex in the graph-theoretic sense of connectivity. A graph is connected if there exists a path connecting every pair of vertices. A connected graph is said to be $k$-connected if there exists no set of $k-1$ vertices whose removal will render the graph disconnected. In this section we will look at the distribution of of the number of 1- and 2-vertex connected components of the random pure complexes. 
+
+In general, the effect of labeling the vertices is that the average vertex-labeled complex tends to have more components than if it were facet-labeled or unlabeled. Fig.(\ref{fig:distNum1Vcomponents}) shows the distribution of the number of 1-vertex connected components. It is also interesting to see how big the largest connected component is. Fig.(\ref{fig:distRatioOfLargestCompVcountVsXVcount}) shows the distribution of the ratio of the number of vertices in the largest connected 1-vertex connected component verses the total number of vertices in the complex. For facet-labeled or unlabeled random complexes there is one connected component that holds nearly all the vertices. This is reflected by the sharp peak at ratio value of 1.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\ 
+\hhline{=|=|=}
+    $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10SXnum1VConnectedComponents.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10ClqXnum1VConnectedComponents.pdf}\\   
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXnum1VConnectedComponents.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10SXnum1VConnectedComponents.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXnum1VConnectedComponents.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXnum1VConnectedComponents.pdf}
+
+\end{tabular}
+\caption{Distribution of the number of 1-vertex connected components of  pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distNum1Vcomponents}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\ 
+\hhline{=|=|=}
+    $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10SXnum2VConnectedComponents.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10ClqXnum2VConnectedComponents.pdf}\\   
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10SXnum2VConnectedComponents.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXnum2VConnectedComponents.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXnum2VConnectedComponents.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXnum2VConnectedComponents.pdf}
+\end{tabular}
+\caption{Distribution of the number of 2-vertex connected components of the pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distNum2Vcomponents}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\ 
+\hhline{=|=|=}
+    $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10SXratioOflargestCompVsVertexCount.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10ClqXratioOflargestCompVsVertexCount.pdf}\\   
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10SXratioOflargestCompVsVertexCount.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXratioOflargestCompVsVertexCount.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXratioOflargestCompVsVertexCount.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXratioOflargestCompVsVertexCount.pdf}
+
+\end{tabular}
+\caption{Distribution of the ratio of the number of vertices in the largest connected component to that of the total number of vertices in the complex of pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distRatioOfLargestCompVcountVsXVcount}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{$k-$path Connectivity}
+While the typical facet-labeled and unlabeled pure complex has much fewer components, for $p\ge 3$ it is interesting to investigate the manner by which the facets connect with each other. For example, does the typical 3-pure complex have its facets merge along vertices or edges? The earlier discussion about the facet-automorphsim group order of connected simplicial complexes suggests that the majority of the facets will be joined along 0-simplices. This leads to the following generalization of the connectivity of graphs for simplicial complexes. A graph is said to be connected if any two vertices are linked by a path. A path in this case is a sequence of edges, or 1-simplices joined along vertices. Let us call such a path a $1$-path and generalize the notion of a path to any $k<p$ as follows. A {\em $k$-dimensional path} or simply a {\em $k$-path} is a sequence $\sigma_0,\sigma_1,\dots,\sigma_\ell$ of $k$-simplices such that $\sigma_i\cap\sigma_{i+1}$ is a $(k-1)$-simplex and $|\sigma_i\cap\sigma_j|<k-1$ if $|j-i|\neq 1$. Then, a simplicial complex is said to be $k$-path connected if every two $k-1$ simplices in $X$ are connected by a $k$-path. In general, given a $p-$pure random complex and a fixed integer $k<p$, we may study the distribution of the number of $k$-path connected components of the complex. This can be done by constructing {\em the $k$-graph}, $G_k(\Delta)$ where the vertex set is the set of all $(k-1)$-simplices and two vertices are connected if the simplices they represent are both contained in a facet. Then, the number of 1-vertex connected components in $G_k(\Delta)$ is the number of $k$-path connected components in $X$. Fig.(\ref{fig:dist2PathConnectedComponents}) shows the distributions of $2$-path connected components for the 3 and 4-pure random complexes. Fig.(\ref{fig:dist3PathConnectedComponents}) shows the distribution of $3$-path connected components for $4$-pure random complexes. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\    
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10SXnum2PConnectedComponents.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXnum2PConnectedComponents.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXnum2PConnectedComponents.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXnum2PConnectedComponents.pdf}
+
+\end{tabular}
+\caption{Distribution of the number of $2$-path connected components of pure simplicial (left column) and clique (right column) complexes for $p=3,4$.}
+\label{fig:dist2PathConnectedComponents}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tabular}{c|c}
+    $\mathcal{Y}_L(4,10)$&$\mathcal{Q}_L(4,10)$\\ 
+\hhline{=|=}
+\includegraphics[width=0.45\textwidth]{Images/p4q10SXnum3PConnectedComponents.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXnum3PConnectedComponents.pdf}
+
+\end{tabular}
+\caption{Distribution of the number of $3$-path connected components of pure simplicial (left column) and clique (right column) complexes for $p=3,4$.}
+\label{fig:dist3PathConnectedComponents}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We see from these distributions that the typical 4-pure complex has as many $3$-path connected components as the number of facets. That means the facets are very unlikely to intersect each other at a co-dimension 1 simplex. This has implication for the question of whether or not the typical pure complex is a pseudo-manifold or whether or not it is shellable. A $p-$pure simplicial complex is a pseudo-manifold if there is only one $(p-1)$-path connected component. Also, $p-$pure simplicial complex of facet-order $q$ is shellable if there exists an ordering $F_1,\dots,F_q$ of its facets such that the complex $B_k=\left(\bigcup_{i=1}^{k-1} F_i\right)\cap F_k$ is a $p-1$ pure complex for all $k=2,\dots,q$. Shellable complexes are homotopy equivalent to wedge sums of spheres \cite{bjorner1996shellable}. In \cite{meshulam2009homological}, it has been proven that a typical simplicial complex from $Y_d(n,p)$ is not shellable. We find that to also be the case for $\mathcal{Y}_L(p,q)$ and  $\mathcal{Q}_L(p,q)$. The reason for that is the necessary condition for shellability, that the complex be $(p-1)$-path connected is not obtained in the typical random complex. 
+
+\subsubsection{Homology}
+Another important topological property that generalizes connectivity in graphs to simplicial complexes is homology. The $k$th homology group $H_k(X,G)$ of a complex $X$ over coefficients in the Abelian group $G$ is quotient group of the $k$th cycle group $Z_k(X,G)$ with the $k$th boundary group $B_k(X,G)$. The $k$th Betti number $\beta_k$, the rank of $H_k(G,k)$, counts the number of $k$-dimensional holes. When $G$ is a field, then $H_k(X,G)$ is a vector space and $\beta_k$ is its dimension. The zeroth Betti number $\beta_0$ counts the number of 1-vertex connected components. The complex is said to be simply connected if any loop in the complex can be shrunk to a point, i.e., the first fundamental group $\pi_1(X)$ is trivial. $H_1$ is trivial in which case any loop in $X$ can be shrunk to a point. Here we investigate the distribution of the Betti numbers. %which are the rank of the homology group over the field $\mathbf{F}=\mathbb{Z}_2$. The zeroth Betti number $\beta_0$ counts the number of 1-vertex connected components. The higher Betti numbers $\beta_i, i>0$ count the number of $i$-dimensional holes. 
+
+Figs.(\ref{fig:distBetti1}) through (\ref{fig:distBetti3}) show the distributions of the Betti numbers for the models of random complexes we are studying. In all cases, for all three models, as the purity number increases the expectation value of $\beta_1$ increases. As in the previous cases, there is significant difference in the distributions for $\beta_1$ between the vertex-labeled case on one side and the facet-labeled and unlabeled cases on the other. Also, the distributions for facet-labeled and unlabeled complexes coincide with increasing purity. On the other hand, the higher Betti numbers ($\beta_2$ for purity 3 and 4, $\beta_3$ for purity 4) are all sharply peaked at 0 signifying the vanishing of the higher homology groups $H_k, k>1$. 
+
+The distribution of the Betti numbers is also the first place so far where we see qualitative difference  simplicial complexes and clique complexes. In all labeling cases the distribution of $\beta_1$ is shifted significantly towards 0 for clique complexes. This indicates that a significant portion of the contribution to $H_1$ comes from ``unfilled" simplices in $\mathcal{Y}_L$.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[H]
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\    
+\hhline{=|=|=}
+   $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10SXBetti1.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10ClqXBetti1.pdf}\\ 
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10SXBetti1.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXBetti1.pdf}\\
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXBetti1.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXBetti1.pdf}
+
+\end{tabular}
+\caption{Distribution of the first Betti number $\beta_1$ of pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distBetti1}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[H]
+\centering
+\begin{tabular}{c|c|c}
+    {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\    
+\hhline{=|=|=}
+   $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10SXBetti2.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXBetti2.pdf}\\   
+  \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXBetti2.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10SXBetti2.pdf}
+
+\end{tabular}
+\caption{Distribution of the first Betti number $\beta_2$ of pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distBetti2}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[H]
+\centering
+\begin{tabular}{c|c}
+    $\mathcal{Y}_L(4,10)$&$\mathcal{Q}_L(4,10)$\\ 
+\hhline{=|=}
+\includegraphics[width=0.45\textwidth]{Images/p4q10SXBetti3.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXBetti3.pdf}
+
+\end{tabular}
+\caption{Distribution of the first Betti number $\beta_3$ of pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+\label{fig:distBetti3}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% \subsubsection{Euler Characteristic}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{figure}
+% \centering
+% \begin{tabular}{c|c|c}
+%     {}&$\mathcal{Y}_L(p,10)$&$\mathcal{Q}_L(p,10)$\\    
+% \hhline{=|=|=}
+%    $p=2$&\includegraphics[width=0.45\textwidth]{Images/p2q10SXEulerChi.pdf}&\includegraphics[width=0.45\textwidth]{Images/p2q10ClqXEulerChi.pdf}\\ 
+% \hhline{=|=|=}
+%    $p=3$&\includegraphics[width=0.45\textwidth]{Images/p3q10SXEulerChi.pdf}&\includegraphics[width=0.45\textwidth]{Images/p3q10ClqXEulerChi.pdf}\\
+%   \hhline{=|=|=} $p=4$&\includegraphics[width=0.45\textwidth]{Images/p4q10SXEulerChi.pdf}&\includegraphics[width=0.45\textwidth]{Images/p4q10ClqXEulerChi.pdf}
+
+% \end{tabular}
+% \caption{Distribution of the Euler Characteristic of pure simplicial (left column) and clique (right column) complexes for $p=2,3,4$.}
+% \label{fig:EulerChi}
+% \end{figure}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% %\subsubsection{CM Complexes}
+
+% % \subsubsection{Collapsibility}
+% % \subsubsection{Percolation (giant connected component)}
+
+% % \subsubsection{Homotopy/Collapsibility}
+
+% % \subsubsection{Degree distribution}
+% % A related but separate concept to 
+% % \subsubsection{Fractal dimensions}
+
+% % \subsection{Effect of Labeling}
+% % \subsubsection{Sampling strategy}
+% % Generate, pick non-isomorphic, reweight according to theoretical dist.
+
+\section{Summary and Conclusion}
+\label{sec:conclusion}
+We studied the space of pure simplicial and clique complexes with a fixed number of facets and three different choices for labeling them: vertex-labeled, facet-labeled, and unlabeled. Facet-labeled complexes are the orbits of vertex-labeled complexes under the action of the automorphism group of the complex. In addition, we proved a necessary and sufficient condition for a simplicial complex to be a clique complex that depends only on the set of facets. 
+
+For fixed values of $p$ and $q$, we  defined three different probability spaces $\mathcal{Y}_L(p,q)$ for $L\in\{v,f,u\}$ denoting a choice of labeling the vertices ($v$), facets ($f$), or neither ($u$)respectively of simplicial complexes. We similarly defined three probability spaces over clique complexes $\mathcal{Q}_L(p,q)$. The probability spaces have uniform measures over all complexes in their respective spaces. The preliminary numerical investigations presented in this paper for $p=2,3,4$ and $q=10$ of various topological and combinatorial statistic indicate that the average vertex-labeled simplicial or clique complex has very different properties compared to the average facet-labeled or unlabeled complex. On the other hand for purity values $p>2$, the distribution of all the topological properties explored in this article for facet-labeled and unlabeled complexes converge, with better convergence for higher $p$. Vertex-labeled complexes are on average much more disconnected whereas the average facet-labeled or unlabeled complexes are connected, have non-trivial homology $H_1$, and trivial top homology $H_{p-1}$. This models provide complementary understanding of random pure simplicial complexes with uniform measure and fixed number of facets (as supposed to vertices). 
+
+%\pagebreak
+\section*{Acknowledgements}
+This work is supported by the National Science Foundation LEAPS-MPS grant (award number 2138323). CE is also supported by the McNair fellowship program at San Jose State University.  KB wants to thank Matthew McRaven for his contribution to the conceptualization of the sequential algorithm.
+
+\pagebreak
+\appendix
+
+% \section{Adjacency Complex Algorithm and Example}
+
+% In this appendix we provide the algorithm for computing the clique complex from the facet adjacency matrix of a pure complex and work out a non-trivial example of the reconstruction of a pure clique complex from its facet adjacency matrix. 
+
+% %\subsection{some sub-appendix}
+
+\printbibliography %Prints bibliography
+
+% \begin{thebibliography}{99}
+% %\noindent\section*{References}
+
+% %\cite{PhysRev.97.511}
+% \bibitem{PhysRev.97.511}
+% Wheeler, J. Geons. {\em Phys. Rev.}. \textbf{97}, 511-536 (1955,1), 
+% https://link.aps.org/doi/10.1103/PhysRev.97.511
+
+% %\cite{gibbons1977action}
+% \bibitem{gibbons1977action}
+% Gibbons, G. \& Hawking, S. Action integrals and partition functions in quantum gravity. {\em Physical Review D}. \textbf{15}, 2752 (1977)
+
+% %\cite{linial2006homological}
+% \bibitem{linial2006homological}
+% Linial, N. \& Meshulam, R. Homological connectivity of random 2-complexes. {\em Combinatorica}. \textbf{26}, 475-487 (2006)
+% https://doi.org/10.1007/s00493-006-0027-9
+
+% %\cite{meshulam2009homological}
+% \bibitem{meshulam2009homological}
+% Meshulam, R. \& Wallach, N. Homological connectivity of random k-dimensional complexes. {\em Random Structures \& Algorithms}. \textbf{34}, 408-417 (2009)
+% https://doi.org/10.1002/rsa.20238
+
+
+% %\cite{CHAO1982139}
+% \bibitem{CHAO1982139}
+% Chao, C. \& Novacky, G. On maximally saturated graphs. {\em Discrete Mathematics}. \textbf{41}, 139-143 (1982), https://www.sciencedirect.com/science/article/pii/0012365X8290200X
+
+% %\cite{Whitehead:1940}
+% \bibitem{Whitehead:1940}
+%  Whitehead, J. H. C. 
+%  ``On C1-Complexes." Annals of Mathematics, Second Series, 41, no. 4 (1940): 809-24.  
+%  doi:10.2307/1968861.
+
+% %\cite{bollobas2001}
+% \bibitem{bollobas2001}
+% B. Bollob\'{a}s. Random graphs, 2nd edition. Vol. 73 of Cambridge Studies in Advanced
+% Mathematics, Cambridge University Press, 2001.
+
+% %\cite{mckay2014practical}
+% \bibitem{mckay2014practical}
+% McKay, B. \& Piperno, A. Practical graph isomorphism, II. {\em Journal Of Symbolic Computation}. \textbf{60} pp. 94-112 (2014)
+
+% %\cite{markstrom2020random}
+% \bibitem{markstrom2020random}
+% Markström, K. \& Pinto, T. Random uniform and pure random simplicial complexes. {\em ArXiv Preprint ArXiv:2001.01933}. (2020)
+% https://doi:10.48550/arXiv.2001.01933
+
+% %\cite{lehmer64}
+% \bibitem{lehmer64}
+% Applied Combinatorial Mathematics, Ed. E. F. Beckenbach (1964), pp.27−30
+
+% @misc{lehmer1964machine,
+%   title={The machine tools of combinatorics, Applied Combinatorial Mathematics (E. F. Beckenbach, ed.)},
+%   author={Lehmer, DH},
+%   pages={27--30},
+%   year={1964},
+%   publisher={Wiley, New York}
+% }
+% D.H. Lehmer, Ranking of combinations, Applied Combinatorial Mathematics, Ed. E. F. Beckenbach (1964), pp 27 - 30
+
+% %\cite{pascal87}
+% \bibitem{pascal87}
+% Pascal, E., ``Sopra una formula numerica", Giornale di Matematiche 25, 45–49 (1887)
+
+% %\cite{SLOWINSKI1998264}
+% \bibitem{SLOWINSKI1998264}
+% Slowinski, J. The Number of Multiple Alignments. {\em Molecular Phylogenetics And Evolution}. \textbf{10}, 264-266 (1998), https://www.sciencedirect.com/science/article/pii/S105579039890522X
+
+% %\cite{mccaffrey04}
+% \bibitem{mccaffrey04}
+% McCaffrey, J., ``Generating the mth Lexicographical Element of a Mathematical
+% Combination", Microsoft Developer Network (2004).
+
+% %\cite{donnot20}
+% \bibitem{donnot20}
+% Cyann Donnot, Antoine Genitrini, Yassine Herida, ``Unranking Combinations Lexicographically: an
+% efficient new strategy compared with others", 2020. ffhal-02462764f\\
+% https://hal.sorbonne-universite.fr/hal-02462764
+
+% %\cite{kreher99}
+% \bibitem{kreher99}
+% Kreher, D.L., Stinson, D.R., ``Combinatorial Algorithms: generation, enumeration,
+% and search", CRC Press (1999)
+
+% %\cite{BENDER1997124}
+% \bibitem{BENDER1997124}
+% Bender, E., Rodney Canfield, E. \& McKay, B. The Asymptotic Number of Labeled Graphs withnVertices,qEdges, and No Isolated Vertices. {\em Journal Of Combinatorial Theory, Series A}. \textbf{80}, 124-150 (1997), https://www.sciencedirect.com/science/article/pii/S0097316597927989
+
+
+% \end{thebibliography}
+        
+% %\bibliography{GraphDimensionsbib}
+% %\bibliographystyle{plain}
+
+
+
+\end{document}
+
+\section{The Facet Algebra}
+
+Let $\Delta^0(G)=\{\{v\}|v\in V(G)\}$, then we get the sequence $$\Delta^0(G)\rightarrow\Delta^1(G)\rightarrow\dots\rightarrow\Delta^d(G)=\Delta(G)$$ of simplicial complexes related by injective simplicial map given by the identity set map, $id:\Delta^i(G)\rightarrow\Delta^{i+1}(G), v\mapsto v$. The link $\Delta^i(G)\rightarrow\Delta^{i+1}(G)$ is given by the algorithm described above. 
+
+The algorithm {\em find cliques} described in section (XX) can be formally viewed as:
+
+\begin{enumerate}
+    \item composition of a family of maps $\mathcal{C}_k:\mathcal{T}\rightarrow \mathcal{T}$ on the set of finite simplicial complexes which takes a complex $K$ as an input and applies the algorithm $\mathcal{F}$ on its $k-$faces to return a complex $K' = K\cup\mathcal{F}(K)$. For example, let $K=\{\{1\},\{2\},\{3\},\{1,2\},\{1,3\},\{2,3\}\}$, then $\mathcal{C}_1(K) = K\cup\{\{1,2,3\}\}= \{\{1\},\{2\},\{3\},\{1,2\},\{1,3\},\{2,3\},\{1,2,3\}\}$. 
+
+The maps $\mathcal{C}_k$ have the following properties.
+\begin{enumerate}
+    \item $\mathcal{C}_0(K)=K\;\; \forall K\in\mathcal{T}$.
+    \item $\mathcal{C}_k(K) = K\;\;\forall k\ge\mathrm{dim}(K)$. 
+    \item $\mathcal{C}^2_k = \mathcal{C}_k \;\;\forall k$.
+\end{enumerate}
+The algorithm that finds all cliques of a graph is the composition $\mathcal{C}_d\circ\dots\circ\mathcal{C}_3\circ\mathcal{C}_1(\Delta^1(X(G))) = cl(\Delta^1(X(G))$, where $d = \mathrm{dim}(K)-1$.
+
+    \item A chain map $\mathcal{C}_k:\Delta^k(G)\rightarrow\Delta^{k+1}(G)$
+\end{enumerate}

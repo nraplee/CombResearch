@@ -1,0 +1,86 @@
+projectRoot         = C:\CombResearch
+dataDir             = C:\CombResearch\data
+figuresDir          = C:\CombResearch\figures
+----- loading samples -----
+  loading p2q10_n500000_samples.csv
+  loading p3q10_n500000_samples.csv
+  loading p4q10_n500000_samples.csv
+----- ESS sanity check -----
+  p=2  ESS_vertex=500000 / 500000 (100.000%)
+         ESS_facet =244 / 500000 (0.049%)
+         ESS_unlab =369 / 500000 (0.074%)
+  p=3  ESS_vertex=500000 / 500000 (100.000%)
+         ESS_facet =21 / 500000 (0.004%)
+         ESS_unlab =26 / 500000 (0.005%)
+  *** WARNING: ESS below 100 — bar heights unreliable for p=3 ***
+  p=4  ESS_vertex=500000 / 500000 (100.000%)
+         ESS_facet =4 / 500000 (0.001%)
+         ESS_unlab =4 / 500000 (0.001%)
+  *** WARNING: ESS below 100 — bar heights unreliable for p=4 ***
+----- rendering figures -----
+building fig03_numVertices ...
+  panel: p2q10SXNumVertices_n500k.pdf
+  panel: p3q10SXNumVertices_n500k.pdf
+  panel: p4q10SXNumVertices_n500k.pdf
+  stacked: fig03_numVertices.pdf / .png
+building fig04_autOrder ...
+  panel: p2q10SXAutGorder_n500k.pdf
+  panel: p3q10SXAutGorder_n500k.pdf
+  panel: p4q10SXAutGorder_n500k.pdf
+  stacked: fig04_autOrder.pdf / .png
+building fig05_autFOrder ...
+  panel: p2q10SXfacetAutGorder_n500k.pdf
+  panel: p3q10SXfacetAutGorder_n500k.pdf
+  panel: p4q10SXfacetAutGorder_n500k.pdf
+  stacked: fig05_autFOrder.pdf / .png
+building fig06_autConnected ...
+  panel: p2q10connSXAutGorder_n500k.pdf
+  panel: p3q10connSXAutGorder_n500k.pdf
+  panel: p4q10connSXAutGorder_n500k.pdf
+  stacked: fig06_autConnected.pdf / .png
+building fig07_autFConnected ...
+  panel: p2q10connSXfacetAutGorder_n500k.pdf
+  panel: p3q10connSXfacetAutGorder_n500k.pdf
+  panel: p4q10connSXfacetAutGorder_n500k.pdf
+  stacked: fig07_autFConnected.pdf / .png
+building fig08_num1VConnComps ...
+  panel: p2q10SXnum1VConnectedComponents_n500k.pdf
+  panel: p3q10SXnum1VConnectedComponents_n500k.pdf
+  panel: p4q10SXnum1VConnectedComponents_n500k.pdf
+  stacked: fig08_num1VConnComps.pdf / .png
+building fig09_num2VConnComps ...
+  panel: p2q10SXnum2VConnectedComponents_n500k.pdf
+  panel: p3q10SXnum2VConnectedComponents_n500k.pdf
+  panel: p4q10SXnum2VConnectedComponents_n500k.pdf
+  stacked: fig09_num2VConnComps.pdf / .png
+building fig10_largestCompRatio ...
+  panel: p2q10SXratioOflargestCompVsVertexCount_n500k.pdf
+  panel: p3q10SXratioOflargestCompVsVertexCount_n500k.pdf
+  panel: p4q10SXratioOflargestCompVsVertexCount_n500k.pdf
+  stacked: fig10_largestCompRatio.pdf / .png
+building fig11_num2PathConnComps ...
+  panel: p3q10SXnum2PConnectedComponents_n500k.pdf
+  panel: p4q10SXnum2PConnectedComponents_n500k.pdf
+  stacked: fig11_num2PathConnComps.pdf / .png
+building fig12_num3PathConnComps ...
+  panel: p4q10SXnum3PConnectedComponents_n500k.pdf
+  stacked: fig12_num3PathConnComps.pdf / .png
+building fig13_Betti1 ...
+  panel: p2q10SXBetti1_n500k.pdf
+  panel: p3q10SXBetti1_n500k.pdf
+  panel: p4q10SXBetti1_n500k.pdf
+  stacked: fig13_Betti1.pdf / .png
+building fig14_Betti2 ...
+  panel: p3q10SXBetti2_n500k.pdf
+  panel: p4q10SXBetti2_n500k.pdf
+  stacked: fig14_Betti2.pdf / .png
+building fig15_Betti3 ...
+  panel: p4q10SXBetti3_n500k.pdf
+  stacked: fig15_Betti3.pdf / .png
+----- combined PDF -----
+wrote combined_all_figures_n500k.pdf
+-----------------------------------------
+wrote 33 individual manuscript panels
+wrote 13 stacked preview pairs (.pdf + .png)
+wrote 1 combined multi-page PDF
+done.

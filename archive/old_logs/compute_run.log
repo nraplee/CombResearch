@@ -1,0 +1,25 @@
+sampleSize = 10000
+outputDir  = C:\CombResearch\
+-----------------------------------------
+p = 2, q = 10, N = 10000
+  sampling     : 64.3865671 s
+  stats        : 93.2206839 s
+  ESS unlabeled: 27 / 10000 (NumberForm[0.2681839575837953, {4, 1}]%)
+  ESS facet    : 13 / 10000 (NumberForm[0.1266119914571882, {4, 1}]%)
+  exported     : p2q10_n10000_samples.csv
+-----------------------------------------
+p = 3, q = 10, N = 10000
+  sampling     : 132.2093048 s
+  stats        : 99.2889031 s
+  ESS unlabeled: 7 / 10000 (NumberForm[0.06982579840333047, {4, 1}]%)
+  ESS facet    : 9 / 10000 (NumberForm[0.09335565807748758, {4, 1}]%)
+  exported     : p3q10_n10000_samples.csv
+-----------------------------------------
+p = 4, q = 10, N = 10000
+  sampling     : 283.8896341 s
+  stats        : 118.9894472 s
+  ESS unlabeled: 12 / 10000 (NumberForm[0.12131207754268397, {4, 1}]%)
+  ESS facet    : 11 / 10000 (NumberForm[0.11164954298763619, {4, 1}]%)
+  exported     : p4q10_n10000_samples.csv
+-----------------------------------------
+Done.
