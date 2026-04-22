@@ -42,7 +42,7 @@ Production pipeline (Figures 3-15):
 
 1. **Compute** — `wolframscript -file src/pure_simplicial_compute.wl` (default N=10000) or `src/pure_simplicial_compute_overnight.wl` (N=500000). Writes `data/p{2,3,4}q10_n{N}_samples.csv`. Resumable via per-chunk atomic checkpointing — restarting after a crash skips finished chunks.
 2. **Render** — `wolframscript -file src/render_all_figures.wl`. Reads the N=500k CSVs from `data/`, writes per-panel PDFs to `figures/manuscript_panels/`, stacked previews to `figures/stacked_previews/`, and a combined PDF to `figures/`.
-3. **Parallel compute** — `powershell -File src/run_parallel.ps1` launches three `wolframscript` processes (one per p) with each using ParallelMap on the stats step.
+3. **Parallel compute** — `powershell -ExecutionPolicy Bypass -File src/run_parallel.ps1` launches three `wolframscript` processes (one per p) with each using ParallelMap on the stats step. Override N via `$env:N` before invocation (e.g. `$env:N = 100000; powershell ...`); the PS script forwards it to the wrappers through the `COMB_N` environment variable. Smoke-tested at N=2000 (3 processes × 8 subkernels, wall-clock ≈ max(p=4) ≈ 120s including kernel-launch overhead).
 
 Reference notebooks (Figure 2 baseline, do not edit):
 
@@ -117,3 +117,5 @@ Key functions provided by the package:
 Producing 13 figures, each a 3×1 column (one panel per p ∈ {2,3,4}) — pure simplicial complexes only, **not** clique complexes. Statistics: numV, |Γ(X)|, |Γ_F(X)|, those two filtered to connected complexes, num1V/num2V components, largest-component ratio, 2- and 3-path components, Betti₁/₂/₃.
 
 **Status:** N=500000 sample CSVs in `data/` (overnight run complete). Per `docs/PIPELINE.md`, the importance-sampling reweighting hack collapses at q=10 — figures render but bar heights for facet/unlabeled at p=3,4 are unreliable (ESS in single digits to low double digits). Awaiting professor consultation on whether to (a) push N up by ~100x for p=4, (b) accept variance and publish, or (c) adopt a different sampler.
+
+See `docs/NEXT.md` for the current handoff note (short-lived; delete once the sampler question is resolved).

@@ -7,6 +7,10 @@
 #   powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
 # Optional: pass a sample size override (default 500000) as $env:N
 #   $env:N = 100000; powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
+#
+# Sample size is passed to Wolfram via the COMB_N environment variable
+# (inherited by child processes). Each wrapper (run_p{2,3,4}.wl) reads
+# COMB_N via `Environment["COMB_N"]` and falls back to 500000 if unset.
 
 $ErrorActionPreference = "Stop"
 $root    = Split-Path -Parent $PSScriptRoot   # parent of src/
@@ -16,7 +20,8 @@ if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-N
 
 # Sample size: env var N overrides default
 $N = if ($env:N) { [int]$env:N } else { 500000 }
-Write-Host "Launching parallel runs with sampleSize = $N"
+$env:COMB_N = "$N"
+Write-Host "Launching parallel runs with sampleSize = $N (via COMB_N)"
 Write-Host "Logs: $logsDir\compute_p{2,3,4}.log"
 
 $jobs = @()
@@ -25,14 +30,9 @@ foreach ($p in 2, 3, 4) {
   $logFile = Join-Path $logsDir ("compute_p{0}.log" -f $p)
   $errFile = Join-Path $logsDir ("compute_p{0}.err" -f $p)
 
-  # Inject sampleSizeOverride before Get'ing the wrapper. The wrapper sets
-  # pListOverride and useParallelOverride internally and then loads the main
-  # script, so the only thing left to inject is N.
-  $code = "sampleSizeOverride = $N; Get[`"$($wrapper -replace '\\','\\\\')`"]"
-
   Write-Host "  starting p = $p"
   $jobs += Start-Process wolframscript `
-    -ArgumentList @("-code", $code) `
+    -ArgumentList @("-file", $wrapper) `
     -RedirectStandardOutput $logFile `
     -RedirectStandardError  $errFile `
     -PassThru -NoNewWindow

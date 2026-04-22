@@ -180,10 +180,22 @@ The script reads several optional override variables at startup. Set them before
 |---|---|---|
 | `sampleSizeOverride` | `10000` | Total samples per `p`. |
 | `chunkSizeOverride` | `25000` | Samples per chunk. |
-| `pListOverride` | (planned) `{2, 3, 4}` | Restrict which `p` values to compute. |
-| `useParallelOverride` | (planned) `False` | If `True`, parallelize `statsFor` via `ParallelMap` after launching subkernels. |
+| `pListOverride` | `{2, 3, 4}` | Restrict which `p` values to compute. |
+| `useParallelOverride` | `False` | If `True`, parallelize `statsFor` via `ParallelMap` after launching subkernels. |
 
-The two `(planned)` rows are not yet implemented but are part of the approved Phase B work in the `lexical-leaping-book.md` plan file.
+### Parallel driver (`run_parallel.ps1`)
+
+Launches three `wolframscript` processes (one per `p`), each running its per-p wrapper (`run_p{2,3,4}.wl`) with `useParallelOverride = True` so the stats step uses `ParallelMap` across local subkernels. Sample size is passed through the `COMB_N` environment variable (the wrappers read it via `Environment["COMB_N"]`, falling back to 500000 if unset).
+
+```powershell
+# Default N=500000
+powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
+
+# Override N
+$env:N = 100000; powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
+```
+
+Smoke-test timing (N=2000, 8 local kernels each, three processes concurrent): p=2 ≈ 24s, p=3 ≈ 44s, p=4 ≈ 69s; wall-clock ≈ max(p=4) + kernel-launch overhead ≈ 120s. Sum would be ≈ 137s — the small gap is dominated by per-process subkernel startup, not Wolfram evaluation.
 
 ---
 

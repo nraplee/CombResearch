@@ -1,0 +1,17 @@
+sampleSize  = 2000
+pList       = {3}
+outputDir   = C:\CombResearch\data
+useParallel = True
+launching parallel kernels ...
+  8 kernels active
+-----------------------------------------
+p = 3, q = 10, N = 2000, chunkSize = 25000, numChunks = 1
+  chunk 1/1 (n=2000)
+    sampling : 39.7695641 s
+    stats    : 4.2742264 s
+    wrote chunk file
+  consolidated 2000 rows → p3q10_n2000_samples.csv
+  ESS unlabeled: 5 / 2000 (0.23%)
+  ESS facet    : 4 / 2000 (0.19%)
+-----------------------------------------
+Done.
