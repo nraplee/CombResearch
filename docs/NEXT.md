@@ -1,17 +1,18 @@
 # Next session — handoff
 
-> Written 2026-04-22 at end of session. Short-lived; delete or overwrite when the open question below resolves.
+> Written 2026-04-22 end of day. Short-lived; overwrite when the open question below resolves.
 
 ## Where things stand
 
-- **N=500k CSVs** in `data/p{2,3,4}q10_n500000_samples.csv` — overnight run is the source of truth for Figures 3-15.
-- **Figures** rendered and living in `figures/manuscript_panels/` (33 per-panel PDFs), `figures/stacked_previews/` (13 stacked PDFs/PNGs), and `figures/combined_all_figures_n500k.pdf`.
-- **Phase B (parallel compute) verified** today at N=2000 via `src/run_parallel.ps1`. Three `wolframscript` processes ran concurrently, each with 8 local subkernels on the stats step; wall-clock ≈ 120s ≈ max(p=4) + kernel-launch overhead, not the 137s serial sum. Smoke-test artifacts (`data/p{2,3,4}q10_n2000_samples.csv`, ~500 KB total) can be deleted at will — they're gitignored.
-- **Scripts touched today:** `src/run_parallel.ps1` (switched from `-code` injection to env-var + `-file`; the old approach silently dropped everything after the first space due to `Start-Process -ArgumentList` not auto-quoting), `src/run_p{2,3,4}.wl` (now read `COMB_N` env var instead of expecting `sampleSizeOverride` to be pre-set). Docs updated: `CLAUDE.md`, `docs/PIPELINE.md`.
+- **N=500k CSVs** in `data/p{2,3,4}q10_n500000_samples.csv` — still the source of truth for Figures 3-15.
+- **Figures** live in `figures/manuscript_panels/` (33 per-panel PDFs), `figures/stacked_previews/` (13 stacked PDFs/PNGs), and `figures/combined_all_figures_n500k.pdf`.
+- **Parallel compute** verified earlier today at N=2000 via `src/run_parallel.ps1`.
+- **Notebook port (today):** `src/pure_simplicial_figures.nb` was a stale mirror (grouped BarChart, sampleSize=10000). Rewrote as a proper notebook port of `src/render_all_figures.wl` — translucent overlaid `Histogram` (opacity 0.55) matching paper Figure 2 style, one figure per cell for inline review, ESS sanity-check cell. Commit `a74a9e7` on `origin/main`.
+- **Email to Dr. Betre drafted** — pending send. Draft in `C:/Users/darth/.claude/plans/check-claude-md-email-response-wobbly-turing.md`. Sends `src/pure_simplicial_figures.nb` as attachment, offers to add him as a collaborator on the private GitHub repo, and explains the ESS-vs-integrated-area distinction (he pushed back thinking reweighting shouldn't change total area — correct about area, but ESS is a variance diagnostic not an area check).
 
-## The open question (blocks everything else)
+## The open question (blocks figure work)
 
-q=10 reweighting ESS collapses — numbers from the N=500k run:
+q=10 reweighting ESS collapses — unchanged from the N=500k run:
 
 | p | ESS unlabeled | ESS facet |
 |---|---|---|
@@ -19,13 +20,23 @@ q=10 reweighting ESS collapses — numbers from the N=500k run:
 | 3 |  26 / 500000 |  21 / 500000 |
 | 4 |   4 / 500000 |   4 / 500000 |
 
-For p=4, one sample carries ~44% of the unlabeled mass. Bar heights at p=3,4 are qualitatively the right shape but quantitatively unreliable. `docs/PIPELINE.md` § "Why the hack breaks at q=10" has the full diagnosis.
+At p=4 one sample carries ~44% of the unlabeled mass. `docs/PIPELINE.md` § "Why the hack breaks at q=10" has the full diagnosis.
 
-**Pending Dr. Betre (elijah.raplee@sjsu.edu is the user; Dr. Betre is the advisor):**
+**Pending Dr. Betre** (waiting on his reply; email draft ready to send):
 
-a. Push N by ~100× — probably infeasible. ESS is ~flat in N for heavy-tailed IS; 50M samples probably doesn't buy enough, and even the parallel pipeline would take days.
+a. Push N by ~100× — likely infeasible; ESS is ~flat in N for heavy-tailed IS.
 b. Accept variance and publish with prominent ESS caveats; possibly restrict figures to p=2.
-c. Swap sampler. Options the professor might propose: direct facet-labeled sampling with Metropolis, unlabeled random-canonical-form generation, etc. Design open.
+c. Swap sampler (Metropolis on facet-labeled, unlabeled random-canonical-form, etc.). Design open.
+
+## To do next session
+
+1. **Send the email** (draft in the plan file linked above).
+2. When Dr. Betre replies with his GitHub username, add him as a collaborator at https://github.com/nraplee/CombResearch/settings/access (Read access).
+3. Once he weighs in on the ESS/sampler question, act on his guidance.
+4. **Housekeeping:** the orphan worktree dir at `C:\CombResearch\.claude\worktrees\flamboyant-chatelet-e0be90\` is unregistered from git but its files are still on disk (couldn't delete during session because shell was cwd'd inside it). Clean up with:
+   ```powershell
+   Remove-Item -Recurse -Force "C:\CombResearch\.claude\worktrees\flamboyant-chatelet-e0be90"
+   ```
 
 ## What can proceed without Dr. Betre
 
