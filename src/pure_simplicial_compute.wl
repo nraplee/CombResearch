@@ -12,6 +12,17 @@ pList = If[ValueQ[pListOverride], pListOverride, {2, 3, 4}];
 sampleSize = If[ValueQ[sampleSizeOverride], sampleSizeOverride, 10000];
 randomSeed = 123456;
 
+(* Optional run tag. When set (e.g. via env var COMB_RUNTAG="batch2") the output
+   filename becomes p{p}q10_n{N}_{runTag}_samples.csv AND the per-chunk seed is
+   offset by a deterministic hash of the tag. This lets a fresh run produce
+   fully independent samples that can be concatenated with a prior run via
+   concat_samples.wl, without colliding on seeds. *)
+runTag = If[ValueQ[runTagOverride], runTagOverride,
+  With[{envTag = Environment["COMB_RUNTAG"]},
+    If[StringQ[envTag] && StringLength[envTag] > 0, envTag, ""]]];
+runSeedOffset = If[runTag === "", 0,
+  Mod[Hash[runTag, "MD5"], 10^7]];
+
 (* Output goes to projectRoot/data/  (projectRoot = parent of src/). *)
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
@@ -23,10 +34,12 @@ If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
    Activate by setting useParallelOverride = True before Get'ing this script. *)
 useParallel = If[ValueQ[useParallelOverride], useParallelOverride, False];
 
-Print["sampleSize  = ", sampleSize];
-Print["pList       = ", pList];
-Print["outputDir   = ", outputDir];
-Print["useParallel = ", useParallel];
+Print["sampleSize    = ", sampleSize];
+Print["pList         = ", pList];
+Print["outputDir     = ", outputDir];
+Print["useParallel   = ", useParallel];
+Print["runTag        = ", If[runTag === "", "(none)", runTag]];
+Print["runSeedOffset = ", runSeedOffset];
 
 (* ===== 1-skeleton ===== *)
 oneSkeleton[c_List] := Module[{verts, edges},
@@ -125,7 +138,8 @@ chunkSizeFor[k_] := If[k == numChunks,
   sampleSize - (numChunks - 1) * chunkSize, chunkSize];
 
 baseStem[p_] := "p" <> ToString[p] <> "q" <> ToString[qVal] <>
-  "_n" <> ToString[sampleSize];
+  "_n" <> ToString[sampleSize] <>
+  If[runTag === "", "", "_" <> runTag];
 chunkFile[p_, k_] := FileNameJoin[{outputDir,
   baseStem[p] <> "_chunk_" <> ToString[k] <> ".csv"}];
 finalFile[p_] := FileNameJoin[{outputDir,
@@ -181,7 +195,7 @@ Do[
         Module[{thisN = chunkSizeFor[k], tSample, tStats, sample,
                 statsRows, numVs, auts, autFs, wV, wU, wF, rows},
           Print["  chunk ", k, "/", numChunks, " (n=", thisN, ")"];
-          SeedRandom[randomSeed + p*1000 + k];
+          SeedRandom[randomSeed + runSeedOffset + p*1000 + k];
 
           tSample = First @ AbsoluteTiming[
             sample = RandomVertexLabeledPureSimplicialComplex[{p, qVal}, thisN]];

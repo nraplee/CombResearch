@@ -21,14 +21,23 @@ if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-N
 # Sample size: env var N overrides default
 $N = if ($env:N) { [int]$env:N } else { 500000 }
 $env:COMB_N = "$N"
-Write-Host "Launching parallel runs with sampleSize = $N (via COMB_N)"
+
+# Optional run tag. When set, each p's output file is named
+# p{p}q10_n{N}_{RUNTAG}_samples.csv AND per-chunk seeds are offset by a hash of
+# the tag — a fresh tag produces fully independent samples safe to concatenate
+# with a prior run via src/concat_samples.wl.
+if ($env:RUNTAG) { $env:COMB_RUNTAG = $env:RUNTAG }
+$tagLabel = if ($env:COMB_RUNTAG) { $env:COMB_RUNTAG } else { "(none)" }
+
+Write-Host "Launching parallel runs with sampleSize = $N, runTag = $tagLabel"
 Write-Host "Logs: $logsDir\compute_p{2,3,4}.log"
 
+$logSuffix = if ($env:COMB_RUNTAG) { "_" + $env:COMB_RUNTAG } else { "" }
 $jobs = @()
 foreach ($p in 2, 3, 4) {
   $wrapper = Join-Path $srcDir ("run_p{0}.wl" -f $p)
-  $logFile = Join-Path $logsDir ("compute_p{0}.log" -f $p)
-  $errFile = Join-Path $logsDir ("compute_p{0}.err" -f $p)
+  $logFile = Join-Path $logsDir ("compute_p{0}{1}.log" -f $p, $logSuffix)
+  $errFile = Join-Path $logsDir ("compute_p{0}{1}.err" -f $p, $logSuffix)
 
   Write-Host "  starting p = $p"
   $jobs += Start-Process wolframscript `
