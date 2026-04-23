@@ -8,7 +8,7 @@
 - **Figures** live in `figures/manuscript_panels/` (33 per-panel PDFs), `figures/stacked_previews/` (13 stacked PDFs/PNGs), and `figures/combined_all_figures_n500k.pdf`.
 - **Parallel compute** verified earlier today at N=2000 via `src/run_parallel.ps1`.
 - **Notebook port (today):** `src/pure_simplicial_figures.nb` was a stale mirror (grouped BarChart, sampleSize=10000). Rewrote as a proper notebook port of `src/render_all_figures.wl` — translucent overlaid `Histogram` (opacity 0.55) matching paper Figure 2 style, one figure per cell for inline review, ESS sanity-check cell. Commit `a74a9e7` on `origin/main`.
-- **Email to Dr. Betre drafted** — pending send. Draft in `C:/Users/darth/.claude/plans/check-claude-md-email-response-wobbly-turing.md`. Sends `src/pure_simplicial_figures.nb` as attachment, offers to add him as a collaborator on the private GitHub repo, and explains the ESS-vs-integrated-area distinction (he pushed back thinking reweighting shouldn't change total area — correct about area, but ESS is a variance diagnostic not an area check).
+- **Email to Dr. Betre sent** — attached the rewritten `src/pure_simplicial_figures.nb`, offered to add him as a GitHub collaborator, and explained the ESS-vs-integrated-area distinction (he'd pushed back thinking reweighting shouldn't change total area — correct about area, but ESS is a variance diagnostic, not an area check). Draft archived at `C:/Users/darth/.claude/plans/check-claude-md-email-response-wobbly-turing.md` if needed. Awaiting his reply.
 
 ## The open question (blocks figure work)
 
@@ -22,7 +22,7 @@ q=10 reweighting ESS collapses — unchanged from the N=500k run:
 
 At p=4 one sample carries ~44% of the unlabeled mass. `docs/PIPELINE.md` § "Why the hack breaks at q=10" has the full diagnosis.
 
-**Pending Dr. Betre** (waiting on his reply; email draft ready to send):
+**Pending Dr. Betre** (email sent; waiting on his reply):
 
 a. Push N by ~100× — likely infeasible; ESS is ~flat in N for heavy-tailed IS.
 b. Accept variance and publish with prominent ESS caveats; possibly restrict figures to p=2.
@@ -30,13 +30,9 @@ c. Swap sampler (Metropolis on facet-labeled, unlabeled random-canonical-form, e
 
 ## To do next session
 
-1. **Send the email** (draft in the plan file linked above).
-2. When Dr. Betre replies with his GitHub username, add him as a collaborator at https://github.com/nraplee/CombResearch/settings/access (Read access).
-3. Once he weighs in on the ESS/sampler question, act on his guidance.
-4. **Housekeeping:** the orphan worktree dir at `C:\CombResearch\.claude\worktrees\flamboyant-chatelet-e0be90\` is unregistered from git but its files are still on disk (couldn't delete during session because shell was cwd'd inside it). Clean up with:
-   ```powershell
-   Remove-Item -Recurse -Force "C:\CombResearch\.claude\worktrees\flamboyant-chatelet-e0be90"
-   ```
+1. When Dr. Betre replies with his GitHub username, add him as a collaborator at https://github.com/nraplee/CombResearch/settings/access (Read access).
+2. Once he weighs in on the ESS/sampler question, act on his guidance.
+3. If there's bandwidth while waiting, work on manuscript LaTeX sections that don't depend on final figures (see "What can proceed" below).
 
 ## What can proceed without Dr. Betre
 
