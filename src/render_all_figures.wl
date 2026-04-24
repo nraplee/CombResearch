@@ -55,12 +55,20 @@ frameOpts = Sequence[
 panelLabel[p_] := Style["p = " <> ToString[p],
   FontFamily -> "Times", FontSize -> 12, Bold];
 
-(* ===== load ===== *)
-loadSamples[p_] := Module[{path, raw, headers, body, cols, parseCol},
-  path = FileNameJoin[{dataDir,
-    "p" <> ToString[p] <> "q" <> ToString[qVal] <>
-    "_n" <> ToString[sampleSize] <> "_samples.csv"}];
-  Print["  loading ", FileNameTake[path]];
+(* ===== load =====
+   Prefers WXF (fast, typed). Falls back to legacy CSV if no WXF present. *)
+stem[p_] := "p" <> ToString[p] <> "q" <> ToString[qVal] <>
+  "_n" <> ToString[sampleSize];
+
+loadSamplesWXF[path_] := Module[{a, headers, rows},
+  Print["  loading ", FileNameTake[path], " (WXF)"];
+  a = Import[path, "WXF"];
+  headers = Lookup[a, "headers"];
+  rows    = Lookup[a, "rows"];
+  AssociationThread[headers -> Transpose[rows]]];
+
+loadSamplesCSV[path_] := Module[{raw, headers, body, cols, parseCol},
+  Print["  loading ", FileNameTake[path], " (CSV, legacy)"];
   raw = Import[path, "CSV"];
   headers = First[raw];
   body = Rest[raw];
@@ -70,6 +78,14 @@ loadSamples[p_] := Module[{path, raw, headers, body, cols, parseCol},
     StringQ[x], N[ToExpression[x]],
     True, x]], col];
   AssociationThread[headers -> (parseCol /@ cols)]];
+
+loadSamples[p_] := Module[{wxf, csv},
+  wxf = FileNameJoin[{dataDir, stem[p] <> "_stats.wxf"}];
+  csv = FileNameJoin[{dataDir, stem[p] <> "_samples.csv"}];
+  Which[
+    FileExistsQ[wxf], loadSamplesWXF[wxf],
+    FileExistsQ[csv], loadSamplesCSV[csv],
+    True, Print["  ERROR: no data for p=", p]; Abort[]]];
 
 Print["----- loading samples -----"];
 sampleData = AssociationMap[loadSamples, pList];

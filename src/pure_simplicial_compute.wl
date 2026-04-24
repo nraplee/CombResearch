@@ -1,7 +1,9 @@
 (* pure_simplicial_compute.wl
    Sampling + per-sample statistics pipeline for Figures 3-16.
    Pure simplicial complexes, q = 10, p in {2, 3, 4}.
-   Produces one CSV per p with all statistics and reweighting weights.
+   Produces two WXF files per p per session:
+     {stem}_stats.wxf     — Association with headers, rows, metadata (stats + weights)
+     {stem}_complexes.wxf — Association with the raw sampled complexes
    Independent of histograms_handoff_v2.nb / histograms_paper_figures.nb. *)
 
 Needs["ECGrav`"];
@@ -121,10 +123,11 @@ If[useParallel,
     boundaryMatrix, bettiNumber, statsFor, qVal]];
 
 (* ===== Main loop with checkpointing =====
-   Per-p chunk files `..._chunk_k.csv` are written atomically (tmp + rename).
-   On restart we skip any p whose final CSV exists, and for a partially-done p
-   we resume at the first missing chunk. At most one chunk (~17 min on p=4)
-   is redone after a crash. *)
+   Per-p chunk files `..._chunk_k_{stats,complexes}.wxf` are written atomically
+   (tmp + rename). A chunk is "done" only when BOTH files are present.
+   On restart we skip any p whose final stats WXF exists; for a partially-done
+   p we resume at the first chunk missing either file. At most one chunk
+   (~11 min on p=4) is redone after a crash. *)
 
 headers = {"numV", "aut", "autF", "connected",
   "num1VConnComps", "num2VConnComps", "largestCompRatio",
@@ -140,31 +143,66 @@ chunkSizeFor[k_] := If[k == numChunks,
 baseStem[p_] := "p" <> ToString[p] <> "q" <> ToString[qVal] <>
   "_n" <> ToString[sampleSize] <>
   If[runTag === "", "", "_" <> runTag];
-chunkFile[p_, k_] := FileNameJoin[{outputDir,
-  baseStem[p] <> "_chunk_" <> ToString[k] <> ".csv"}];
-finalFile[p_] := FileNameJoin[{outputDir,
-  baseStem[p] <> "_samples.csv"}];
+chunkStatsFile[p_, k_] := FileNameJoin[{outputDir,
+  baseStem[p] <> "_chunk_" <> ToString[k] <> "_stats.wxf"}];
+chunkComplexesFile[p_, k_] := FileNameJoin[{outputDir,
+  baseStem[p] <> "_chunk_" <> ToString[k] <> "_complexes.wxf"}];
+finalStatsFile[p_] := FileNameJoin[{outputDir,
+  baseStem[p] <> "_stats.wxf"}];
+finalComplexesFile[p_] := FileNameJoin[{outputDir,
+  baseStem[p] <> "_complexes.wxf"}];
 
 firstMissingChunk[p_] := Module[{k = 1},
-  While[k <= numChunks && FileExistsQ[chunkFile[p, k]], k++]; k];
+  While[k <= numChunks &&
+      FileExistsQ[chunkStatsFile[p, k]] &&
+      FileExistsQ[chunkComplexesFile[p, k]],
+    k++]; k];
 
-exportChunkAtomic[p_, k_, rowsWithHeader_] := Module[{tmp, final, res},
-  tmp = chunkFile[p, k] <> ".tmp";
-  final = chunkFile[p, k];
-  Export[tmp, rowsWithHeader, "CSV"];
+exportWxfAtomic[path_String, expr_] := Module[{tmp, res},
+  tmp = path <> ".tmp";
+  If[FileExistsQ[tmp], DeleteFile[tmp]];
+  Export[tmp, expr, "WXF"];
   If[! FileExistsQ[tmp],
     Print["    ERROR: tmp file not written: ", tmp]; Abort[]];
-  If[FileExistsQ[final], DeleteFile[final]];
-  res = RenameFile[tmp, final];
+  If[FileExistsQ[path], DeleteFile[path]];
+  res = RenameFile[tmp, path];
   If[res === $Failed,
-    Print["    ERROR: rename failed ", tmp, " -> ", final]; Abort[]]];
+    Print["    ERROR: rename failed ", tmp, " -> ", path]; Abort[]]];
 
-consolidateChunks[p_] := Module[{allRows, final},
-  allRows = Flatten[Rest /@ (Import[chunkFile[p, #], "CSV"] & /@ Range[numChunks]), 1];
-  final = finalFile[p];
-  Export[final, Prepend[allRows, headers]];
-  Do[DeleteFile[chunkFile[p, k]], {k, numChunks}];
-  Print["  consolidated ", Length[allRows], " rows → ", FileNameTake[final]];
+(* Per-chunk files hold bare lists — the Association wrapper with metadata is
+   only applied at the final consolidated file. *)
+exportChunkAtomic[p_, k_, sample_, rows_] := (
+  exportWxfAtomic[chunkStatsFile[p, k], rows];
+  exportWxfAtomic[chunkComplexesFile[p, k], sample]);
+
+consolidateChunks[p_] := Module[{allRows, allComplexes, n, statsAssoc, complexesAssoc},
+  allRows      = Join @@ (Import[chunkStatsFile[p, #], "WXF"] & /@ Range[numChunks]);
+  allComplexes = Join @@ (Import[chunkComplexesFile[p, #], "WXF"] & /@ Range[numChunks]);
+  n = Length[allRows];
+  statsAssoc = <|
+    "headers"   -> headers,
+    "rows"      -> allRows,
+    "p"         -> p,
+    "q"         -> qVal,
+    "n"         -> n,
+    "runTag"    -> runTag,
+    "createdAt" -> DateString[]|>;
+  complexesAssoc = <|
+    "complexes" -> allComplexes,
+    "p"         -> p,
+    "q"         -> qVal,
+    "n"         -> n,
+    "runTag"    -> runTag,
+    "createdAt" -> DateString[]|>;
+  exportWxfAtomic[finalStatsFile[p],     statsAssoc];
+  exportWxfAtomic[finalComplexesFile[p], complexesAssoc];
+  Do[
+    DeleteFile[chunkStatsFile[p, k]];
+    DeleteFile[chunkComplexesFile[p, k]],
+    {k, numChunks}];
+  Print["  consolidated ", n, " rows → ",
+    FileNameTake[finalStatsFile[p]], " + ",
+    FileNameTake[finalComplexesFile[p]]];
   allRows];
 
 reportESS[p_, allRows_] := Module[{numVs, auts, autFs, wU, wF, essU, essF},
@@ -185,8 +223,8 @@ Do[
   Print["p = ", p, ", q = ", qVal, ", N = ", sampleSize,
     ", chunkSize = ", chunkSize, ", numChunks = ", numChunks];
 
-  If[FileExistsQ[finalFile[p]],
-    Print["  final CSV already present — skipping p = ", p],
+  If[FileExistsQ[finalStatsFile[p]] && FileExistsQ[finalComplexesFile[p]],
+    Print["  final WXF files already present — skipping p = ", p],
    (* else *)
     Module[{startK = firstMissingChunk[p]},
       If[startK > 1, Print["  resuming at chunk ", startK, " / ", numChunks]];
@@ -215,8 +253,8 @@ Do[
           wF = MapThread[#1 * qVal! / (#2 * #3!) &, {auts, autFs, numVs}];
           rows = MapThread[Join[#1, {#2, #3, #4}] &, {statsRows, wV, wU, wF}];
 
-          exportChunkAtomic[p, k, Prepend[rows, headers]];
-          Print["    wrote chunk file"]],
+          exportChunkAtomic[p, k, sample, rows];
+          Print["    wrote chunk files"]],
         {k, startK, numChunks}];
 
       reportESS[p, consolidateChunks[p]]]],

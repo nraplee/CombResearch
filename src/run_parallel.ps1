@@ -33,8 +33,17 @@ Write-Host "Launching parallel runs with sampleSize = $N, runTag = $tagLabel"
 Write-Host "Logs: $logsDir\compute_p{2,3,4}.log"
 
 $logSuffix = if ($env:COMB_RUNTAG) { "_" + $env:COMB_RUNTAG } else { "" }
+
+# Which p values to launch. Default is {3, 4} (p=2 dropped — ESS at q=10 is
+# healthy enough there that additional samples aren't needed, and freeing
+# those 8 subkernels lets p=3 and p=4 run at full thread allocation on
+# 8C/16T hardware). Override via $env:COMB_PLIST = "2,3,4" or "4" etc.
+$plistSpec = if ($env:COMB_PLIST) { $env:COMB_PLIST } else { "3,4" }
+$pList = @($plistSpec.Split(",") | ForEach-Object { [int]$_.Trim() })
+Write-Host "  pList = $($pList -join ', ')"
+
 $jobs = @()
-foreach ($p in 2, 3, 4) {
+foreach ($p in $pList) {
   $wrapper = Join-Path $srcDir ("run_p{0}.wl" -f $p)
   $logFile = Join-Path $logsDir ("compute_p{0}{1}.log" -f $p, $logSuffix)
   $errFile = Join-Path $logsDir ("compute_p{0}{1}.err" -f $p, $logSuffix)
@@ -47,9 +56,9 @@ foreach ($p in 2, 3, 4) {
     -PassThru -NoNewWindow
 }
 
-Write-Host "Waiting for all three processes ..."
+Write-Host "Waiting for $($jobs.Count) processes ..."
 $jobs | Wait-Process
-Write-Host "All three processes finished."
+Write-Host "All processes finished."
 foreach ($j in $jobs) {
   Write-Host ("  PID {0}: ExitCode {1}" -f $j.Id, $j.ExitCode)
 }
