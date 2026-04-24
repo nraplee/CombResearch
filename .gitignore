@@ -3,6 +3,9 @@ data/*.csv
 data/*_chunk_*.csv
 data/*.tmp
 archive/superseded_data/*.csv
+data/*.wxf
+data/*_chunk_*.wxf
+archive/superseded_data/*.wxf
 
 # --- Compute checkpoint artifacts ---
 *.tmp

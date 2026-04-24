@@ -1,0 +1,11 @@
+sampleSize    = 10000000
+pList         = {4}
+outputDir     = C:\CombResearch\data
+useParallel   = True
+runTag        = batch3
+runSeedOffset = 6102964
+launching parallel kernels ...
+  8 kernels active
+-----------------------------------------
+p = 4, q = 10, N = 10000000, chunkSize = 25000, numChunks = 400
+  chunk 1/400 (n=25000)
