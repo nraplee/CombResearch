@@ -21,14 +21,32 @@ if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-N
 # Sample size: env var N overrides default
 $N = if ($env:N) { [int]$env:N } else { 500000 }
 $env:COMB_N = "$N"
-Write-Host "Launching parallel runs with sampleSize = $N (via COMB_N)"
+
+# Optional run tag. When set, each p's output file is named
+# p{p}q10_n{N}_{RUNTAG}_samples.csv AND per-chunk seeds are offset by a hash of
+# the tag — a fresh tag produces fully independent samples safe to concatenate
+# with a prior run via src/concat_samples.wl.
+if ($env:RUNTAG) { $env:COMB_RUNTAG = $env:RUNTAG }
+$tagLabel = if ($env:COMB_RUNTAG) { $env:COMB_RUNTAG } else { "(none)" }
+
+Write-Host "Launching parallel runs with sampleSize = $N, runTag = $tagLabel"
 Write-Host "Logs: $logsDir\compute_p{2,3,4}.log"
 
+$logSuffix = if ($env:COMB_RUNTAG) { "_" + $env:COMB_RUNTAG } else { "" }
+
+# Which p values to launch. Default is {3, 4} (p=2 dropped — ESS at q=10 is
+# healthy enough there that additional samples aren't needed, and freeing
+# those 8 subkernels lets p=3 and p=4 run at full thread allocation on
+# 8C/16T hardware). Override via $env:COMB_PLIST = "2,3,4" or "4" etc.
+$plistSpec = if ($env:COMB_PLIST) { $env:COMB_PLIST } else { "3,4" }
+$pList = @($plistSpec.Split(",") | ForEach-Object { [int]$_.Trim() })
+Write-Host "  pList = $($pList -join ', ')"
+
 $jobs = @()
-foreach ($p in 2, 3, 4) {
+foreach ($p in $pList) {
   $wrapper = Join-Path $srcDir ("run_p{0}.wl" -f $p)
-  $logFile = Join-Path $logsDir ("compute_p{0}.log" -f $p)
-  $errFile = Join-Path $logsDir ("compute_p{0}.err" -f $p)
+  $logFile = Join-Path $logsDir ("compute_p{0}{1}.log" -f $p, $logSuffix)
+  $errFile = Join-Path $logsDir ("compute_p{0}{1}.err" -f $p, $logSuffix)
 
   Write-Host "  starting p = $p"
   $jobs += Start-Process wolframscript `
@@ -38,9 +56,9 @@ foreach ($p in 2, 3, 4) {
     -PassThru -NoNewWindow
 }
 
-Write-Host "Waiting for all three processes ..."
+Write-Host "Waiting for $($jobs.Count) processes ..."
 $jobs | Wait-Process
-Write-Host "All three processes finished."
+Write-Host "All processes finished."
 foreach ($j in $jobs) {
   Write-Host ("  PID {0}: ExitCode {1}" -f $j.Id, $j.ExitCode)
 }
