@@ -68,29 +68,28 @@ essOfWeights[ws_] := Module[{w = parseWeight /@ ws, s1, s2},
   If[s2 == 0, 0, N[s1^2 / s2]]];
 
 mergeForP[p_] := Module[{statsFiles, complexFiles, statsAssocs, allRows,
-    allComplexes, n, wU, wF, essU, essF, mergedStats, mergedComplexes},
+    allComplexes, n, wU, wF, essU, essF, mergedStats, mergedComplexes,
+    missingCx, hasAllComplexes},
   Print["--- p = ", p, " ---"];
   statsFiles = statsInputsForP[p];
   If[statsFiles === {},
     Print["  no inputs for p=", p, "; skipping"]; Return[Null]];
-  complexFiles = complexesSibling /@ statsFiles;
-  Scan[
-    If[!FileExistsQ[#],
-      Print["  ERROR: missing complexes sibling: ", #]; Abort[]] &,
-    complexFiles];
+  complexFiles    = complexesSibling /@ statsFiles;
+  missingCx       = Select[complexFiles, ! FileExistsQ[#] &];
+  hasAllComplexes = (missingCx === {});
+  If[!hasAllComplexes,
+    Print["  WARNING: ", Length[missingCx], " of ",
+      Length[complexFiles], " complexes siblings missing — merging stats only"];
+    Do[Print["    missing: ", FileNameTake[m]], {m, missingCx}]];
 
   Print["  inputs:"];
   Do[Print["    ", FileNameTake[f], "  (",
     ToString[FileByteCount[f]], " bytes)"], {f, statsFiles}];
 
-  statsAssocs  = loadStats /@ statsFiles;
-  allRows      = Join @@ Lookup[statsAssocs, "rows"];
-  allComplexes = Join @@ (Lookup[Import[#, "WXF"], "complexes"] & /@ complexFiles);
+  statsAssocs = loadStats /@ statsFiles;
+  allRows     = Join @@ Lookup[statsAssocs, "rows"];
   n = Length[allRows];
   Print["  merged rows: ", n];
-  If[Length[allComplexes] != n,
-    Print["  ERROR: complex count ", Length[allComplexes],
-      " != stats rows ", n]; Abort[]];
 
   mergedStats = <|
     "headers"   -> expectedHeaders,
@@ -101,18 +100,26 @@ mergeForP[p_] := Module[{statsFiles, complexFiles, statsAssocs, allRows,
     "runTag"    -> "merged",
     "sourceFiles" -> (FileNameTake /@ statsFiles),
     "createdAt" -> DateString[]|>;
-  mergedComplexes = <|
-    "complexes"   -> allComplexes,
-    "p"           -> p,
-    "q"           -> qVal,
-    "n"           -> n,
-    "runTag"      -> "merged",
-    "sourceFiles" -> (FileNameTake /@ complexFiles),
-    "createdAt"   -> DateString[]|>;
-  Export[mergedStatsPath[p],     mergedStats,     "WXF"];
-  Export[mergedComplexesPath[p], mergedComplexes, "WXF"];
-  Print["  wrote ", FileNameTake[mergedStatsPath[p]], " + ",
-    FileNameTake[mergedComplexesPath[p]]];
+  Export[mergedStatsPath[p], mergedStats, "WXF"];
+  Print["  wrote ", FileNameTake[mergedStatsPath[p]]];
+
+  If[hasAllComplexes,
+    allComplexes = Join @@ (Lookup[Import[#, "WXF"], "complexes"] & /@ complexFiles);
+    If[Length[allComplexes] != n,
+      Print["  ERROR: complex count ", Length[allComplexes],
+        " != stats rows ", n]; Abort[]];
+    mergedComplexes = <|
+      "complexes"   -> allComplexes,
+      "p"           -> p,
+      "q"           -> qVal,
+      "n"           -> n,
+      "runTag"      -> "merged",
+      "sourceFiles" -> (FileNameTake /@ complexFiles),
+      "createdAt"   -> DateString[]|>;
+    Export[mergedComplexesPath[p], mergedComplexes, "WXF"];
+    Print["  wrote ", FileNameTake[mergedComplexesPath[p]]],
+    Print["  skipped ", FileNameTake[mergedComplexesPath[p]],
+      " (some inputs lack complexes)"]];
 
   wU = allRows[[All, 14]];
   wF = allRows[[All, 15]];

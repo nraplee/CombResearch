@@ -9,3 +9,1607 @@ launching parallel kernels ...
 -----------------------------------------
 p = 4, q = 10, N = 10000000, chunkSize = 25000, numChunks = 400
   chunk 1/400 (n=25000)
+    sampling : 813.794054 s
+    stats    : 54.3396953 s
+    wrote chunk files
+  chunk 2/400 (n=25000)
+    sampling : 918.8655772 s
+    stats    : 58.5762447 s
+    wrote chunk files
+  chunk 3/400 (n=25000)
+    sampling : 934.391309 s
+    stats    : 53.4643573 s
+    wrote chunk files
+  chunk 4/400 (n=25000)
+    sampling : 931.212575 s
+    stats    : 53.9548587 s
+    wrote chunk files
+  chunk 5/400 (n=25000)
+    sampling : 931.4560464 s
+    stats    : 53.8561282 s
+    wrote chunk files
+  chunk 6/400 (n=25000)
+    sampling : 929.5034759 s
+    stats    : 54.2655458 s
+    wrote chunk files
+  chunk 7/400 (n=25000)
+    sampling : 937.0784517 s
+    stats    : 54.8846336 s
+    wrote chunk files
+  chunk 8/400 (n=25000)
+    sampling : 930.0065368 s
+    stats    : 54.1382268 s
+    wrote chunk files
+  chunk 9/400 (n=25000)
+    sampling : 938.3348245 s
+    stats    : 54.4005073 s
+    wrote chunk files
+  chunk 10/400 (n=25000)
+    sampling : 940.1903572 s
+    stats    : 54.1496446 s
+    wrote chunk files
+  chunk 11/400 (n=25000)
+    sampling : 945.1137562 s
+    stats    : 64.2087148 s
+    wrote chunk files
+  chunk 12/400 (n=25000)
+    sampling : 946.2415872 s
+    stats    : 54.0458011 s
+    wrote chunk files
+  chunk 13/400 (n=25000)
+    sampling : 930.6838782 s
+    stats    : 53.560448 s
+    wrote chunk files
+  chunk 14/400 (n=25000)
+    sampling : 929.5347536 s
+    stats    : 53.787743 s
+    wrote chunk files
+  chunk 15/400 (n=25000)
+    sampling : 924.5930568 s
+    stats    : 54.9845892 s
+    wrote chunk files
+  chunk 16/400 (n=25000)
+    sampling : 926.1512287 s
+    stats    : 53.6824768 s
+    wrote chunk files
+  chunk 17/400 (n=25000)
+    sampling : 930.7873015 s
+    stats    : 53.3558021 s
+    wrote chunk files
+  chunk 18/400 (n=25000)
+    sampling : 907.1698547 s
+    stats    : 59.9965049 s
+    wrote chunk files
+  chunk 19/400 (n=25000)
+    sampling : 875.6064768 s
+    stats    : 54.4735853 s
+    wrote chunk files
+  chunk 20/400 (n=25000)
+    sampling : 939.0979928 s
+    stats    : 54.3217482 s
+    wrote chunk files
+  chunk 21/400 (n=25000)
+    sampling : 935.4128223 s
+    stats    : 60.1883006 s
+    wrote chunk files
+  chunk 22/400 (n=25000)
+    sampling : 728.5977989 s
+    stats    : 56.8047473 s
+    wrote chunk files
+  chunk 23/400 (n=25000)
+    sampling : 953.9128658 s
+    stats    : 56.0946994 s
+    wrote chunk files
+  chunk 24/400 (n=25000)
+    sampling : 951.0197603 s
+    stats    : 56.1226032 s
+    wrote chunk files
+  chunk 25/400 (n=25000)
+    sampling : 951.1714362 s
+    stats    : 56.2008135 s
+    wrote chunk files
+  chunk 26/400 (n=25000)
+    sampling : 951.5764391 s
+    stats    : 55.8660911 s
+    wrote chunk files
+  chunk 27/400 (n=25000)
+    sampling : 951.376744 s
+    stats    : 55.7520421 s
+    wrote chunk files
+  chunk 28/400 (n=25000)
+    sampling : 954.7560169 s
+    stats    : 55.6119201 s
+    wrote chunk files
+  chunk 29/400 (n=25000)
+    sampling : 955.2695561 s
+    stats    : 65.0008508 s
+    wrote chunk files
+  chunk 30/400 (n=25000)
+    sampling : 953.0408569 s
+    stats    : 56.3423733 s
+    wrote chunk files
+  chunk 31/400 (n=25000)
+    sampling : 955.7536069 s
+    stats    : 55.902491 s
+    wrote chunk files
+  chunk 32/400 (n=25000)
+    sampling : 954.8598426 s
+    stats    : 56.6122407 s
+    wrote chunk files
+  chunk 33/400 (n=25000)
+    sampling : 950.1691225 s
+    stats    : 55.860529 s
+    wrote chunk files
+  chunk 34/400 (n=25000)
+    sampling : 956.1689272 s
+    stats    : 56.4283118 s
+    wrote chunk files
+  chunk 35/400 (n=25000)
+    sampling : 957.6903419 s
+    stats    : 56.3670633 s
+    wrote chunk files
+  chunk 36/400 (n=25000)
+    sampling : 951.2956938 s
+    stats    : 59.5959691 s
+    wrote chunk files
+  chunk 37/400 (n=25000)
+    sampling : 949.9427798 s
+    stats    : 55.842459 s
+    wrote chunk files
+  chunk 38/400 (n=25000)
+    sampling : 954.0130807 s
+    stats    : 56.3406572 s
+    wrote chunk files
+  chunk 39/400 (n=25000)
+    sampling : 952.6806564 s
+    stats    : 56.6563313 s
+    wrote chunk files
+  chunk 40/400 (n=25000)
+    sampling : 948.1117223 s
+    stats    : 58.24879 s
+    wrote chunk files
+  chunk 41/400 (n=25000)
+    sampling : 951.8036193 s
+    stats    : 56.1399206 s
+    wrote chunk files
+  chunk 42/400 (n=25000)
+    sampling : 953.0492199 s
+    stats    : 56.3351312 s
+    wrote chunk files
+  chunk 43/400 (n=25000)
+    sampling : 950.02001 s
+    stats    : 56.5503046 s
+    wrote chunk files
+  chunk 44/400 (n=25000)
+    sampling : 950.9840557 s
+    stats    : 56.220006 s
+    wrote chunk files
+  chunk 45/400 (n=25000)
+    sampling : 953.392836 s
+    stats    : 55.9369544 s
+    wrote chunk files
+  chunk 46/400 (n=25000)
+    sampling : 952.8015203 s
+    stats    : 56.442662 s
+    wrote chunk files
+  chunk 47/400 (n=25000)
+    sampling : 948.2474078 s
+    stats    : 64.2697781 s
+    wrote chunk files
+  chunk 48/400 (n=25000)
+    sampling : 949.2519759 s
+    stats    : 56.5136898 s
+    wrote chunk files
+  chunk 49/400 (n=25000)
+    sampling : 953.0543633 s
+    stats    : 56.2134981 s
+    wrote chunk files
+  chunk 50/400 (n=25000)
+    sampling : 952.2474887 s
+    stats    : 56.4974943 s
+    wrote chunk files
+  chunk 51/400 (n=25000)
+    sampling : 946.0404666 s
+    stats    : 56.2496381 s
+    wrote chunk files
+  chunk 52/400 (n=25000)
+    sampling : 949.4066464 s
+    stats    : 56.6439966 s
+    wrote chunk files
+  chunk 53/400 (n=25000)
+    sampling : 950.1942741 s
+    stats    : 56.5467617 s
+    wrote chunk files
+  chunk 54/400 (n=25000)
+    sampling : 947.2076502 s
+    stats    : 64.2089966 s
+    wrote chunk files
+  chunk 55/400 (n=25000)
+    sampling : 946.6857063 s
+    stats    : 56.7329421 s
+    wrote chunk files
+  chunk 56/400 (n=25000)
+    sampling : 955.4603123 s
+    stats    : 56.3467257 s
+    wrote chunk files
+  chunk 57/400 (n=25000)
+    sampling : 953.2231171 s
+    stats    : 56.7945392 s
+    wrote chunk files
+  chunk 58/400 (n=25000)
+    sampling : 950.1413476 s
+    stats    : 56.5275254 s
+    wrote chunk files
+  chunk 59/400 (n=25000)
+    sampling : 952.84028 s
+    stats    : 56.4130881 s
+    wrote chunk files
+  chunk 60/400 (n=25000)
+    sampling : 954.5613039 s
+    stats    : 56.7874637 s
+    wrote chunk files
+  chunk 61/400 (n=25000)
+    sampling : 950.2614209 s
+    stats    : 58.3885089 s
+    wrote chunk files
+  chunk 62/400 (n=25000)
+    sampling : 946.6640779 s
+    stats    : 56.173461 s
+    wrote chunk files
+  chunk 63/400 (n=25000)
+    sampling : 954.365337 s
+    stats    : 56.4268034 s
+    wrote chunk files
+  chunk 64/400 (n=25000)
+    sampling : 955.0518112 s
+    stats    : 56.5437064 s
+    wrote chunk files
+  chunk 65/400 (n=25000)
+    sampling : 950.6530691 s
+    stats    : 59.703468 s
+    wrote chunk files
+  chunk 66/400 (n=25000)
+    sampling : 951.5301007 s
+    stats    : 56.5560677 s
+    wrote chunk files
+  chunk 67/400 (n=25000)
+    sampling : 954.3333094 s
+    stats    : 56.7517841 s
+    wrote chunk files
+  chunk 68/400 (n=25000)
+    sampling : 953.3645364 s
+    stats    : 56.7053546 s
+    wrote chunk files
+  chunk 69/400 (n=25000)
+    sampling : 949.7586035 s
+    stats    : 57.0121295 s
+    wrote chunk files
+  chunk 70/400 (n=25000)
+    sampling : 956.7564546 s
+    stats    : 56.841753 s
+    wrote chunk files
+  chunk 71/400 (n=25000)
+    sampling : 958.582002 s
+    stats    : 56.4983407 s
+    wrote chunk files
+  chunk 72/400 (n=25000)
+    sampling : 952.1743851 s
+    stats    : 65.8890559 s
+    wrote chunk files
+  chunk 73/400 (n=25000)
+    sampling : 954.6658834 s
+    stats    : 56.6653438 s
+    wrote chunk files
+  chunk 74/400 (n=25000)
+    sampling : 956.7262701 s
+    stats    : 57.0834292 s
+    wrote chunk files
+  chunk 75/400 (n=25000)
+    sampling : 958.7099795 s
+    stats    : 57.2717702 s
+    wrote chunk files
+  chunk 76/400 (n=25000)
+    sampling : 948.6232613 s
+    stats    : 56.7084063 s
+    wrote chunk files
+  chunk 77/400 (n=25000)
+    sampling : 963.7084963 s
+    stats    : 56.8008644 s
+    wrote chunk files
+  chunk 78/400 (n=25000)
+    sampling : 961.7530294 s
+    stats    : 57.5944118 s
+    wrote chunk files
+  chunk 79/400 (n=25000)
+    sampling : 958.2504165 s
+    stats    : 63.3035369 s
+    wrote chunk files
+  chunk 80/400 (n=25000)
+    sampling : 957.0018298 s
+    stats    : 56.607208 s
+    wrote chunk files
+  chunk 81/400 (n=25000)
+    sampling : 960.5733644 s
+    stats    : 56.4760842 s
+    wrote chunk files
+  chunk 82/400 (n=25000)
+    sampling : 958.4365655 s
+    stats    : 56.7886485 s
+    wrote chunk files
+  chunk 83/400 (n=25000)
+    sampling : 958.383221 s
+    stats    : 58.7453377 s
+    wrote chunk files
+  chunk 84/400 (n=25000)
+    sampling : 961.3204514 s
+    stats    : 56.9581505 s
+    wrote chunk files
+  chunk 85/400 (n=25000)
+    sampling : 962.9129543 s
+    stats    : 56.8769182 s
+    wrote chunk files
+  chunk 86/400 (n=25000)
+    sampling : 958.4572737 s
+    stats    : 56.9933739 s
+    wrote chunk files
+  chunk 87/400 (n=25000)
+    sampling : 957.1516245 s
+    stats    : 56.7312372 s
+    wrote chunk files
+  chunk 88/400 (n=25000)
+    sampling : 961.0805857 s
+    stats    : 57.0087379 s
+    wrote chunk files
+  chunk 89/400 (n=25000)
+    sampling : 960.8654368 s
+    stats    : 57.5601332 s
+    wrote chunk files
+  chunk 90/400 (n=25000)
+    sampling : 956.1122791 s
+    stats    : 62.8748072 s
+    wrote chunk files
+  chunk 91/400 (n=25000)
+    sampling : 957.0050667 s
+    stats    : 56.9975737 s
+    wrote chunk files
+  chunk 92/400 (n=25000)
+    sampling : 960.1212555 s
+    stats    : 57.0705478 s
+    wrote chunk files
+  chunk 93/400 (n=25000)
+    sampling : 956.7022587 s
+    stats    : 56.9659485 s
+    wrote chunk files
+  chunk 94/400 (n=25000)
+    sampling : 954.7234277 s
+    stats    : 57.0079465 s
+    wrote chunk files
+  chunk 95/400 (n=25000)
+    sampling : 955.9849333 s
+    stats    : 57.0390503 s
+    wrote chunk files
+  chunk 96/400 (n=25000)
+    sampling : 959.7425494 s
+    stats    : 56.7583857 s
+    wrote chunk files
+  chunk 97/400 (n=25000)
+    sampling : 955.8185244 s
+    stats    : 66.3012858 s
+    wrote chunk files
+  chunk 98/400 (n=25000)
+    sampling : 956.9181069 s
+    stats    : 56.7834759 s
+    wrote chunk files
+  chunk 99/400 (n=25000)
+    sampling : 959.5865681 s
+    stats    : 56.81003 s
+    wrote chunk files
+  chunk 100/400 (n=25000)
+    sampling : 956.6830734 s
+    stats    : 56.5642762 s
+    wrote chunk files
+  chunk 101/400 (n=25000)
+    sampling : 956.6087061 s
+    stats    : 56.7203997 s
+    wrote chunk files
+  chunk 102/400 (n=25000)
+    sampling : 959.7688632 s
+    stats    : 56.794805 s
+    wrote chunk files
+  chunk 103/400 (n=25000)
+    sampling : 960.8835959 s
+    stats    : 57.1889254 s
+    wrote chunk files
+  chunk 104/400 (n=25000)
+    sampling : 957.4364792 s
+    stats    : 59.1934595 s
+    wrote chunk files
+  chunk 105/400 (n=25000)
+    sampling : 955.939775 s
+    stats    : 56.8296553 s
+    wrote chunk files
+  chunk 106/400 (n=25000)
+    sampling : 955.4193264 s
+    stats    : 56.8781587 s
+    wrote chunk files
+  chunk 107/400 (n=25000)
+    sampling : 958.7192828 s
+    stats    : 56.8453563 s
+    wrote chunk files
+  chunk 108/400 (n=25000)
+    sampling : 956.2875767 s
+    stats    : 60.3691016 s
+    wrote chunk files
+  chunk 109/400 (n=25000)
+    sampling : 956.9339672 s
+    stats    : 57.0067862 s
+    wrote chunk files
+  chunk 110/400 (n=25000)
+    sampling : 960.671444 s
+    stats    : 57.0443698 s
+    wrote chunk files
+  chunk 111/400 (n=25000)
+    sampling : 959.8073113 s
+    stats    : 57.420918 s
+    wrote chunk files
+  chunk 112/400 (n=25000)
+    sampling : 954.3491308 s
+    stats    : 57.0293929 s
+    wrote chunk files
+  chunk 113/400 (n=25000)
+    sampling : 953.8300559 s
+    stats    : 57.1672045 s
+    wrote chunk files
+  chunk 114/400 (n=25000)
+    sampling : 957.2230175 s
+    stats    : 57.5793814 s
+    wrote chunk files
+  chunk 115/400 (n=25000)
+    sampling : 958.0536575 s
+    stats    : 68.3602117 s
+    wrote chunk files
+  chunk 116/400 (n=25000)
+    sampling : 952.1046491 s
+    stats    : 57.1916218 s
+    wrote chunk files
+  chunk 117/400 (n=25000)
+    sampling : 952.9675931 s
+    stats    : 57.1059905 s
+    wrote chunk files
+  chunk 118/400 (n=25000)
+    sampling : 955.0257086 s
+    stats    : 57.4709814 s
+    wrote chunk files
+  chunk 119/400 (n=25000)
+    sampling : 947.8003788 s
+    stats    : 57.2568637 s
+    wrote chunk files
+  chunk 120/400 (n=25000)
+    sampling : 953.3175545 s
+    stats    : 57.2700612 s
+    wrote chunk files
+  chunk 121/400 (n=25000)
+    sampling : 953.748015 s
+    stats    : 57.1357136 s
+    wrote chunk files
+  chunk 122/400 (n=25000)
+    sampling : 955.0034431 s
+    stats    : 62.100699 s
+    wrote chunk files
+  chunk 123/400 (n=25000)
+    sampling : 949.4173642 s
+    stats    : 57.0747582 s
+    wrote chunk files
+  chunk 124/400 (n=25000)
+    sampling : 956.5790209 s
+    stats    : 57.3666864 s
+    wrote chunk files
+  chunk 125/400 (n=25000)
+    sampling : 954.2014375 s
+    stats    : 56.9936497 s
+    wrote chunk files
+  chunk 126/400 (n=25000)
+    sampling : 951.848535 s
+    stats    : 58.1477452 s
+    wrote chunk files
+  chunk 127/400 (n=25000)
+    sampling : 955.4000978 s
+    stats    : 57.3377517 s
+    wrote chunk files
+  chunk 128/400 (n=25000)
+    sampling : 955.6212358 s
+    stats    : 57.4017658 s
+    wrote chunk files
+  chunk 129/400 (n=25000)
+    sampling : 950.9916807 s
+    stats    : 57.1738894 s
+    wrote chunk files
+  chunk 130/400 (n=25000)
+    sampling : 949.6053348 s
+    stats    : 57.0961724 s
+    wrote chunk files
+  chunk 131/400 (n=25000)
+    sampling : 956.0179182 s
+    stats    : 57.203025 s
+    wrote chunk files
+  chunk 132/400 (n=25000)
+    sampling : 953.1333187 s
+    stats    : 57.484968 s
+    wrote chunk files
+  chunk 133/400 (n=25000)
+    sampling : 947.3437403 s
+    stats    : 66.0001145 s
+    wrote chunk files
+  chunk 134/400 (n=25000)
+    sampling : 948.8849002 s
+    stats    : 56.8703728 s
+    wrote chunk files
+  chunk 135/400 (n=25000)
+    sampling : 957.9193063 s
+    stats    : 57.0857129 s
+    wrote chunk files
+  chunk 136/400 (n=25000)
+    sampling : 955.0113598 s
+    stats    : 57.1992857 s
+    wrote chunk files
+  chunk 137/400 (n=25000)
+    sampling : 954.0209109 s
+    stats    : 56.8624943 s
+    wrote chunk files
+  chunk 138/400 (n=25000)
+    sampling : 954.7184765 s
+    stats    : 57.5327422 s
+    wrote chunk files
+  chunk 139/400 (n=25000)
+    sampling : 955.2138261 s
+    stats    : 57.585844 s
+    wrote chunk files
+  chunk 140/400 (n=25000)
+    sampling : 952.0834435 s
+    stats    : 62.1597479 s
+    wrote chunk files
+  chunk 141/400 (n=25000)
+    sampling : 951.7827787 s
+    stats    : 57.310328 s
+    wrote chunk files
+  chunk 142/400 (n=25000)
+    sampling : 955.6107705 s
+    stats    : 57.4625475 s
+    wrote chunk files
+  chunk 143/400 (n=25000)
+    sampling : 953.8804923 s
+    stats    : 57.6247439 s
+    wrote chunk files
+  chunk 144/400 (n=25000)
+    sampling : 948.6548193 s
+    stats    : 58.8071519 s
+    wrote chunk files
+  chunk 145/400 (n=25000)
+    sampling : 952.7463989 s
+    stats    : 57.1006845 s
+    wrote chunk files
+  chunk 146/400 (n=25000)
+    sampling : 948.8220553 s
+    stats    : 57.0810748 s
+    wrote chunk files
+  chunk 147/400 (n=25000)
+    sampling : 952.8409254 s
+    stats    : 57.4835886 s
+    wrote chunk files
+  chunk 148/400 (n=25000)
+    sampling : 953.8037128 s
+    stats    : 57.1652324 s
+    wrote chunk files
+  chunk 149/400 (n=25000)
+    sampling : 957.441919 s
+    stats    : 57.8634992 s
+    wrote chunk files
+  chunk 150/400 (n=25000)
+    sampling : 958.7182799 s
+    stats    : 57.3932411 s
+    wrote chunk files
+  chunk 151/400 (n=25000)
+    sampling : 953.1997004 s
+    stats    : 67.0131735 s
+    wrote chunk files
+  chunk 152/400 (n=25000)
+    sampling : 955.6013633 s
+    stats    : 57.4515506 s
+    wrote chunk files
+  chunk 153/400 (n=25000)
+    sampling : 955.1839842 s
+    stats    : 57.5921823 s
+    wrote chunk files
+  chunk 154/400 (n=25000)
+    sampling : 955.3117474 s
+    stats    : 57.7073236 s
+    wrote chunk files
+  chunk 155/400 (n=25000)
+    sampling : 953.5233635 s
+    stats    : 57.4922667 s
+    wrote chunk files
+  chunk 156/400 (n=25000)
+    sampling : 956.3911906 s
+    stats    : 57.4014085 s
+    wrote chunk files
+  chunk 157/400 (n=25000)
+    sampling : 956.8798556 s
+    stats    : 57.813865 s
+    wrote chunk files
+  chunk 158/400 (n=25000)
+    sampling : 953.8532713 s
+    stats    : 62.3323982 s
+    wrote chunk files
+  chunk 159/400 (n=25000)
+    sampling : 951.2847764 s
+    stats    : 57.5545086 s
+    wrote chunk files
+  chunk 160/400 (n=25000)
+    sampling : 954.7807265 s
+    stats    : 57.6417839 s
+    wrote chunk files
+  chunk 161/400 (n=25000)
+    sampling : 956.4960042 s
+    stats    : 57.9445774 s
+    wrote chunk files
+  chunk 162/400 (n=25000)
+    sampling : 951.5889373 s
+    stats    : 60.9680841 s
+    wrote chunk files
+  chunk 163/400 (n=25000)
+    sampling : 956.6211847 s
+    stats    : 57.3545354 s
+    wrote chunk files
+  chunk 164/400 (n=25000)
+    sampling : 954.0560769 s
+    stats    : 57.423251 s
+    wrote chunk files
+  chunk 165/400 (n=25000)
+    sampling : 957.7354886 s
+    stats    : 57.4071767 s
+    wrote chunk files
+  chunk 166/400 (n=25000)
+    sampling : 951.5392775 s
+    stats    : 57.3502015 s
+    wrote chunk files
+  chunk 167/400 (n=25000)
+    sampling : 955.6094766 s
+    stats    : 57.7984517 s
+    wrote chunk files
+  chunk 168/400 (n=25000)
+    sampling : 960.4873299 s
+    stats    : 57.9474696 s
+    wrote chunk files
+  chunk 169/400 (n=25000)
+    sampling : 952.5250609 s
+    stats    : 67.7375575 s
+    wrote chunk files
+  chunk 170/400 (n=25000)
+    sampling : 954.3162564 s
+    stats    : 57.6666747 s
+    wrote chunk files
+  chunk 171/400 (n=25000)
+    sampling : 956.889774 s
+    stats    : 57.6903936 s
+    wrote chunk files
+  chunk 172/400 (n=25000)
+    sampling : 955.9479822 s
+    stats    : 58.0465772 s
+    wrote chunk files
+  chunk 173/400 (n=25000)
+    sampling : 953.5457885 s
+    stats    : 57.5965676 s
+    wrote chunk files
+  chunk 174/400 (n=25000)
+    sampling : 957.2360539 s
+    stats    : 57.6434468 s
+    wrote chunk files
+  chunk 175/400 (n=25000)
+    sampling : 960.6578976 s
+    stats    : 59.1720029 s
+    wrote chunk files
+  chunk 176/400 (n=25000)
+    sampling : 955.4445696 s
+    stats    : 60.7080345 s
+    wrote chunk files
+  chunk 177/400 (n=25000)
+    sampling : 952.2000784 s
+    stats    : 57.4984659 s
+    wrote chunk files
+  chunk 178/400 (n=25000)
+    sampling : 956.1991667 s
+    stats    : 57.6727008 s
+    wrote chunk files
+  chunk 179/400 (n=25000)
+    sampling : 956.1091252 s
+    stats    : 57.4102927 s
+    wrote chunk files
+  chunk 180/400 (n=25000)
+    sampling : 948.0926171 s
+    stats    : 62.2975733 s
+    wrote chunk files
+  chunk 181/400 (n=25000)
+    sampling : 950.1932602 s
+    stats    : 57.4562532 s
+    wrote chunk files
+  chunk 182/400 (n=25000)
+    sampling : 956.7805086 s
+    stats    : 57.5672541 s
+    wrote chunk files
+  chunk 183/400 (n=25000)
+    sampling : 954.9940239 s
+    stats    : 57.9545179 s
+    wrote chunk files
+  chunk 184/400 (n=25000)
+    sampling : 952.007537 s
+    stats    : 57.6151651 s
+    wrote chunk files
+  chunk 185/400 (n=25000)
+    sampling : 956.6501147 s
+    stats    : 59.8655321 s
+    wrote chunk files
+  chunk 186/400 (n=25000)
+    sampling : 957.8396615 s
+    stats    : 57.6959991 s
+    wrote chunk files
+  chunk 187/400 (n=25000)
+    sampling : 950.5205233 s
+    stats    : 67.4608777 s
+    wrote chunk files
+  chunk 188/400 (n=25000)
+    sampling : 954.6996936 s
+    stats    : 57.6310124 s
+    wrote chunk files
+  chunk 189/400 (n=25000)
+    sampling : 953.9633076 s
+    stats    : 57.317333 s
+    wrote chunk files
+  chunk 190/400 (n=25000)
+    sampling : 957.1350169 s
+    stats    : 57.2270217 s
+    wrote chunk files
+  chunk 191/400 (n=25000)
+    sampling : 956.0719943 s
+    stats    : 57.4730042 s
+    wrote chunk files
+  chunk 192/400 (n=25000)
+    sampling : 959.2183408 s
+    stats    : 57.3053462 s
+    wrote chunk files
+  chunk 193/400 (n=25000)
+    sampling : 956.0881785 s
+    stats    : 57.5155719 s
+    wrote chunk files
+  chunk 194/400 (n=25000)
+    sampling : 958.1311892 s
+    stats    : 60.0963509 s
+    wrote chunk files
+  chunk 195/400 (n=25000)
+    sampling : 953.3390764 s
+    stats    : 58.1161801 s
+    wrote chunk files
+  chunk 196/400 (n=25000)
+    sampling : 956.1872028 s
+    stats    : 57.894237 s
+    wrote chunk files
+  chunk 197/400 (n=25000)
+    sampling : 955.6576757 s
+    stats    : 58.1482564 s
+    wrote chunk files
+  chunk 198/400 (n=25000)
+    sampling : 951.2310674 s
+    stats    : 62.6856137 s
+    wrote chunk files
+  chunk 199/400 (n=25000)
+    sampling : 955.953673 s
+    stats    : 57.2406216 s
+    wrote chunk files
+  chunk 200/400 (n=25000)
+    sampling : 960.2237049 s
+    stats    : 58.0513441 s
+    wrote chunk files
+  chunk 201/400 (n=25000)
+    sampling : 955.5477787 s
+    stats    : 58.1446199 s
+    wrote chunk files
+  chunk 202/400 (n=25000)
+    sampling : 953.545547 s
+    stats    : 57.7198926 s
+    wrote chunk files
+  chunk 203/400 (n=25000)
+    sampling : 955.1094159 s
+    stats    : 57.8036176 s
+    wrote chunk files
+  chunk 204/400 (n=25000)
+    sampling : 955.6493533 s
+    stats    : 57.6948751 s
+    wrote chunk files
+  chunk 205/400 (n=25000)
+    sampling : 949.8765152 s
+    stats    : 66.4762254 s
+    wrote chunk files
+  chunk 206/400 (n=25000)
+    sampling : 953.4759128 s
+    stats    : 57.8070804 s
+    wrote chunk files
+  chunk 207/400 (n=25000)
+    sampling : 957.6907144 s
+    stats    : 57.7831389 s
+    wrote chunk files
+  chunk 208/400 (n=25000)
+    sampling : 955.885188 s
+    stats    : 57.7300943 s
+    wrote chunk files
+  chunk 209/400 (n=25000)
+    sampling : 953.7608922 s
+    stats    : 57.8110054 s
+    wrote chunk files
+  chunk 210/400 (n=25000)
+    sampling : 958.0555356 s
+    stats    : 57.3041957 s
+    wrote chunk files
+  chunk 211/400 (n=25000)
+    sampling : 958.3560711 s
+    stats    : 57.7806507 s
+    wrote chunk files
+  chunk 212/400 (n=25000)
+    sampling : 959.0217335 s
+    stats    : 57.7660569 s
+    wrote chunk files
+  chunk 213/400 (n=25000)
+    sampling : 956.5463547 s
+    stats    : 57.7278149 s
+    wrote chunk files
+  chunk 214/400 (n=25000)
+    sampling : 960.5051068 s
+    stats    : 58.0751202 s
+    wrote chunk files
+  chunk 215/400 (n=25000)
+    sampling : 955.4510496 s
+    stats    : 58.0294539 s
+    wrote chunk files
+  chunk 216/400 (n=25000)
+    sampling : 955.2815229 s
+    stats    : 67.9877874 s
+    wrote chunk files
+  chunk 217/400 (n=25000)
+    sampling : 952.5211682 s
+    stats    : 57.8049035 s
+    wrote chunk files
+  chunk 218/400 (n=25000)
+    sampling : 959.3032878 s
+    stats    : 57.5852906 s
+    wrote chunk files
+  chunk 219/400 (n=25000)
+    sampling : 956.5192159 s
+    stats    : 57.5801438 s
+    wrote chunk files
+  chunk 220/400 (n=25000)
+    sampling : 954.6171904 s
+    stats    : 57.7096 s
+    wrote chunk files
+  chunk 221/400 (n=25000)
+    sampling : 957.4509352 s
+    stats    : 57.558612 s
+    wrote chunk files
+  chunk 222/400 (n=25000)
+    sampling : 955.5715685 s
+    stats    : 57.8147863 s
+    wrote chunk files
+  chunk 223/400 (n=25000)
+    sampling : 953.3429733 s
+    stats    : 62.870791 s
+    wrote chunk files
+  chunk 224/400 (n=25000)
+    sampling : 953.006153 s
+    stats    : 57.9166209 s
+    wrote chunk files
+  chunk 225/400 (n=25000)
+    sampling : 955.5154516 s
+    stats    : 57.9985567 s
+    wrote chunk files
+  chunk 226/400 (n=25000)
+    sampling : 958.4627423 s
+    stats    : 57.8579255 s
+    wrote chunk files
+  chunk 227/400 (n=25000)
+    sampling : 951.7534082 s
+    stats    : 60.6450905 s
+    wrote chunk files
+  chunk 228/400 (n=25000)
+    sampling : 955.6005061 s
+    stats    : 57.7345427 s
+    wrote chunk files
+  chunk 229/400 (n=25000)
+    sampling : 957.5412275 s
+    stats    : 59.3570602 s
+    wrote chunk files
+  chunk 230/400 (n=25000)
+    sampling : 958.6893356 s
+    stats    : 57.9844594 s
+    wrote chunk files
+  chunk 231/400 (n=25000)
+    sampling : 955.7003902 s
+    stats    : 57.8574986 s
+    wrote chunk files
+  chunk 232/400 (n=25000)
+    sampling : 956.7184257 s
+    stats    : 57.534529 s
+    wrote chunk files
+  chunk 233/400 (n=25000)
+    sampling : 902.4779557 s
+    stats    : 57.8425457 s
+    wrote chunk files
+  chunk 234/400 (n=25000)
+    sampling : 597.7760418 s
+    stats    : 57.9401389 s
+    wrote chunk files
+  chunk 235/400 (n=25000)
+    sampling : 597.4480713 s
+    stats    : 57.8535294 s
+    wrote chunk files
+  chunk 236/400 (n=25000)
+    sampling : 598.8870889 s
+    stats    : 57.6087665 s
+    wrote chunk files
+  chunk 237/400 (n=25000)
+    sampling : 599.1444896 s
+    stats    : 58.3907593 s
+    wrote chunk files
+  chunk 238/400 (n=25000)
+    sampling : 600.6078428 s
+    stats    : 57.9520539 s
+    wrote chunk files
+  chunk 239/400 (n=25000)
+    sampling : 595.6278711 s
+    stats    : 57.8167804 s
+    wrote chunk files
+  chunk 240/400 (n=25000)
+    sampling : 598.387452 s
+    stats    : 58.2603225 s
+    wrote chunk files
+  chunk 241/400 (n=25000)
+    sampling : 593.4905687 s
+    stats    : 58.0139453 s
+    wrote chunk files
+  chunk 242/400 (n=25000)
+    sampling : 596.8153484 s
+    stats    : 58.6035838 s
+    wrote chunk files
+  chunk 243/400 (n=25000)
+    sampling : 596.2791697 s
+    stats    : 58.0265507 s
+    wrote chunk files
+  chunk 244/400 (n=25000)
+    sampling : 593.779139 s
+    stats    : 57.8516528 s
+    wrote chunk files
+  chunk 245/400 (n=25000)
+    sampling : 597.9793247 s
+    stats    : 57.8512758 s
+    wrote chunk files
+  chunk 246/400 (n=25000)
+    sampling : 594.1255766 s
+    stats    : 57.6570144 s
+    wrote chunk files
+  chunk 247/400 (n=25000)
+    sampling : 595.1645656 s
+    stats    : 58.0500286 s
+    wrote chunk files
+  chunk 248/400 (n=25000)
+    sampling : 592.4780297 s
+    stats    : 57.8437888 s
+    wrote chunk files
+  chunk 249/400 (n=25000)
+    sampling : 595.9167365 s
+    stats    : 57.9302655 s
+    wrote chunk files
+  chunk 250/400 (n=25000)
+    sampling : 593.8812484 s
+    stats    : 58.4396566 s
+    wrote chunk files
+  chunk 251/400 (n=25000)
+    sampling : 596.7667596 s
+    stats    : 58.6754843 s
+    wrote chunk files
+  chunk 252/400 (n=25000)
+    sampling : 592.8091424 s
+    stats    : 57.7181948 s
+    wrote chunk files
+  chunk 253/400 (n=25000)
+    sampling : 595.8213924 s
+    stats    : 57.7863636 s
+    wrote chunk files
+  chunk 254/400 (n=25000)
+    sampling : 595.4386553 s
+    stats    : 57.7344865 s
+    wrote chunk files
+  chunk 255/400 (n=25000)
+    sampling : 594.7842296 s
+    stats    : 57.6792617 s
+    wrote chunk files
+  chunk 256/400 (n=25000)
+    sampling : 594.7396673 s
+    stats    : 58.7313212 s
+    wrote chunk files
+  chunk 257/400 (n=25000)
+    sampling : 597.6252109 s
+    stats    : 58.1116388 s
+    wrote chunk files
+  chunk 258/400 (n=25000)
+    sampling : 597.6135006 s
+    stats    : 58.705281 s
+    wrote chunk files
+  chunk 259/400 (n=25000)
+    sampling : 592.0416411 s
+    stats    : 58.025247 s
+    wrote chunk files
+  chunk 260/400 (n=25000)
+    sampling : 592.7874181 s
+    stats    : 57.9705294 s
+    wrote chunk files
+  chunk 261/400 (n=25000)
+    sampling : 593.4778387 s
+    stats    : 58.44616 s
+    wrote chunk files
+  chunk 262/400 (n=25000)
+    sampling : 599.3265936 s
+    stats    : 58.1721797 s
+    wrote chunk files
+  chunk 263/400 (n=25000)
+    sampling : 593.6360962 s
+    stats    : 58.5426898 s
+    wrote chunk files
+  chunk 264/400 (n=25000)
+    sampling : 594.1712068 s
+    stats    : 58.4746546 s
+    wrote chunk files
+  chunk 265/400 (n=25000)
+    sampling : 599.0338393 s
+    stats    : 58.1699123 s
+    wrote chunk files
+  chunk 266/400 (n=25000)
+    sampling : 592.616962 s
+    stats    : 57.6251312 s
+    wrote chunk files
+  chunk 267/400 (n=25000)
+    sampling : 593.0034427 s
+    stats    : 57.7316065 s
+    wrote chunk files
+  chunk 268/400 (n=25000)
+    sampling : 593.9066772 s
+    stats    : 57.8656498 s
+    wrote chunk files
+  chunk 269/400 (n=25000)
+    sampling : 595.7584268 s
+    stats    : 57.7889449 s
+    wrote chunk files
+  chunk 270/400 (n=25000)
+    sampling : 596.1127102 s
+    stats    : 58.3834108 s
+    wrote chunk files
+  chunk 271/400 (n=25000)
+    sampling : 593.3221004 s
+    stats    : 57.9673666 s
+    wrote chunk files
+  chunk 272/400 (n=25000)
+    sampling : 593.2421526 s
+    stats    : 57.6396033 s
+    wrote chunk files
+  chunk 273/400 (n=25000)
+    sampling : 592.2435016 s
+    stats    : 58.2951947 s
+    wrote chunk files
+  chunk 274/400 (n=25000)
+    sampling : 594.5689575 s
+    stats    : 57.9738878 s
+    wrote chunk files
+  chunk 275/400 (n=25000)
+    sampling : 594.3086684 s
+    stats    : 58.3571378 s
+    wrote chunk files
+  chunk 276/400 (n=25000)
+    sampling : 595.9757816 s
+    stats    : 58.6169484 s
+    wrote chunk files
+  chunk 277/400 (n=25000)
+    sampling : 596.3500701 s
+    stats    : 58.4049043 s
+    wrote chunk files
+  chunk 278/400 (n=25000)
+    sampling : 595.8361761 s
+    stats    : 58.2270942 s
+    wrote chunk files
+  chunk 279/400 (n=25000)
+    sampling : 591.3086397 s
+    stats    : 57.7954638 s
+    wrote chunk files
+  chunk 280/400 (n=25000)
+    sampling : 591.8820036 s
+    stats    : 57.7398044 s
+    wrote chunk files
+  chunk 281/400 (n=25000)
+    sampling : 594.536937 s
+    stats    : 58.6706886 s
+    wrote chunk files
+  chunk 282/400 (n=25000)
+    sampling : 595.1558103 s
+    stats    : 58.4228406 s
+    wrote chunk files
+  chunk 283/400 (n=25000)
+    sampling : 595.1204448 s
+    stats    : 58.2133759 s
+    wrote chunk files
+  chunk 284/400 (n=25000)
+    sampling : 595.4696475 s
+    stats    : 58.0479543 s
+    wrote chunk files
+  chunk 285/400 (n=25000)
+    sampling : 594.8520261 s
+    stats    : 58.5687345 s
+    wrote chunk files
+  chunk 286/400 (n=25000)
+    sampling : 591.5250548 s
+    stats    : 58.0717813 s
+    wrote chunk files
+  chunk 287/400 (n=25000)
+    sampling : 591.7752024 s
+    stats    : 58.0345773 s
+    wrote chunk files
+  chunk 288/400 (n=25000)
+    sampling : 591.2404453 s
+    stats    : 57.7872998 s
+    wrote chunk files
+  chunk 289/400 (n=25000)
+    sampling : 592.0288306 s
+    stats    : 58.2271803 s
+    wrote chunk files
+  chunk 290/400 (n=25000)
+    sampling : 592.0726664 s
+    stats    : 58.2667301 s
+    wrote chunk files
+  chunk 291/400 (n=25000)
+    sampling : 593.6367661 s
+    stats    : 57.7822914 s
+    wrote chunk files
+  chunk 292/400 (n=25000)
+    sampling : 594.4191543 s
+    stats    : 58.0739096 s
+    wrote chunk files
+  chunk 293/400 (n=25000)
+    sampling : 594.0444032 s
+    stats    : 57.81196 s
+    wrote chunk files
+  chunk 294/400 (n=25000)
+    sampling : 589.5739552 s
+    stats    : 58.4487186 s
+    wrote chunk files
+  chunk 295/400 (n=25000)
+    sampling : 593.7941151 s
+    stats    : 57.9319238 s
+    wrote chunk files
+  chunk 296/400 (n=25000)
+    sampling : 594.2250539 s
+    stats    : 57.8771083 s
+    wrote chunk files
+  chunk 297/400 (n=25000)
+    sampling : 594.131777 s
+    stats    : 58.1255316 s
+    wrote chunk files
+  chunk 298/400 (n=25000)
+    sampling : 589.498702 s
+    stats    : 58.4274766 s
+    wrote chunk files
+  chunk 299/400 (n=25000)
+    sampling : 595.0817099 s
+    stats    : 58.0242593 s
+    wrote chunk files
+  chunk 300/400 (n=25000)
+    sampling : 590.9941088 s
+    stats    : 58.3308984 s
+    wrote chunk files
+  chunk 301/400 (n=25000)
+    sampling : 591.0194325 s
+    stats    : 57.8645647 s
+    wrote chunk files
+  chunk 302/400 (n=25000)
+    sampling : 591.2279833 s
+    stats    : 57.9671597 s
+    wrote chunk files
+  chunk 303/400 (n=25000)
+    sampling : 590.4802727 s
+    stats    : 58.7277464 s
+    wrote chunk files
+  chunk 304/400 (n=25000)
+    sampling : 592.8892318 s
+    stats    : 58.2601467 s
+    wrote chunk files
+  chunk 305/400 (n=25000)
+    sampling : 590.1121504 s
+    stats    : 58.6976576 s
+    wrote chunk files
+  chunk 306/400 (n=25000)
+    sampling : 590.4582825 s
+    stats    : 58.0674269 s
+    wrote chunk files
+  chunk 307/400 (n=25000)
+    sampling : 592.2212861 s
+    stats    : 57.8834569 s
+    wrote chunk files
+  chunk 308/400 (n=25000)
+    sampling : 592.5304427 s
+    stats    : 58.4208714 s
+    wrote chunk files
+  chunk 309/400 (n=25000)
+    sampling : 593.8441321 s
+    stats    : 58.2695756 s
+    wrote chunk files
+  chunk 310/400 (n=25000)
+    sampling : 594.5580107 s
+    stats    : 57.882438 s
+    wrote chunk files
+  chunk 311/400 (n=25000)
+    sampling : 593.3178657 s
+    stats    : 57.8718233 s
+    wrote chunk files
+  chunk 312/400 (n=25000)
+    sampling : 594.3665642 s
+    stats    : 57.6609822 s
+    wrote chunk files
+  chunk 313/400 (n=25000)
+    sampling : 592.8020649 s
+    stats    : 58.2917813 s
+    wrote chunk files
+  chunk 314/400 (n=25000)
+    sampling : 593.7272021 s
+    stats    : 58.2062375 s
+    wrote chunk files
+  chunk 315/400 (n=25000)
+    sampling : 595.3582301 s
+    stats    : 58.6042466 s
+    wrote chunk files
+  chunk 316/400 (n=25000)
+    sampling : 594.3601054 s
+    stats    : 59.1573983 s
+    wrote chunk files
+  chunk 317/400 (n=25000)
+    sampling : 593.2661785 s
+    stats    : 58.1743678 s
+    wrote chunk files
+  chunk 318/400 (n=25000)
+    sampling : 594.5417005 s
+    stats    : 58.4925309 s
+    wrote chunk files
+  chunk 319/400 (n=25000)
+    sampling : 594.1086882 s
+    stats    : 58.7608326 s
+    wrote chunk files
+  chunk 320/400 (n=25000)
+    sampling : 595.6171353 s
+    stats    : 58.7686325 s
+    wrote chunk files
+  chunk 321/400 (n=25000)
+    sampling : 594.7498291 s
+    stats    : 58.4163985 s
+    wrote chunk files
+  chunk 322/400 (n=25000)
+    sampling : 594.7165647 s
+    stats    : 58.2031651 s
+    wrote chunk files
+  chunk 323/400 (n=25000)
+    sampling : 592.8922844 s
+    stats    : 58.3035377 s
+    wrote chunk files
+  chunk 324/400 (n=25000)
+    sampling : 595.8200919 s
+    stats    : 58.1724361 s
+    wrote chunk files
+  chunk 325/400 (n=25000)
+    sampling : 591.2422559 s
+    stats    : 58.1850648 s
+    wrote chunk files
+  chunk 326/400 (n=25000)
+    sampling : 592.6543946 s
+    stats    : 57.9661394 s
+    wrote chunk files
+  chunk 327/400 (n=25000)
+    sampling : 593.0188603 s
+    stats    : 57.9752348 s
+    wrote chunk files
+  chunk 328/400 (n=25000)
+    sampling : 591.9365931 s
+    stats    : 57.9054245 s
+    wrote chunk files
+  chunk 329/400 (n=25000)
+    sampling : 595.1079938 s
+    stats    : 58.1178026 s
+    wrote chunk files
+  chunk 330/400 (n=25000)
+    sampling : 591.7971706 s
+    stats    : 58.3315533 s
+    wrote chunk files
+  chunk 331/400 (n=25000)
+    sampling : 591.795416 s
+    stats    : 58.0239143 s
+    wrote chunk files
+  chunk 332/400 (n=25000)
+    sampling : 590.7551431 s
+    stats    : 57.7268773 s
+    wrote chunk files
+  chunk 333/400 (n=25000)
+    sampling : 593.9520234 s
+    stats    : 58.0677829 s
+    wrote chunk files
+  chunk 334/400 (n=25000)
+    sampling : 591.3036794 s
+    stats    : 57.8090006 s
+    wrote chunk files
+  chunk 335/400 (n=25000)
+    sampling : 593.1813083 s
+    stats    : 58.6665041 s
+    wrote chunk files
+  chunk 336/400 (n=25000)
+    sampling : 593.3972508 s
+    stats    : 58.5087253 s
+    wrote chunk files
+  chunk 337/400 (n=25000)
+    sampling : 594.4459831 s
+    stats    : 58.2728391 s
+    wrote chunk files
+  chunk 338/400 (n=25000)
+    sampling : 594.3973142 s
+    stats    : 58.3177685 s
+    wrote chunk files
+  chunk 339/400 (n=25000)
+    sampling : 594.506897 s
+    stats    : 58.0304841 s
+    wrote chunk files
+  chunk 340/400 (n=25000)
+    sampling : 591.5259115 s
+    stats    : 57.906026 s
+    wrote chunk files
+  chunk 341/400 (n=25000)
+    sampling : 595.5144781 s
+    stats    : 58.5510463 s
+    wrote chunk files
+  chunk 342/400 (n=25000)
+    sampling : 594.0568677 s
+    stats    : 57.7826732 s
+    wrote chunk files
+  chunk 343/400 (n=25000)
+    sampling : 596.3913453 s
+    stats    : 58.1530857 s
+    wrote chunk files
+  chunk 344/400 (n=25000)
+    sampling : 592.9304382 s
+    stats    : 57.9032679 s
+    wrote chunk files
+  chunk 345/400 (n=25000)
+    sampling : 592.873114 s
+    stats    : 58.607299 s
+    wrote chunk files
+  chunk 346/400 (n=25000)
+    sampling : 595.5508051 s
+    stats    : 58.1050679 s
+    wrote chunk files
+  chunk 347/400 (n=25000)
+    sampling : 597.5748087 s
+    stats    : 58.1374863 s
+    wrote chunk files
+  chunk 348/400 (n=25000)
+    sampling : 596.8579003 s
+    stats    : 58.7695044 s
+    wrote chunk files
+  chunk 349/400 (n=25000)
+    sampling : 594.3233265 s
+    stats    : 58.0412777 s
+    wrote chunk files
+  chunk 350/400 (n=25000)
+    sampling : 594.3154886 s
+    stats    : 58.2457681 s
+    wrote chunk files
+  chunk 351/400 (n=25000)
+    sampling : 594.5253559 s
+    stats    : 58.84111 s
+    wrote chunk files
+  chunk 352/400 (n=25000)
+    sampling : 592.5287596 s
+    stats    : 58.0143772 s
+    wrote chunk files
+  chunk 353/400 (n=25000)
+    sampling : 594.8097042 s
+    stats    : 58.9148694 s
+    wrote chunk files
+  chunk 354/400 (n=25000)
+    sampling : 593.7021168 s
+    stats    : 58.4101237 s
+    wrote chunk files
+  chunk 355/400 (n=25000)
+    sampling : 590.7598714 s
+    stats    : 58.7307756 s
+    wrote chunk files
+  chunk 356/400 (n=25000)
+    sampling : 595.848567 s
+    stats    : 58.1254144 s
+    wrote chunk files
+  chunk 357/400 (n=25000)
+    sampling : 594.1503633 s
+    stats    : 58.2968062 s
+    wrote chunk files
+  chunk 358/400 (n=25000)
+    sampling : 593.1632708 s
+    stats    : 58.4525547 s
+    wrote chunk files
+  chunk 359/400 (n=25000)
+    sampling : 591.795702 s
+    stats    : 59.7815596 s
+    wrote chunk files
+  chunk 360/400 (n=25000)
+    sampling : 588.1633944 s
+    stats    : 48.7051794 s
+    wrote chunk files
+  chunk 361/400 (n=25000)
+    sampling : 573.6819739 s
+    stats    : 44.3631539 s
+    wrote chunk files
+  chunk 362/400 (n=25000)
+    sampling : 569.9536208 s
+    stats    : 48.2576051 s
+    wrote chunk files
+  chunk 363/400 (n=25000)
+    sampling : 572.0606034 s
+    stats    : 44.2583792 s
+    wrote chunk files
+  chunk 364/400 (n=25000)
+    sampling : 564.5323634 s
+    stats    : 42.8191458 s
+    wrote chunk files
+  chunk 365/400 (n=25000)
+    sampling : 560.0320336 s
+    stats    : 42.776326 s
+    wrote chunk files
+  chunk 366/400 (n=25000)
+    sampling : 558.4068261 s
+    stats    : 43.1294191 s
+    wrote chunk files
+  chunk 367/400 (n=25000)
+    sampling : 558.0221267 s
+    stats    : 42.78492 s
+    wrote chunk files
+  chunk 368/400 (n=25000)
+    sampling : 557.4552255 s
+    stats    : 42.7149572 s
+    wrote chunk files
+  chunk 369/400 (n=25000)
+    sampling : 625.4009847 s
+    stats    : 63.8904339 s
+    wrote chunk files
+  chunk 370/400 (n=25000)
+    sampling : 641.5132292 s
+    stats    : 61.8955902 s
+    wrote chunk files
+  chunk 371/400 (n=25000)
+    sampling : 617.5189638 s
+    stats    : 57.6216389 s
+    wrote chunk files
+  chunk 372/400 (n=25000)
+    sampling : 621.7576794 s
+    stats    : 58.9293835 s
+    wrote chunk files
+  chunk 373/400 (n=25000)
+    sampling : 600.9960419 s
+    stats    : 56.1518644 s
+    wrote chunk files
+  chunk 374/400 (n=25000)
+    sampling : 606.1958543 s
+    stats    : 66.0434626 s
+    wrote chunk files
+  chunk 375/400 (n=25000)
+    sampling : 615.8989372 s
+    stats    : 57.1647992 s
+    wrote chunk files
+  chunk 376/400 (n=25000)
+    sampling : 614.4900883 s
+    stats    : 59.1342213 s
+    wrote chunk files
+  chunk 377/400 (n=25000)
+    sampling : 611.1576219 s
+    stats    : 59.4175889 s
+    wrote chunk files
+  chunk 378/400 (n=25000)
+    sampling : 619.9009022 s
+    stats    : 59.618659 s
+    wrote chunk files
+  chunk 379/400 (n=25000)
+    sampling : 607.2572689 s
+    stats    : 58.7160157 s
+    wrote chunk files
+  chunk 380/400 (n=25000)
+    sampling : 616.6475951 s
+    stats    : 57.9858701 s
+    wrote chunk files
+  chunk 381/400 (n=25000)
+    sampling : 625.4901991 s
+    stats    : 58.9149987 s
+    wrote chunk files
+  chunk 382/400 (n=25000)
+    sampling : 613.3119616 s
+    stats    : 58.7272913 s
+    wrote chunk files
+  chunk 383/400 (n=25000)
+    sampling : 623.4711728 s
+    stats    : 59.3986182 s
+    wrote chunk files
+  chunk 384/400 (n=25000)
+    sampling : 630.7742357 s
+    stats    : 60.3968852 s
+    wrote chunk files
+  chunk 385/400 (n=25000)
+    sampling : 636.801828 s
+    stats    : 59.4200604 s
+    wrote chunk files
+  chunk 386/400 (n=25000)
+    sampling : 629.6110688 s
+    stats    : 59.8437837 s
+    wrote chunk files
+  chunk 387/400 (n=25000)
+    sampling : 633.6072854 s
+    stats    : 57.1689343 s
+    wrote chunk files
+  chunk 388/400 (n=25000)
+    sampling : 631.0612993 s
+    stats    : 59.8606763 s
+    wrote chunk files
+  chunk 389/400 (n=25000)
+    sampling : 623.50576 s
+    stats    : 45.1142456 s
+    wrote chunk files
+  chunk 390/400 (n=25000)
+    sampling : 624.9266665 s
+    stats    : 58.4177161 s
+    wrote chunk files
+  chunk 391/400 (n=25000)
+    sampling : 633.0275104 s
+    stats    : 49.968638 s
+    wrote chunk files
+  chunk 392/400 (n=25000)
+    sampling : 621.0703976 s
+    stats    : 59.0874959 s
+    wrote chunk files
+  chunk 393/400 (n=25000)
+    sampling : 593.5403774 s
+    stats    : 53.1958604 s
+    wrote chunk files
+  chunk 394/400 (n=25000)
+    sampling : 585.6604503 s
+    stats    : 58.9062856 s
+    wrote chunk files
+  chunk 395/400 (n=25000)
+    sampling : 582.2787288 s
+    stats    : 47.7703812 s
+    wrote chunk files
+  chunk 396/400 (n=25000)
+    sampling : 640.4856655 s
+    stats    : 59.955956 s
+    wrote chunk files
+  chunk 397/400 (n=25000)
+    sampling : 639.737004 s
+    stats    : 59.2077636 s
+    wrote chunk files
+  chunk 398/400 (n=25000)
+    sampling : 623.2465581 s
+    stats    : 57.094273 s
+    wrote chunk files
+  chunk 399/400 (n=25000)
+    sampling : 566.6894671 s
+    stats    : 56.8960128 s
+    wrote chunk files
+  chunk 400/400 (n=25000)
+    sampling : 562.5295445 s
+    stats    : 57.0187708 s
+    wrote chunk files
+  consolidated 10000000 rows → p4q10_n10000000_batch3_stats.wxf + p4q10_n10000000_batch3_complexes.wxf
+  ESS unlabeled: 24 / 10000000 (0.00%)
+  ESS facet    : 23 / 10000000 (0.00%)
+-----------------------------------------
+Done.

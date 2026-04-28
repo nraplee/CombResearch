@@ -1,5 +1,5 @@
 (* render_all_figures.wl
-   Renders Figures 3-15 from p{2,3,4}q10_n500000_samples.csv (in ../data/).
+   Renders Figures 3-15 from p{2,3,4}q10_merged_stats.wxf (in ../data/).
    Three panel modes — all rendered as TRANSLUCENT OVERLAID histograms
    (matching paper Figure 2 style), not grouped bars:
      "discrete"     — Histogram with bin width 1, integer x values
@@ -7,8 +7,8 @@
      "continuous"   — Histogram with Automatic bins
    Outputs:
      ../figures/stacked_previews/fig{03..15}_*.{pdf,png}   (one stacked column per fig)
-     ../figures/manuscript_panels/p{p}q10[conn]SX{Stat}_n500k.pdf  (~30 panels)
-     ../figures/combined_all_figures_n500k.pdf             (multi-page combined)
+     ../figures/manuscript_panels/p{p}q10[conn]SX{Stat}_merged.pdf (~30 panels)
+     ../figures/combined_all_figures_merged.pdf            (multi-page combined)
    Prints per-p ESS at startup. *)
 
 (* ===== paths ===== *)
@@ -30,8 +30,8 @@ Print["figuresDir          = ", figuresDir];
 (* ===== parameters ===== *)
 qVal = 10;
 pList = {2, 3, 4};
-sampleSize = 500000;
-sampleTag  = "n500k";
+sampleSize = 12000000;  (* informational only — stem reads merged file directly *)
+sampleTag  = "merged";
 
 (* ===== style ===== *)
 colorVertex    = RGBColor[0.984, 0.757, 0.369];
@@ -57,8 +57,7 @@ panelLabel[p_] := Style["p = " <> ToString[p],
 
 (* ===== load =====
    Prefers WXF (fast, typed). Falls back to legacy CSV if no WXF present. *)
-stem[p_] := "p" <> ToString[p] <> "q" <> ToString[qVal] <>
-  "_n" <> ToString[sampleSize];
+stem[p_] := "p" <> ToString[p] <> "q" <> ToString[qVal] <> "_merged";
 
 loadSamplesWXF[path_] := Module[{a, headers, rows},
   Print["  loading ", FileNameTake[path], " (WXF)"];
@@ -201,7 +200,7 @@ panelDispatch["logdiscrete", args__] := makePanelLogBin[args];
 panelDispatch["continuous", args__]  := makePanelContinuous[args];
 
 (* ===== manuscript panel name builder ===== *)
-(* Convention: p{p}q10[conn]SX{Stat}_n500k.pdf *)
+(* Convention: p{p}q10[conn]SX{Stat}_{sampleTag}.pdf *)
 manuscriptName[stem_, p_, filterSpec_] :=
   "p" <> ToString[p] <> "q10" <>
   If[filterSpec === "connected", "conn", ""] <>
