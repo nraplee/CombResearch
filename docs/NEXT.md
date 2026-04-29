@@ -1,6 +1,6 @@
 # Next session — handoff
 
-> Written 2026-04-27, after batch3 (4-day unattended sampling run) landed and was processed end-to-end. Overwrite when Dr. Betre's reply arrives and direction is set.
+> Written 2026-04-27, updated 2026-04-29 with MH-prototype state. Email to Dr. Betre was sent 2026-04-29 (per Elijah). Overwrite when Dr. Betre replies and direction is set.
 
 ## Where we are
 
@@ -38,10 +38,95 @@ Read: p=2 fine; p=3 at the borderline; **p=4 confirmed broken-IS-regime** — 24
 
 ## Pending / blocked
 
-- **Email to Dr. Betre.** Drafted at `docs/email_betre_post_batch3.md`. Awaiting Elijah review → send → delete draft.
-- **Sampler swap.** Sketched in the email; concrete plan blocked on Betre's input. Top candidate: Metropolis-Hastings over isomorphism classes with detailed balance against |Aut| (unlabeled measure) or q!/|Aut_F| (facet measure).
+- **Email to Dr. Betre.** SENT 2026-04-29. Draft at `docs/email_betre_post_batch3.md` may now be stale — confirm sent text matches, then delete the draft.
+- **Sampler swap.** Sketched in the email; awaiting Dr. Betre's reply. Elijah's stance: doubts we'll actually rewrite the samplers; an old accept/reject sampler exists but is too inefficient to use.
 - **Manuscript text** updates to caveat the p=4 figures — defer until sampler decision lands.
 - **Add Dr. Betre as GitHub collaborator** once he sends his username (carryover from prior handoff).
+
+## MH sampler prototype (2026-04-29, exploratory only)
+
+User asked for a "for shits and giggles" Metropolis-Hastings prototype targeting iso-class measures directly. Lives at `src/sampler_mh.wl`. Plain-language writeup of IS-vs-MH at `docs/sampler_writeup.md` (shareable with Dr. Betre if useful). **Status: runs end-to-end, math hand-verified AND empirically verified against enumeration at p=2 q=4. NOT in the production pipeline. Do not use for figures yet.**
+
+### Design (current revision, after one rewrite)
+
+- **State space:** sorted q-tuples of distinct sorted p-subsets of fixed ambient `[N]` with `N = q·p`. Active vertex set = ⋃ F_i. **No canonicalization** (this was a bug in the first draft — see below).
+- **Targets:**
+  - `unlabeled`: π(X) ∝ |Aut(X)| · (N − numV)!  → uniform marginal on iso classes
+  - `facet`: π(X) ∝ |Aut(X)| · (N − numV)! / |Aut_F(X)|  → uniform on facet-labelings
+  - `vertex`: π(X) ∝ 1  → sanity check, should match IS vertex-labeled
+- **Proposal:** pick i ∈ {1..q}, replace F_i with uniform p-subset of [N] not equal to other facets. Symmetric, so α = min(1, π(Y)/π(X)).
+- **Hand-verified at p=2 q=2 N=4:** path iso (12 states · weight 2·1!) = matching iso (3 states · weight 8·0!) = 24 each. ✓
+
+### What was wrong with the first draft
+
+First draft canonicalized state to "labels in first-appearance order, no unused labels." That breaks detailed balance: canonicalization collapses different vertex-labelings of the same iso class to a *variable* number of canonical forms (e.g. for the (p=2,q=2) path, 3 labelings → 2 canonical forms; for matching, 3 labelings → 1). The chain's iso-class marginal becomes ∝ 1/c([Y]) for an irregular collapse factor c. Empirically: gave E[numV]≈10 at p=4 q=10 vs IS-empirical ≈18.6.
+
+### Current empirical results (q=10, target=unlabeled, smoke test 5k+1k burn-in)
+
+| p | nMax | accept | E[numV] (MH) | E[numV] (IS @12M, ESS=25 for p=4) |
+|---|------|--------|--------------|-----------------------------------|
+| 2 | 20   | 0.38   | 10.24        | (didn't measure) |
+| 3 | 30   | 0.18   | 12.68        | (didn't measure) |
+| 4 | 40   | 0.09   | 16.23        | 18.57 |
+
+Longer p=4 run (30k+5k burn-in): mean = 15.74, first-10k=16.07, last-10k=15.05 — drifting *down*, not converging to 18.57. **Open question: is the chain still mis-mixed, or is the IS estimate biased high by outlier weights at ESS=25?** Cannot tell without ground truth.
+
+### Ground truth verification (DONE 2026-04-29)
+
+Two independent enumerable cases:
+
+**p=2 q=4** (11 iso classes, MH 30k+3k burn): all numV bins within ~2pp, E[numV] = 5.495 vs truth 5.545.
+
+**p=3 q=4** (66 iso classes from 666 facet-labeled enumeration, MH 50k+5k burn): all numV bins within ~2pp, E[numV] = 7.402 vs truth 7.348.
+
+**MH math is correct** — verified at two independent cases of varying complexity.
+
+### Implication for q=10 p=4
+
+The chain at p=4 q=10 (35k+5k burn) gives stable E[numV] ≈ 15.7 across first/last 10k. Given the math is correct, the chain is likely sampling π_U correctly, which means **the IS estimate of E[numV]=18.57 is biased high**. Mechanism: random VL sampling almost never produces numV<17 at p=4 q=10 (vertex-labeled mode is at 30), so the IS dataset's 12M samples include only a handful with very-low numV. Those few have huge `|Aut|/numV!` weights (because numV! is small), so they dominate the reweighted estimate — but they're a biased sample of the low-numV region of state space. ESS=25 quantifies "only 25 effective samples contribute," and they all happen to live at numV∈{17,18,19} because that's the lowest-numV the IS sample reached.
+
+If this analysis is right:
+- MH gives meaningfully better estimates of unlabeled/facet measures at q=10 p=4 than IS does, even at moderate sample sizes.
+- The IS bars in the merged figures at p=4 are not just noisy but systematically wrong — pulled up toward the higher numV the IS sample happens to reach.
+- The email to Dr. Betre still has the right top-line conclusion (sampler swap warranted) but understates the case: it's not just "ESS too low" — IS at q=10 p=4 may be producing wrong central tendencies, not just noisy ones.
+
+**Multi-seed verification (4 chains × 25k+5k burn at p=4 q=10):**
+
+| seed | E[numV] | first 10k | last 10k |
+|------|---------|-----------|----------|
+| 12345 | 16.01 | 16.07 | 15.77 |
+| 67890 | 16.34 | 16.30 | 16.25 |
+| 11111 | 15.68 | 16.21 | 15.66 |
+| 99999 | 15.63 | 15.87 | 15.64 |
+
+Range 15.62–16.34, mean ≈ 15.9. Within-chain first/last halves consistent. IS estimate 18.57 is ~9 inter-seed std-deviations away — a real disagreement, not noise. Treat MH ≈ 15.9 as the better estimate.
+
+### Per-iso-class uniformity check (DONE 2026-04-29)
+
+Stronger correctness test than numV-marginal: at p=2 q=4 with 11 enumerable iso classes, run MH with each target, identify the iso class of every sampled state (via `IsomorphicSimplicialComplexQ` filtered by numV), and compare visit fractions to truth. Output: `figures/sampler_mh_uniformity.{pdf,png}` (script: `src/render_uniformity_check.wl`).
+
+**target=facet:** all 11 iso classes match truth (q!/|Aut_F| normalized) within ~5%. Clean.
+
+**target=unlabeled:** 10 of 11 iso classes within ~7% of truth (1/11). **Iso class 11** (numV=8, |Aut|=384 — 4 disjoint edges, the most symmetric class) is undersampled at empirical 0.069 vs truth 0.091 (~25% deficit, ~13σ at 30k samples).
+
+This is NOT a math bug — the same target produces correct counts for the other 10 classes, and the facet target produces correct counts for class 11 too. It's a **mixing artifact**: highly symmetric configurations sit in narrow basins that a local single-facet-replacement proposal struggles to enter from non-symmetric states. With more burn-in, more thinning, or a smarter proposal (e.g., a "swap two facets" or "rewire" move), the gap would close.
+
+Practical implication: at q=10, the most-symmetric iso classes will be undersampled in target=unlabeled relative to their true π_U mass. For paper figures this likely shows up as bar heights at the symmetric end of the distribution being slightly low. Bounded magnitude — far smaller than the IS-vs-truth gap we documented above. If MH ever moves toward production, a better proposal kernel is the obvious engineering improvement.
+
+### Next verification step (when resuming)
+
+If pursuing further:
+- Run a much longer MH chain at p=4 q=10 (e.g. 500k–1M steps, parallel tempering or smarter proposals to fight the 9% accept rate). If the running mean stabilizes < 18, evidence that IS biases high.
+- Or: enumerate at one more small case (e.g. p=3 q=4) and verify match holds at slightly larger scale before trusting q=10 results.
+- Or: compare MH-facet to MH-vertex output and check the vertex target reproduces the IS vertex-labeled distribution (which is direct, not reweighted, and should match at all p, q). That rules out any remaining proposal-kernel bug.
+
+If shelving: nothing to do. Prototype lives in `src/sampler_mh.wl`, math notes in its header, this section is the running log.
+
+### Files touched
+- `src/sampler_mh.wl` — the prototype (current revision is the fixed-ambient-N version, NOT the canonicalization version)
+- No data files written
+- No figures written
+- `data/p4q10_merged_stats.wxf` was read for IS empirical baseline (E[numV]_unlabeled=18.57, top-10 weight numVs all 17–19)
 
 ## If something goes wrong
 
