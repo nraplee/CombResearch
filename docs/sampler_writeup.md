@@ -99,6 +99,23 @@ Figures:
 - At q=10 p=4 the chain mixes slowly (accept rate 9%) but produces stable E[numV] ≈ 15.7 across first-half/last-half of a long run. The IS-empirical estimate is 18.57. Since the MH math is verified and the chain is at stationary, **the most likely explanation is that the IS estimate is biased high** — vertex-labeled sampling almost never lands in the low-numV region where π_U has most of its mass, so the IS reweighting is dominated by a handful of slightly-low-numV samples (top-10 weights all at numV ∈ {17, 18, 19}) that don't fairly represent the bulk of the unlabeled distribution.
 - Not in the production pipeline. Lives at `src/sampler_mh.wl`. To use, call `runMHChain[p, q, target, numIter]` after `Get["src/sampler_mh.wl"]` (set `$smokeTestSkip = True` first if you don't want the auto-smoke-test).
 
+## Side check: was the ECGrav warning correct?
+
+CLAUDE.md (and `docs/PIPELINE.md`) carry a long-standing prohibition against using `RandomFacetLabeledPureSimplicialComplex` from the ECGrav package, on the grounds that "it is not a verified uniform sampler." That warning was inherited rather than measured. Now that we have a verified uniform-on-facet-labelings sampler (MH facet target, validated against enumeration on 11 iso classes at p=2 q=4), we can directly measure how far off ECGrav's sampler actually is.
+
+Test: at p=2 q=4, sample 30k from `RandomFacetLabeledPureSimplicialComplex`, identify the iso class of each, count visit fractions, compare to the q!/|Aut_F|-normalized truth. Same test for MH facet target as a control.
+
+| metric | value |
+|---|---|
+| L1 distance MH facet → truth | **0.028** |
+| L1 distance ECGrav RandomFacetLabeled → truth | **0.427** |
+
+ECGrav's sampler is **15× further from uniform-on-facet-labelings** than MH is. Per-iso-class deviations are large in both directions — one class is over-represented by 6.4×, another is under-represented by 88%. This isn't "biased toward some inherited natural distribution" — the bias varies in sign across classes, and the magnitude (40%+ L1) is well beyond any sampling-variance explanation.
+
+**Conclusion: the inherited warning is fully justified by direct measurement.** Whatever ECGrav's sampler is doing, it is not uniform on facet-labelings, and using its output for facet-labeled empirics would produce wildly wrong distributions. Continue treating it as forbidden.
+
+Figure: `figures/sampler_ecgrav_compare.{pdf,png}`. Three-color bar chart, one bar per iso class for each of (truth, MH facet, ECGrav). MH and truth bars track tightly; ECGrav bars are visibly all over the place.
+
 ## What this means for the paper
 
 The email to Dr. Betre concluded that IS is structurally unable to produce paper-quality unlabeled/facet figures at q=10 p∈{3,4} because of low ESS, and proposed MH as an alternative. The new finding sharpens the case: at p=4 q=10, IS may not just be noisy but **systematically biased** — its central tendencies (means, modes) for unlabeled and facet measures are pulled toward whatever low-numV samples happen to be in the dataset, rather than toward the true bulk of the distribution.

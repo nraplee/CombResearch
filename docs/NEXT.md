@@ -101,6 +101,15 @@ If this analysis is right:
 
 Range 15.62–16.34, mean ≈ 15.9. Within-chain first/last halves consistent. IS estimate 18.57 is ~9 inter-seed std-deviations away — a real disagreement, not noise. Treat MH ≈ 15.9 as the better estimate.
 
+### ECGrav `RandomFacetLabeledPureSimplicialComplex` direct measurement (DONE 2026-04-29)
+
+The CLAUDE.md prohibition on this sampler was inherited; we now have direct measurement. At p=2 q=4 (11 iso classes), 30k samples from each sampler, compared to q!/|Aut_F| truth:
+
+- L1(MH facet, truth) = 0.028 (sample noise, ~7% per-bin max)
+- L1(ECGrav RandomFacetLabeled, truth) = **0.427** (15× worse, single iso classes off by 6.4× over and 88% under)
+
+ECGrav sampler is conclusively NOT uniform on facet-labelings. Warning fully justified. Figure: `figures/sampler_ecgrav_compare.{pdf,png}`. Script: `src/render_ecgrav_compare.wl`.
+
 ### Per-iso-class uniformity check (DONE 2026-04-29)
 
 Stronger correctness test than numV-marginal: at p=2 q=4 with 11 enumerable iso classes, run MH with each target, identify the iso class of every sampled state (via `IsomorphicSimplicialComplexQ` filtered by numV), and compare visit fractions to truth. Output: `figures/sampler_mh_uniformity.{pdf,png}` (script: `src/render_uniformity_check.wl`).
