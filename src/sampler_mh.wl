@@ -109,28 +109,109 @@ randomSubsetExcluding[n_Integer, p_Integer, forbidden_List] := Module[
    the value of |Aut| is iso-invariant so the choice of labels doesn't
    matter. *)
 
+(* ===============================================================
+   Proposal kernels (added 2026-04-29).
+
+   All proposals are SYMMETRIC: q(X→Y) = q(Y→X). With symmetric q,
+   Metropolis acceptance simplifies to min(1, π(Y)/π(X)).
+
+   Each kernel returns {Y, deltaNumActive} — the proposed state and
+   the change in numActive (0 for no-op).
+
+   Benchmark results at p=4 q=10 / p=2 q=4 are summarized in
+   docs/NEXT.md; tl;dr "global" remains the best for numV-mixing,
+   "mixed" is comparable on accuracy and ~26% faster wall-clock.
+   =============================================================== *)
+
+proposeGlobal[X_List, p_Integer, q_Integer, nMax_Integer] := Module[
+  {i, otherFacets, Fnew, Y, mOld},
+  mOld = numActive[X];
+  i = RandomInteger[{1, q}];
+  otherFacets = Delete[X, i];
+  Fnew = randomSubsetExcluding[nMax, p, otherFacets];
+  Y = Sort[ReplacePart[X, i -> Fnew]];
+  {Y, numActive[Y] - mOld}];
+
+(* Local: change one vertex in one facet. Symmetric. *)
+proposeLocal[X_List, p_Integer, q_Integer, nMax_Integer] := Module[
+  {i, j, vNew, Fi, FNew, Y, mOld},
+  mOld = numActive[X];
+  i = RandomInteger[{1, q}];
+  j = RandomInteger[{1, p}];
+  vNew = RandomInteger[{1, nMax}];
+  Fi = X[[i]];
+  If[MemberQ[Fi, vNew], Return[{X, 0}]];
+  FNew = Sort[ReplacePart[Fi, j -> vNew]];
+  If[MemberQ[Delete[X, i], FNew], Return[{X, 0}]];
+  Y = Sort[ReplacePart[X, i -> FNew]];
+  {Y, numActive[Y] - mOld}];
+
+(* Swap: exchange one vertex between two facets. Symmetric.
+   WARNING: when used as the sole kernel, ergodicity is poor — at p=2
+   most swaps yield states in the same iso class as the input. Useful
+   only as a component of a mixture. *)
+proposeSwap[X_List, p_Integer, q_Integer, nMax_Integer] := Module[
+  {i, k, j, l, a, b, Fi, Fk, FiNew, FkNew, otherFacets, Y, mOld},
+  mOld = numActive[X];
+  i = RandomInteger[{1, q}];
+  k = RandomInteger[{1, q - 1}];
+  If[k >= i, k = k + 1];
+  j = RandomInteger[{1, p}];
+  l = RandomInteger[{1, p}];
+  Fi = X[[i]]; Fk = X[[k]];
+  a = Fi[[j]]; b = Fk[[l]];
+  Which[
+    a === b,        Return[{X, 0}],
+    MemberQ[Fi, b], Return[{X, 0}],
+    MemberQ[Fk, a], Return[{X, 0}]];
+  FiNew = Sort[ReplacePart[Fi, j -> b]];
+  FkNew = Sort[ReplacePart[Fk, l -> a]];
+  If[FiNew === FkNew, Return[{X, 0}]];
+  otherFacets = Delete[X, {{i}, {k}}];
+  If[MemberQ[otherFacets, FiNew] || MemberQ[otherFacets, FkNew],
+    Return[{X, 0}]];
+  Y = Sort[ReplacePart[X, {i -> FiNew, k -> FkNew}]];
+  {Y, numActive[Y] - mOld}];
+
+(* Mixed: 50% local + 30% swap + 20% global. *)
+proposeMixed[X_List, p_Integer, q_Integer, nMax_Integer,
+             alphaLocal_:0.5, betaSwap_:0.3] := Module[{u},
+  u = RandomReal[];
+  Which[
+    u < alphaLocal,            proposeLocal[X, p, q, nMax],
+    u < alphaLocal + betaSwap, proposeSwap[X, p, q, nMax],
+    True,                      proposeGlobal[X, p, q, nMax]]];
+
 (* =============================================================== *)
 (* MH step                                                          *)
 (* =============================================================== *)
 
 (* Returns {newState, acceptedQ, ΔnumV, alpha}.
-   nMax (rather than N) to avoid shadowing built-in N (numerical conversion). *)
-mhStep[X_List, p_Integer, q_Integer, nMax_Integer, target_String] := Module[
-  {m, mY, i, otherFacets, Fnew, Y,
+   nMax (rather than N) to avoid shadowing built-in N (numerical conversion).
+   kernel ∈ {"global", "local", "swap", "mixed"} selects the proposal kernel. *)
+mhStep[X_List, p_Integer, q_Integer, nMax_Integer, target_String,
+       kernel_String:"global"] := Module[
+  {m, mY, Y, deltaM,
    autX, autY, autFX, autFY, factRatio, piRatio, alpha, u},
 
   m = numActive[X];
-  i = RandomInteger[{1, q}];
-  otherFacets = Delete[X, i];
-  Fnew = randomSubsetExcluding[nMax, p, otherFacets];
-  Y = Sort[ReplacePart[X, i -> Fnew]];
-  mY = numActive[Y];
+  {Y, deltaM} = Switch[kernel,
+    "global", proposeGlobal[X, p, q, nMax],
+    "local",  proposeLocal[X, p, q, nMax],
+    "swap",   proposeSwap[X, p, q, nMax],
+    "mixed",  proposeMixed[X, p, q, nMax],
+    _, Print["unknown kernel: ", kernel]; Abort[]];
+
+  (* If the proposal degenerated to a no-op (Y == X), accept trivially. *)
+  If[Y === X, Return[{X, True, 0, 1.0}]];
+
+  mY = m + deltaM;
 
   (* (nMax-mY)!/(nMax-m)! computed safely for any Δm ∈ [-p, p]. *)
   factRatio = Which[
-    mY == m,  1,
-    mY > m,   1 / Product[nMax - m - j, {j, 0, mY - m - 1}],
-    mY < m,   Product[nMax - mY - j, {j, 0, m - mY - 1}]];
+    deltaM == 0, 1,
+    deltaM > 0,  1 / Product[nMax - m - j, {j, 0, deltaM - 1}],
+    deltaM < 0,  Product[nMax - mY - j, {j, 0, -deltaM - 1}]];
 
   Switch[target,
     "unlabeled",
@@ -151,8 +232,8 @@ mhStep[X_List, p_Integer, q_Integer, nMax_Integer, target_String] := Module[
   alpha = Min[1, N[piRatio]];
   u = RandomReal[];
   If[u < alpha,
-    {Y, True, mY - m, alpha},
-    {X, False, mY - m, alpha}]
+    {Y, True, deltaM, alpha},
+    {X, False, deltaM, alpha}]
 ];
 
 (* =============================================================== *)
@@ -172,31 +253,33 @@ initialState[p_Integer, q_Integer, nMax_Integer, seed_Integer] := Module[
 (* Chain runner                                                     *)
 (* =============================================================== *)
 
-Options[runMHChain] = {burnIn -> 0, thin -> 1, seed -> 12345, verbose -> True};
+Options[runMHChain] = {burnIn -> 0, thin -> 1, seed -> 12345,
+  verbose -> True, kernel -> "global"};
 
 runMHChain[p_Integer, q_Integer, target_String, numIter_Integer,
            opts:OptionsPattern[]] := Module[
-  {bIn, th, sd, vrb, NN, X, traceLen, trace, accepts = 0, deltas,
+  {bIn, th, sd, vrb, kn, NN, X, traceLen, trace, accepts = 0, deltas,
    step, idx, t0, t1},
 
   bIn = OptionValue[burnIn];
   th  = OptionValue[thin];
   sd  = OptionValue[seed];
   vrb = OptionValue[verbose];
+  kn  = OptionValue[kernel];
 
   NN = q * p;
   X  = initialState[p, q, NN, sd];
 
   If[vrb,
     Print["MH chain: p=", p, " q=", q, " nMax=", NN,
-      " target=", target, " numIter=", numIter,
-      " burnIn=", bIn, " thin=", th]];
+      " target=", target, " kernel=", kn,
+      " numIter=", numIter, " burnIn=", bIn, " thin=", th]];
 
   t0 = AbsoluteTime[];
 
   (* Burn-in. *)
   Do[
-    step = mhStep[X, p, q, NN, target];
+    step = mhStep[X, p, q, NN, target, kn];
     X = step[[1]];
     If[step[[2]], accepts++],
     {bIn}];
@@ -211,7 +294,7 @@ runMHChain[p_Integer, q_Integer, target_String, numIter_Integer,
   trace = ConstantArray[Null, traceLen];
   idx = 0;
   Do[
-    step = mhStep[X, p, q, NN, target];
+    step = mhStep[X, p, q, NN, target, kn];
     X = step[[1]];
     If[step[[2]], accepts++];
     deltas[[k]] = step[[3]];

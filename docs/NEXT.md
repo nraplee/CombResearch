@@ -101,6 +101,38 @@ If this analysis is right:
 
 Range 15.62–16.34, mean ≈ 15.9. Within-chain first/last halves consistent. IS estimate 18.57 is ~9 inter-seed std-deviations away — a real disagreement, not noise. Treat MH ≈ 15.9 as the better estimate.
 
+### Smarter proposal kernels (DONE 2026-04-29)
+
+Added three new proposal kernels to `src/sampler_mh.wl` (selected via `kernel -> "..."` option to `runMHChain`):
+- `local`: change one vertex in one facet
+- `swap`: exchange one vertex between two facets
+- `mixed`: 50% local + 30% swap + 20% global
+
+Two benchmarks (scripts: `src/benchmark_kernels.wl`, `src/benchmark_kernels_uniformity.wl`):
+
+**ESS/sec at p=4 q=10, target=unlabeled (numV mixing):**
+
+| kernel | accept | τ_int | ESS/sec |
+|--------|--------|-------|---------|
+| global | 0.094 | 96 | **0.998** |
+| local  | 0.473 | 206 | 0.569 |
+| mixed  | 0.352 | 148 | 0.731 |
+
+Higher accept rate ≠ better mixing. Local moves change numV by ≤1 per step; global moves can shift numV by up to p, so each accepted global move buys more decorrelation.
+
+**Per-iso-class L1 to uniform at p=2 q=4 (30k+3k burn):**
+
+| kernel | L1 to uniform | iso-11 deviation |
+|--------|---------------|------------------|
+| global | 0.052 | -19% |
+| local  | 0.082 | +18% |
+| swap   | **1.818** | -100% (stuck) |
+| mixed  | 0.055 | +10% |
+
+Swap alone is broken — chain stuck because most swap proposals at p=2 yield labelings within the same iso class. Mixed kernel is comparable on L1 and slightly better on iso-11. Modest improvement, not dramatic.
+
+**Verdict:** mixed kernel is reasonable as a new alternative — comparable accuracy, ~26% faster wall-clock, slightly better symmetric-class coverage. Not a 10× improvement. Real gains would come from parallel tempering or smarter swap moves (3-cycle vertex rotations across 3 facets, edge contractions). Both deferred. Default kernel remains `"global"` for backward compatibility.
+
 ### ECGrav `RandomFacetLabeledPureSimplicialComplex` direct measurement (DONE 2026-04-29)
 
 The CLAUDE.md prohibition on this sampler was inherited; we now have direct measurement. At p=2 q=4 (11 iso classes), 30k samples from each sampler, compared to q!/|Aut_F| truth:
