@@ -1,0 +1,32 @@
+======= scaling_probe_streaming =======
+grid       : {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {3, 4}, {3, 5}, {3, 6}, {4, 5}}
+timeout    : 1800s per cell
+sysMem (MB): 16384.00
+
+[probe-stream] p=2 q=4 (timeout=1800s) ...
+  emitted=70 iso=11 buckets=9  4.529s peak=59.62 MB
+RESULT|p=2|q=4|emitted=70|iso=11|buckets=9|tTotal=4.529|peakMB=59.62|status=ok
+[probe-stream] p=2 q=5 (timeout=1800s) ...
+  emitted=794 iso=26 buckets=17  4.914s peak=0.62 MB
+RESULT|p=2|q=5|emitted=794|iso=26|buckets=17|tTotal=4.914|peakMB=0.62|status=ok
+[probe-stream] p=2 q=6 (timeout=1800s) ...
+  emitted=12055 iso=68 buckets=31  209.730s peak=3.69 MB
+RESULT|p=2|q=6|emitted=12055|iso=68|buckets=31|tTotal=209.730|peakMB=3.69|status=ok
+[probe-stream] p=2 q=7 (timeout=1800s) ...
+  TIMEOUT after 1800s
+RESULT|p=2|q=7|emitted=NA|iso=NA|buckets=NA|tTotal=NA|peakMB=NA|status=timeout
+[probe-stream] p=3 q=4 (timeout=1800s) ...
+  emitted=666 iso=66 buckets=46  4.868s peak=2.09 MB
+RESULT|p=3|q=4|emitted=666|iso=66|buckets=46|tTotal=4.868|peakMB=2.09|status=ok
+[probe-stream] p=3 q=5 (timeout=1800s) ...
+  emitted=28344 iso=445 buckets=159  455.022s peak=48.93 MB
+RESULT|p=3|q=5|emitted=28344|iso=445|buckets=159|tTotal=455.022|peakMB=48.93|status=ok
+[probe-stream] p=3 q=6 (timeout=1800s) ...
+  TIMEOUT after 1800s
+RESULT|p=3|q=6|emitted=NA|iso=NA|buckets=NA|tTotal=NA|peakMB=NA|status=timeout
+[probe-stream] p=4 q=5 (timeout=1800s) ...
+  TIMEOUT after 1800s
+RESULT|p=4|q=5|emitted=NA|iso=NA|buckets=NA|tTotal=NA|peakMB=NA|status=timeout
+
+======= scaling_probe_streaming done =======
+session peak memory (MB): 166.06
