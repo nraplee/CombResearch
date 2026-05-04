@@ -1,6 +1,8 @@
 # Next session — handoff
 
-> Written 2026-04-27, updated 2026-04-29 with MH-prototype state. Email to Dr. Betre was sent 2026-04-29 (per Elijah). Overwrite when Dr. Betre replies and direction is set.
+> Written 2026-04-27, updated 2026-04-29 with MH-prototype state. Email to Dr. Betre was sent 2026-04-29 (per Elijah).
+>
+> **Superseded 2026-05-01 → 2026-05-02 by `docs/PLAN_TRUTH_ENUMERATION.md`** for the active workstream. Phase 1 of that plan is now complete (reachable grid `{(2,4), (2,5), (2,6), (3,4), (3,5)}`, see `docs/enumeration_scaling.md`); Phase 2 is next. The MH-sampler verification details below are still valid history — keep them as the durable evidence base for "MH math is correct," referenced in the plan and (eventually) the manuscript. Sections discussing IS pipeline next steps are stale.
 
 ## Where we are
 

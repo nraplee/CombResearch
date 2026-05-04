@@ -23,14 +23,22 @@ C:\CombResearch\
 │   ├── render_all_figures.wl         (Figs 3-15 renderer)
 │   ├── run_p{2,3,4}.wl               (per-p wrappers, parallel-aware)
 │   ├── run_parallel.ps1              (3-way parallel driver)
+│   ├── sampler_mh.wl                 (MH iso-class sampler — verified at (2,4), (3,4))
+│   ├── streaming_enumerator.wl       (truth-enum: streaming gen + bucketed dedupe)
+│   ├── scaling_probe.wl              (truth-enum: eager-pipeline timing probe)
+│   ├── scaling_probe_streaming.wl    (truth-enum: streaming-pipeline timing probe)
+│   ├── test_streaming.wl             (truth-enum: correctness check vs ECGrav)
 │   └── reference\                    (Figure 2 source notebooks; do not edit)
-├── data\                          (CSVs from compute runs)
+├── ECGrav\                        (vendored paclet sources — 1.0.0 prod, main snapshot)
+├── data\                          (CSVs/WXFs from compute runs)
 ├── figures\
 │   ├── stacked_previews\            (3-panel column previews per figure)
 │   ├── manuscript_panels\           (~30 individual per-panel PDFs for \includegraphics)
 │   └── combined_all_figures_n500k.pdf (multi-page review PDF)
-├── docs\                          (HANDOFF.md, PIPELINE.md, manuscript .tex)
-├── logs\                          (overnight.log, compute_p{2,3,4}.log)
+├── docs\                          (PLAN_TRUTH_ENUMERATION.md, enumeration_scaling.md,
+│                                   HANDOFF.md, PIPELINE.md, NEXT.md, manuscript .tex)
+├── logs\                          (overnight.log, compute_p{2,3,4}.log,
+│                                   scaling_probe.log, scaling_probe_streaming.log)
 └── archive\                       (superseded data, tests, old renders)
 ```
 
@@ -116,6 +124,14 @@ Key functions provided by the package:
 
 Producing 13 figures, each a 3×1 column (one panel per p ∈ {2,3,4}) — pure simplicial complexes only, **not** clique complexes. Statistics: numV, |Γ(X)|, |Γ_F(X)|, those two filtered to connected complexes, num1V/num2V components, largest-component ratio, 2- and 3-path components, Betti₁/₂/₃.
 
-**Status:** N=500000 sample CSVs in `data/` (overnight run complete). Per `docs/PIPELINE.md`, the importance-sampling reweighting hack collapses at q=10 — figures render but bar heights for facet/unlabeled at p=3,4 are unreliable (ESS in single digits to low double digits). Awaiting professor consultation on whether to (a) push N up by ~100x for p=4, (b) accept variance and publish, or (c) adopt a different sampler.
+**Status (2026-05-02):** the IS pipeline is shelved at q=10 p=4 (ESS=25, biased mean — see `docs/sampler_writeup.md`). The MH sampler is verified at (2,4), (3,4), (3,5). The active workstream is **truth enumeration** — computing exact distributions for the small (p, q) cells where they're feasible, so manuscript figures can replace IS bars with exact bars wherever possible.
 
-See `docs/NEXT.md` for the current handoff note (short-lived; delete once the sampler question is resolved).
+### Truth-enumeration plan
+
+See **`docs/PLAN_TRUTH_ENUMERATION.md`** for the active plan. Highlights:
+- ✅ Phase 1 (scaling probe) complete. Reachable grid: `{(2,4), (2,5), (2,6), (3,4), (3,5)}`. Results in `docs/enumeration_scaling.md`.
+- ✅ Streaming enumerator prototype (`src/streaming_enumerator.wl`) — DFS gen + bucketed dedupe, parallel, validated against ECGrav. Drop-in `chooseNonIsoBucketed` available too.
+- ⏳ Phase 2 next: `src/enumerate_truth.wl` writes `data/p{p}q{q}_truth.wxf` for the five reachable cells.
+- ⏳ Phase 3: `src/render_truth_overlay.wl` produces the manuscript panels.
+
+`docs/NEXT.md` is the older (pre-truth-enumeration) handoff note; the plan supersedes it for this workstream.
