@@ -1,0 +1,41 @@
+sampleSize    = 0
+pList         = {}
+outputDir     = C:\CombResearch\.claude\worktrees\sleepy-lumiere-b24582\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\.claude\worktrees\sleepy-lumiere-b24582\src\
+outputDir         = C:\CombResearch\.claude\worktrees\sleepy-lumiere-b24582\data
+resolvedCells     = {{2, 4}, {3, 4}}
+forceRecompute    = False
+ecGravVersion     = 1.0.0
+enumeratorVersion = streaming_enumerator.wl@e18066a
+
+=====================================
+(p, q) = (2, 4)  -->  p2q4_truth.wxf
+  expected |iso|: 11
+  streaming done in 7.55s,   peak mem 137.9 MB
+  |isoReps|     = 11
+  totalEmitted  = 70
+  numBuckets    = 9
+  ok: iso-class count matches expected 11
+  computing 12-stat row for 11 iso classes ...
+    stats time  : 0.05s
+  wrote p2q4_truth.wxf  (3.4000000000000004 KB)
+
+=====================================
+(p, q) = (3, 4)  -->  p3q4_truth.wxf
+  expected |iso|: 66
+  streaming done in 5.21s,   peak mem 137.9 MB
+  |isoReps|     = 66
+  totalEmitted  = 666
+  numBuckets    = 46
+  ok: iso-class count matches expected 66
+  computing 12-stat row for 66 iso classes ...
+    stats time  : 0.35000000000000003s
+  wrote p3q4_truth.wxf  (19. KB)
+
+=====================================
+Done.
