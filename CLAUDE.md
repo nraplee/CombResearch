@@ -124,14 +124,14 @@ Key functions provided by the package:
 
 Producing 13 figures, each a 3×1 column (one panel per p ∈ {2,3,4}) — pure simplicial complexes only, **not** clique complexes. Statistics: numV, |Γ(X)|, |Γ_F(X)|, those two filtered to connected complexes, num1V/num2V components, largest-component ratio, 2- and 3-path components, Betti₁/₂/₃.
 
-**Status (2026-05-02):** the IS pipeline is shelved at q=10 p=4 (ESS=25, biased mean — see `docs/sampler_writeup.md`). The MH sampler is verified at (2,4), (3,4), (3,5). The active workstream is **truth enumeration** — computing exact distributions for the small (p, q) cells where they're feasible, so manuscript figures can replace IS bars with exact bars wherever possible.
+**Status (2026-05-04):** the IS pipeline is shelved at q=10 p=4 (ESS=25, biased mean — see `docs/sampler_writeup.md`). The MH sampler is verified at (2,4), (3,4), (3,5). The active workstream is **truth enumeration** — computing exact distributions for the small (p, q) cells where they're feasible, so manuscript figures can replace IS bars with exact bars wherever possible.
 
 ### Truth-enumeration plan
 
 See **`docs/PLAN_TRUTH_ENUMERATION.md`** for the active plan. Highlights:
 - ✅ Phase 1 (scaling probe) complete. Reachable grid: `{(2,4), (2,5), (2,6), (3,4), (3,5)}`. Results in `docs/enumeration_scaling.md`.
 - ✅ Streaming enumerator prototype (`src/streaming_enumerator.wl`) — DFS gen + bucketed dedupe, parallel, validated against ECGrav. Drop-in `chooseNonIsoBucketed` available too.
-- ⏳ Phase 2 next: `src/enumerate_truth.wl` writes `data/p{p}q{q}_truth.wxf` for the five reachable cells.
-- ⏳ Phase 3: `src/render_truth_overlay.wl` produces the manuscript panels.
+- ✅ Phase 2 done (2026-05-04): `src/enumerate_truth.wl` produced `data/p{p}q{q}_truth.wxf` for all five reachable cells; iso-class gates 11 / 26 / 68 / 66 / 445 all pass; ~14 min wall-clock total.
+- ⏳ Phase 3 next: `src/render_truth_overlay.wl` produces the manuscript panels.
 
 `docs/NEXT.md` is the older (pre-truth-enumeration) handoff note; the plan supersedes it for this workstream.

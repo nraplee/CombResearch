@@ -1,15 +1,61 @@
 # Plan — Truth-enumeration pipeline (q-sweep, target q=10, expected cap q=5)
 
-> Written 2026-05-01. Phase 1 complete 2026-05-02 — see `docs/enumeration_scaling.md` for results. Phase 2 is now ready to begin and uses the streaming pipeline from `src/streaming_enumerator.wl`.
+> Written 2026-05-01. Phase 1 complete 2026-05-02. Phase 2 complete 2026-05-04 — five truth WXFs in `data/`, all iso-class gates pass. Phase 3 (`render_truth_overlay.wl`) is next.
 
-## Status (2026-05-02)
+## Status (2026-05-04)
 
 - ✅ **Phase 1 — Scaling probe.** `src/scaling_probe.wl` (eager pipeline) and `src/scaling_probe_streaming.wl` (streaming + bucketed pipeline) both run; results in `docs/enumeration_scaling.md`. Empirically reachable grid: `{(2,4), (2,5), (2,6), (3,4), (3,5)}`. (2,7), (3,6), (4,5), (4,6), and the rest of the (p, q) grid are unreachable within a 30 min budget per cell on the current host with either pipeline.
 - ✅ **Streaming pipeline prototype.** `src/streaming_enumerator.wl` — DFS streaming generator + online bucketed dedupe, parallelized over starting states. Validated against ECGrav on (2,4), (2,5), (3,4); reproduces canonical iso class counts. 1.1×–3.4× faster than eager+naive on cells where eager succeeds; ~10× lower memory peak. **Does not unlock new cells.**
-- ⏳ **Phase 2 — enumerate_truth.wl.** Five reachable cells, ready to build.
+- ✅ **Phase 2 — enumerate_truth.wl.** Done. `src/enumerate_truth.wl` produced `data/p{p}q{q}_truth.wxf` for all five reachable cells. All iso-class count gates pass: 11 / 26 / 68 / 66 / 445. Total wall-clock ≈ 14 min (dominated by (3,5) at 526s and (2,6) at 265s). See "Phase 2 results" below.
 - ⏳ **Phase 3 — render_truth_overlay.wl.**
 - ⏳ **Phase 4 — manuscript integration.**
 - ⏳ **Phase 5 — literature reading.**
+
+## Phase 2 results (2026-05-04)
+
+`src/enumerate_truth.wl`, sequential driver, streaming enumerator parallelized over starting states (~14 subkernels). Run logged at `logs/enumerate_truth_smoke.log` (the (2,4) + (3,4) gate check) and `logs/enumerate_truth_full.log` (the remaining three cells).
+
+| (p, q) | \|isoReps\| (gate) | totalEmitted | numBuckets | streaming time (s) | peak mem (MB) | WXF size |
+|:------:|------------------:|-------------:|-----------:|-------------------:|--------------:|---------:|
+| (2, 4) | 11 ✓              | 70           | 9          | 7.6                | 137.9         | 3.4 KB   |
+| (2, 5) | 26 ✓              | 794          | 17         | 14.0               | 121.0         | 7.7 KB   |
+| (2, 6) | 68 ✓              | 12 055       | 31         | 265.1              | 123.9         | 20.1 KB  |
+| (3, 4) | 66 ✓              | 666          | 46         | 5.2                | 137.9         | 19.0 KB  |
+| (3, 5) | 445 ✓             | 28 344       | 159        | 526.0              | 169.3         | 129.4 KB |
+
+Stats step (computing the 12-stat row per iso-class rep) was negligible: (2,4) 0.05s, (2,5) 0.12s, (2,6) 0.45s, (3,4) 0.35s, (3,5) 2.97s. The bottleneck is the streaming enumerator, exactly as Phase 1 anticipated. Sanity: all three exact distributions (`piVertex`, `piFacet`, `piUnlabeled`) sum to 1 within `1e-9` per cell.
+
+WXF schema (one per cell):
+
+```
+<|"p" -> p, "q" -> q,
+  "numIsoClasses" -> nIso,
+  "totalFacetLabeled" -> sr["totalEmitted"],
+  "numBuckets" -> sr["numBuckets"],
+  "complexes" -> {<|"facets"->..., "aut"->..., "autF"->..., "nV"->...,
+                    "stats"-><|numV->..., aut->..., autF->...,
+                              connected->..., num1VConnComps->...,
+                              num2VConnComps->..., largestCompRatio->...,
+                              num2PathConnComps->..., num3PathConnComps->...,
+                              Betti1->..., Betti2->..., Betti3->...|>|>, ...},
+  "piVertex" -> {N, ...}, "piFacet" -> {N, ...}, "piUnlabeled" -> {N, ...},
+  "wallClockSec" -> ..., "peakMemMB" -> ...,
+  "ecGravVersion" -> "1.0.0",
+  "enumeratorVersion" -> "streaming_enumerator.wl@<sha>",
+  "createdAt" -> ...|>
+```
+
+Run convention:
+
+```
+wolframscript -file src/enumerate_truth.wl              # full reachable grid
+COMB_TRUTH_CELLS="2,4;3,4" wolframscript -file ...      # restrict cells
+COMB_FORCE=1 wolframscript -file ...                    # ignore existing WXFs
+```
+
+Idempotent: existing non-empty WXFs are skipped unless `COMB_FORCE=1`. Atomic write (`tmp + RenameFile`) so a crash mid-cell doesn't leave a partial file.
+
+**Validation gate not run yet:** the optional cross-check of the (3,5) numV distribution against an N=200k MH chain (the plan's `L1 < 0.05` gate). Listed under deliverables; defer to Phase 3 since it shares the same load-WXF + extract-marginal scaffolding.
 
 ## Goal
 
@@ -59,35 +105,29 @@ These are **exact**: no sampling, no ESS, no chain. The only error is rounding.
 
 Results in `docs/enumeration_scaling.md`. The plan's original prediction was wrong in an interesting way: it identified `ChooseNonIsomorphic...` (iso testing, O(n²)) as the wall, and proposed canonical-form bucketing as the mitigation. The actual wall is the *generator* — every timeout cell ((2,7), (3,6), (4,5)) died inside `GenerateAll` (eager) or DFS traversal (streaming) without producing a single emission. Bucketing helped (it's now in the streaming pipeline) but didn't change reachability. See "Risks" below for the corrected understanding.
 
-### Phase 2 — Enumeration cache (`src/enumerate_truth.wl`)
+### ✅ Phase 2 — Enumeration cache (`src/enumerate_truth.wl`) — DONE 2026-05-04
 
-Single script, parameterized over `(p, q)`. For each case in the reachable grid `{(2,4), (2,5), (2,6), (3,4), (3,5)}`:
+Single script, sequential driver over the reachable grid `{(2,4), (2,5), (2,6), (3,4), (3,5)}`. For each cell:
 
-1. `sr = streamingEnumeratePure[p, q]` — get iso class reps.
-2. For each iso-class rep: compute `aut`, `autF`, `nV`, plus the 13 stats from `statsFor`.
-3. Persist to `data/p{p}q{q}_truth.wxf`. Schema:
-   ```
-   <|
-     "p" -> p, "q" -> q,
-     "numIsoClasses" -> Length[sr["isoReps"]],
-     "totalFacetLabeled" -> sr["totalEmitted"],
-     "complexes" -> {<|"facets"->..., "aut"->..., "autF"->..., "nV"->..., "stats"-><|...|>|>, ...},
-     "wallClockSec" -> ..., "peakMemMB" -> ..., "ecGravVersion" -> "1.0.0",
-     "enumeratorVersion" -> "streaming_enumerator.wl@<commit>"
-   |>
-   ```
-4. Idempotent: skip cases whose WXF already exists and is non-empty. Force-recompute via env var `COMB_FORCE=1`.
-5. Driver: enumerate the reachable grid sequentially.
+1. `sr = streamingEnumeratePure[p, q, Parallel -> True]` — iso class reps.
+2. For each rep: 12-stat row from `statsFor` (reused from `pure_simplicial_compute.wl` — the script `Get`s that file with `pListOverride={}` to suppress its main loop and only pick up the function definitions).
+3. Per-cell exact distributions over iso classes:
+   - `π_V(X) ∝ nV(X)! / aut(X)`
+   - `π_F(X) ∝ q!     / autF(X)`
+   - `π_U(X) ∝ 1`
+   computed with exact rationals then converted to machine reals at the very end. All three sum to 1 within `1e-9` per cell.
+4. Atomic persist (`tmp + RenameFile`) to `data/p{p}q{q}_truth.wxf` — schema in the "Phase 2 results" section above.
+5. Idempotent: skip cells with existing non-empty WXF unless `COMB_FORCE=1`. Restrict cells via `COMB_TRUTH_CELLS="p,q;p,q;..."`.
 
-**Validation gates** before declaring Phase 2 done:
-- (p=2, q=4): match the 11 iso classes from `render_uniformity_check.wl`.
-- (p=3, q=4): match the 66 iso classes from `render_sampler_progress.wl`.
-- (p=2, q=5): match 26 iso classes (validated in Phase 1).
-- (p=2, q=6): match 68 iso classes (validated in Phase 1).
-- (p=3, q=5): match 445 iso classes (validated in Phase 1).
-- One spot-check of `numV` distribution against an N=200k MH chain at (3, 5): L1 < 0.05.
+**Validation gates** — all met:
+- (p=2, q=4): 11 iso classes ✓ (matches `render_uniformity_check.wl`).
+- (p=3, q=4): 66 iso classes ✓ (matches `render_sampler_progress.wl`).
+- (p=2, q=5): 26 iso classes ✓ (matches Phase 1).
+- (p=2, q=6): 68 iso classes ✓ (matches Phase 1).
+- (p=3, q=5): 445 iso classes ✓ (matches Phase 1).
+- ⏳ Spot-check of `numV` distribution against an N=200k MH chain at (3, 5): L1 < 0.05. **Not run yet — defer to Phase 3** since it shares the load-WXF + extract-marginal scaffolding.
 
-**Estimated wall-clock:** (3,5) is the dominant cost at ~7.6 min; the rest are ≤4 min each. Full Phase 2 run ≈ 15–20 min wall-clock.
+**Actual wall-clock** (logs/enumerate_truth_full.log + logs/enumerate_truth_smoke.log): ~14 min total. (3,5) dominates at 526s (matches Phase 1's 455s estimate within ~16%); (2,6) at 265s is ~25% slower than Phase 1's 210s, likely host-load variance. The full timing table is in the "Phase 2 results" section above.
 
 ### Phase 3 — Truth-overlay renderer (`src/render_truth_overlay.wl`)
 
@@ -220,8 +260,8 @@ For pushing the cap, in priority order:
 | `src/scaling_probe.wl`               | ✅ done | Eager pipeline probe |
 | `src/scaling_probe_streaming.wl`     | ✅ done | Streaming pipeline probe |
 | `src/test_streaming.wl`              | ✅ done | Correctness check |
-| `src/enumerate_truth.wl`             | pending | Phase 2 |
-| `data/p{p}q{q}_truth.wxf`            | pending | Phase 2 — five files |
+| `src/enumerate_truth.wl`             | ✅ done | Phase 2 driver |
+| `data/p{p}q{q}_truth.wxf`            | ✅ done | Phase 2 — five files (3.4–129.4 KB) |
 | `src/render_truth_overlay.wl`        | pending | Phase 3 |
 | `figures/combined_truth_overlay.pdf` | pending | Phase 3 |
 | `docs/literature_notes.md`           | pending | Phase 5 |
@@ -235,9 +275,9 @@ For pushing the cap, in priority order:
 ## Sequencing
 
 1. ✅ **Phase 1 — done 2026-05-02.** Half a day budgeted; took ~1.5 days including the streaming-pipeline development.
-2. **Phase 5 (reading) starts in parallel.** Doesn't block anything; informs the manuscript intro.
-3. **Phase 2 next.** Two days including validation gates. Compute is fast (~20 min wall-clock); the work is in the persistence schema, the validation script, and the stats integration.
-4. **Phase 3 after Phase 2.** Two days.
+2. ✅ **Phase 2 — done 2026-05-04.** Compute was fast as predicted (~14 min wall-clock for the full grid); the work was in the persistence schema, validation gates, and the `statsFor` integration via override-suppressed `Get` of `pure_simplicial_compute.wl`.
+3. **Phase 5 (reading) can start in parallel.** Doesn't block anything; informs the manuscript intro.
+4. **Phase 3 next.** Two days. Templates: `render_uniformity_check.wl` (per-iso-class bar style), `render_all_figures.wl` (3-color translucent overlay style + manuscript-panel naming).
 5. **Phase 4 last** — manuscript edits on top of confirmed reachability.
 
 End state: the manuscript figures show truth bars for (2, q≤6) and (3, q≤5), MH bars where truth is out of reach, and the (4,10) smoking-gun panel as honest evidence of why IS has to go.
