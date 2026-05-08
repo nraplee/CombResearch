@@ -25,6 +25,9 @@ C:\CombResearch\
 │   ├── run_parallel.ps1              (3-way parallel driver)
 │   ├── sampler_mh.wl                 (MH iso-class sampler — verified at (2,4), (3,4))
 │   ├── streaming_enumerator.wl       (truth-enum: streaming gen + bucketed dedupe)
+│   ├── enumerate_truth.wl            (truth-enum Phase 2: per-cell exact distributions → WXF)
+│   ├── run_mh_chains.wl              (truth-enum Phase 3: per-cell MH chain stats → WXF)
+│   ├── render_truth_overlay.wl       (truth-enum Phase 3: truth+MH overlay panels)
 │   ├── scaling_probe.wl              (truth-enum: eager-pipeline timing probe)
 │   ├── scaling_probe_streaming.wl    (truth-enum: streaming-pipeline timing probe)
 │   ├── test_streaming.wl             (truth-enum: correctness check vs ECGrav)
@@ -132,6 +135,7 @@ See **`docs/PLAN_TRUTH_ENUMERATION.md`** for the active plan. Highlights:
 - ✅ Phase 1 (scaling probe) complete. Reachable grid: `{(2,4), (2,5), (2,6), (3,4), (3,5)}`. Results in `docs/enumeration_scaling.md`.
 - ✅ Streaming enumerator prototype (`src/streaming_enumerator.wl`) — DFS gen + bucketed dedupe, parallel, validated against ECGrav. Drop-in `chooseNonIsoBucketed` available too.
 - ✅ Phase 2 done (2026-05-04): `src/enumerate_truth.wl` produced `data/p{p}q{q}_truth.wxf` for all five reachable cells; iso-class gates 11 / 26 / 68 / 66 / 445 all pass; ~14 min wall-clock total.
-- ⏳ Phase 3 next: `src/render_truth_overlay.wl` produces the manuscript panels.
+- ✅ Phase 3 done (2026-05-05): `src/run_mh_chains.wl` (chain persistence, schema mirrors enumerate_truth.wl) + `src/render_truth_overlay.wl` (truth+MH overlay panels). Renderer outputs to `figures/manuscript_panels/truthSX{Stat}[_conn]_p{p}q{q}_{target}.pdf` (147 panels at full coverage), `figures/stacked_previews/truth_*.{pdf,png}` (33 previews), and `figures/combined_truth_overlay.pdf` (multi-page review). MH chain numIter=200000, burnIn=20000, thin=5, kernel=global; (3,5) numV L1 gate fires inline on first compute. Renderer is rerunnable in ~2 min.
+- ⏳ Phase 4 next: manuscript integration via `\includegraphics` of the per-panel PDFs.
 
 `docs/NEXT.md` is the older (pre-truth-enumeration) handoff note; the plan supersedes it for this workstream.

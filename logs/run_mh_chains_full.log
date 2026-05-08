@@ -1,0 +1,88 @@
+sampleSize    = 0
+pList         = {}
+outputDir     = C:\CombResearch\.claude\worktrees\adoring-hoover-18d09b\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\.claude\worktrees\adoring-hoover-18d09b\src\
+outputDir         = C:\CombResearch\.claude\worktrees\adoring-hoover-18d09b\data
+resolvedCells     = {{2, 4}, {2, 5}, {2, 6}, {3, 4}, {3, 5}}
+resolvedTargets   = {unlabeled, facet, vertex}
+numIter / burnIn  = 200000 / 20000
+thin / seed       = 5 / 12345
+kernel            = global
+forceRecompute    = False
+samplerVersion    = sampler_mh.wl@9468fff
+
+=====================================
+(p, q) = (2, 4)  target = unlabeled  -->  p2q4_mh_unlabeled.wxf
+  WXF already exists (229.4 KB), skipping. Set COMB_FORCE=1 to override.
+
+=====================================
+(p, q) = (2, 4)  target = facet  -->  p2q4_mh_facet.wxf
+  WXF already exists (229. KB), skipping. Set COMB_FORCE=1 to override.
+
+=====================================
+(p, q) = (2, 4)  target = vertex  -->  p2q4_mh_vertex.wxf
+  WXF already exists (229. KB), skipping. Set COMB_FORCE=1 to override.
+
+=====================================
+(p, q) = (2, 5)  target = unlabeled  -->  p2q5_mh_unlabeled.wxf
+MH chain: p=2 q=5 nMax=10 target=unlabeled kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.555
+  sampling done: 200000 steps in 574.4 s
+    accept rate    : 0.555
+    Δ numV counts  : <|2 -> 15230, 1 -> 63821, 0 -> 74443, -1 -> 37072, -2 -> 9434|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 158.45000000000002s
+  wrote p2q5_mh_unlabeled.wxf  (1525.3000000000002 KB)
+
+=====================================
+(p, q) = (2, 5)  target = facet  -->  p2q5_mh_facet.wxf
+MH chain: p=2 q=5 nMax=10 target=facet kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.641
+  sampling done: 200000 steps in 1696.8 s
+    accept rate    : 0.645
+    Δ numV counts  : <|1 -> 76003, -2 -> 3418, -1 -> 26385, 0 -> 75238, 2 -> 18956|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 184.19s
+  wrote p2q5_mh_facet.wxf  (1523.9 KB)
+
+=====================================
+(p, q) = (2, 5)  target = vertex  -->  p2q5_mh_vertex.wxf
+MH chain: p=2 q=5 nMax=10 target=vertex kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 1.000
+  sampling done: 200000 steps in 24.0 s
+    accept rate    : 1.000
+    Δ numV counts  : <|0 -> 88594, 1 -> 48700, -1 -> 48628, -2 -> 7057, 2 -> 7021|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+In  = 200000 / 20000
+thin / seed       = 5 / 12345
+kernel            = global
+forceRecompute    = False
+samplerVersion    = sampler_mh.wl@9468fff
+
+=====================================
+(p, q) = (2, 4)  target = unlabeled  -->  p2q4_mh_unlabeled.wxf
+  WXF already exists (229.4 KB), skipping. Set COMB_FORCE=1 to override.
+
+=====================================
+(p, q) = (2, 4)  target = facet  -->  p2q4_mh_facet.wxf
+  WXF already exists (229. KB), skipping. Set COMB_FORCE=1 to override.
+
+=====================================
+(p, q) = (2, 4)  target = vertex  -->  p2q4_mh_vertex.wxf
+  WXF already exists (229. KB), skipping. Set COMB_FORCE=1 to override.
+
+=====================================
+(p, q) = (2, 5)  target = unlabeled  -->  p2q5_mh_unlabeled.wxf
+  WXF already exists (1525.3000000000002 KB), skipping. Set COMB_FORCE=1 to override.
+
+=====================================
+(p, q) = (2, 5)  target = facet  -->  p2q5_mh_facet.wxf
+MH chain: p=2 q=5 nMax=10 target=facet kernel=global numIter=200000 burnIn=20000 thin=5

@@ -1,0 +1,58 @@
+sampleSize    = 0
+pList         = {}
+outputDir     = C:\CombResearch\.claude\worktrees\adoring-hoover-18d09b\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\.claude\worktrees\adoring-hoover-18d09b\src\
+outputDir         = C:\CombResearch\.claude\worktrees\adoring-hoover-18d09b\data
+resolvedCells     = {{3, 5}}
+resolvedTargets   = {unlabeled, facet, vertex}
+numIter / burnIn  = 200000 / 20000
+thin / seed       = 5 / 12345
+kernel            = global
+forceRecompute    = False
+samplerVersion    = sampler_mh.wl@9468fff
+
+=====================================
+(p, q) = (3, 5)  target = unlabeled  -->  p3q5_mh_unlabeled.wxf
+MH chain: p=3 q=5 nMax=15 target=unlabeled kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.414
+  sampling done: 200000 steps in 694.8 s
+    accept rate    : 0.413
+    Δ numV counts  : <|1 -> 67887, 0 -> 50902, -1 -> 22526, 2 -> 42677, -2 -> 6054, 3 -> 9207, -3 -> 747|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 250.12s
+  wrote p3q5_mh_unlabeled.wxf  (1526. KB)
+  (3,5) numV L1(truth, MH unlabeled): 0.0222
+    GATE PASS (< 0.05)
+
+=====================================
+(p, q) = (3, 5)  target = facet  -->  p3q5_mh_facet.wxf
+MH chain: p=3 q=5 nMax=15 target=facet kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.445
+  sampling done: 200000 steps in 2197.6 s
+    accept rate    : 0.440
+    Δ numV counts  : <|0 -> 49861, 1 -> 70790, -2 -> 4287, 2 -> 45798, 3 -> 9746, -1 -> 19084, -3 -> 434|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 223.15s
+  wrote p3q5_mh_facet.wxf  (1524.4 KB)
+
+=====================================
+(p, q) = (3, 5)  target = vertex  -->  p3q5_mh_vertex.wxf
+MH chain: p=3 q=5 nMax=15 target=vertex kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 1.000
+  sampling done: 200000 steps in 19.4 s
+    accept rate    : 1.000
+    Δ numV counts  : <|-2 -> 14700, 0 -> 70995, -1 -> 48274, 1 -> 48564, 2 -> 14501, 3 -> 1501, -3 -> 1465|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 211.05s
+  wrote p3q5_mh_vertex.wxf  (1526. KB)
+
+=====================================
+Done.
