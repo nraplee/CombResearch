@@ -6,7 +6,7 @@ Set up shared agent instructions so Codex and Claude Code can work interchangeab
 
 ## Current status
 
-In progress.
+Complete.
 
 ## Decisions made
 
@@ -40,7 +40,7 @@ Before continuing, the next agent must:
 
 ## Last updated by
 
-Codex
+Codex on 2026-05-12
 
 ## Then when switching tools
 
@@ -55,4 +55,3 @@ When you switch from Codex to Claude Code:
 ```text
 Read CLAUDE.md, AGENTS.md, and docs/agent-task.md. Run git status --short and inspect the diff. Continue from the current repo state. Do not restart the task from scratch.
 ```
-
