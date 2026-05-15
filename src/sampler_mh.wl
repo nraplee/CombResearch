@@ -39,8 +39,12 @@
        π_U(X) ∝ |Aut(X)| · (N - numV(X))!
      facet (uniform on facet-labelings, marginal on iso classes):
        π_F(X) ∝ |Aut(X)| · (N - numV(X))! / |Aut_F(X)|
-     vertex (uniform on vertex-labeled, sanity check):
-       π_V(X) ∝ 1
+     vertex (marginal-on-iso matches enumerate_truth's piVertex):
+       π_V(X) ∝ 1 / C(N, numV(X))
+       (Before 2026-05-14 the form was π_V ∝ 1, which gives a different
+       distribution — uniform on labeled-in-[N] states — whose iso
+       marginal includes an extra C(N, k) factor. See in-code comment
+       at the vertex target Switch branch and validate_mh_vs_truth.wl.)
 
    Verification of unlabeled target via marginal calculation:
      For iso class [Y] with numV([Y]) = k, the number of vertex-labeled
@@ -225,7 +229,20 @@ mhStep[X_List, p_Integer, q_Integer, nMax_Integer, target_String,
       autFY = PureComplexFacetAutomorphismGroupOrder[Y];
       piRatio = (autY / autX) * (autFX / autFY) * factRatio,
     "vertex",
-      piRatio = 1,
+      (* 2026-05-14 fix: cancel the ambient-set embedding multiplicity
+         C(nMax, k). Before this fix, vertex target was π_V(X) ∝ 1,
+         which is uniform on vertex-labeled-in-[nMax] states. Its
+         marginal over iso class [Y] is C(nMax, k)·k!/|Aut(Y)| where
+         k = numV(Y). That's NOT enumerate_truth.wl's piVertex, which
+         marginalizes to k!/|Aut(Y)| (intrinsic, no ambient).
+         Validation at (3,5) showed L1 = 0.85 against truth.
+         Setting π_V(X) ∝ 1/C(nMax, numV(X)) makes the marginal
+         match: marginal[Y] ∝ C(nMax,k)·k!/|Aut(Y)| · 1/C(nMax,k)
+         = k!/|Aut(Y)|. The acceptance ratio is
+           π(Y)/π(X) = C(nMax, m) / C(nMax, mY).
+         Note: this means π_V is no longer uniform on labeled-in-[nMax]
+         states — labeled states with larger numV get LESS weight. *)
+      piRatio = Binomial[nMax, m] / Binomial[nMax, mY],
     _,
       Print["unknown target: ", target]; Abort[]];
 

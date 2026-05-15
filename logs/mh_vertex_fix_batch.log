@@ -1,0 +1,81 @@
+sampleSize    = 0
+pList         = {}
+nnFixed       = (none, variable n)
+outputDir     = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\src\
+outputDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+resolvedCells     = {{2, 4}, {2, 5}, {2, 6}, {3, 3}, {3, 4}}
+resolvedTargets   = {vertex}
+numIter / burnIn  = 200000 / 20000
+thin / seed       = 5 / 12345
+kernel            = global
+forceRecompute    = True
+samplerVersion    = sampler_mh.wl@7143104
+
+=====================================
+(p, q) = (2, 4)  target = vertex  -->  p2q4_mh_vertex.wxf
+MH chain: p=2 q=4 nMax=8 target=vertex kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.652
+  sampling done: 200000 steps in 22.3 s
+    accept rate    : 0.656
+    Δ numV counts  : <|1 -> 25484, 0 -> 75437, -1 -> 73998, -2 -> 22648, 2 -> 2433|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 166.46s
+  wrote p2q4_mh_vertex.wxf  (1528.5 KB)
+
+=====================================
+(p, q) = (2, 5)  target = vertex  -->  p2q5_mh_vertex.wxf
+MH chain: p=2 q=5 nMax=10 target=vertex kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.659
+  sampling done: 200000 steps in 16.5 s
+    accept rate    : 0.659
+    Δ numV counts  : <|0 -> 73474, -1 -> 73258, 1 -> 26310, -2 -> 24135, 2 -> 2823|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 239.63s
+  wrote p2q5_mh_vertex.wxf  (1526. KB)
+
+=====================================
+(p, q) = (2, 6)  target = vertex  -->  p2q6_mh_vertex.wxf
+MH chain: p=2 q=6 nMax=12 target=vertex kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.649
+  sampling done: 200000 steps in 22.4 s
+    accept rate    : 0.653
+    Δ numV counts  : <|-2 -> 25445, 0 -> 71616, -1 -> 73399, 1 -> 26428, 2 -> 3112|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 321.93s
+  wrote p2q6_mh_vertex.wxf  (1534.9 KB)
+
+=====================================
+(p, q) = (3, 3)  target = vertex  -->  p3q3_mh_vertex.wxf
+MH chain: p=3 q=3 nMax=9 target=vertex kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.574
+  sampling done: 200000 steps in 23.2 s
+    accept rate    : 0.579
+    Δ numV counts  : <|2 -> 4225, -1 -> 69181, 0 -> 58782, 1 -> 24049, -2 -> 36762, -3 -> 6760, 3 -> 241|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 182.62s
+  wrote p3q3_mh_vertex.wxf  (1528. KB)
+
+=====================================
+(p, q) = (3, 4)  target = vertex  -->  p3q4_mh_vertex.wxf
+MH chain: p=3 q=4 nMax=12 target=vertex kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.562
+  sampling done: 200000 steps in 23.1 s
+    accept rate    : 0.581
+    Δ numV counts  : <|1 -> 24189, -1 -> 67082, 0 -> 56822, -2 -> 38232, 3 -> 394, 2 -> 5001, -3 -> 8280|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 231.12s
+  wrote p3q4_mh_vertex.wxf  (1535.8000000000002 KB)
+
+=====================================
+Done.

@@ -47,45 +47,56 @@ Get[FileNameJoin[{scriptDir, "streaming_enumerator_bliss.wl"}]];
 
 (* The V-side vertex of bipartiteIncidenceGraph[cmplx] that receives
    the largest canonical label. Equivalently: the canonical "last
-   vertex to remove" in McKay's framework. *)
+   vertex to remove" in McKay's framework.
+
+   Integer-labeled now (2026-05-13 Phase 4b): V vertices are 1..n in
+   bipartiteIncidenceGraph, returns the integer V-label k in {1..n}
+   that gets the largest canonical position. The McKay DFS predicate
+   then checks `=== Length[state]` exactly as before. *)
 canonicalRemovalVSide[cmplx_List] := Module[
-  {g, n, vLabels, canonG, isoMap, canonLabels, maxPos},
+  {g, vList, n, canonG, isoMap, canonPositions, maxPos},
   g = bipartiteIncidenceGraph[cmplx];
-  n = Length[DeleteDuplicates[Flatten[cmplx]]];
-  vLabels = "v_" <> ToString[#] & /@ Range[n];
+  vList = Sort @ DeleteDuplicates @ Flatten[cmplx];
+  n = Length[vList];
   canonG = CanonicalGraph[g];
   isoMap = First[FindGraphIsomorphism[g, canonG]];
-  canonLabels = Lookup[isoMap, vLabels];
-  maxPos = First[Ordering[canonLabels, -1]];
-  vLabels[[maxPos]]
+  (* V-labels in the bipartite graph are 1..n (post-relabel inside
+     bipartiteIncidenceGraph); look up their canonical positions and
+     pick the V-label with the largest. Map the relabeled index back
+     to the original vertex via vList. For DFS use this is identity
+     (vList === Range[n]), so the returned integer equals the depth
+     of the just-added vertex and the McKay predicate's
+     `=== Length[state]` check matches. *)
+  canonPositions = Lookup[isoMap, Range[n]];
+  maxPos = First[Ordering[canonPositions, -1]];
+  vList[[maxPos]]
 ];
 
-(* Is `candidate` in the orbit of canonicalRemovalVSide[cmplx] under
-   the automorphism group of bipartiteIncidenceGraph[cmplx]?
+(* Is `candidate` (an integer V-label in 1..n) in the orbit of
+   canonicalRemovalVSide[cmplx] under the automorphism group of
+   bipartiteIncidenceGraph[cmplx]?
 
    IMPORTANT: GraphAutomorphismGroup returns a permutation group on
-   integer positions in VertexList[g], not on String labels directly.
-   We therefore translate vertex labels to positions, compute orbits
-   on positions, then check membership.
+   integer positions in VertexList[g]. With integer-labeled graphs the
+   vertex labels are themselves positions in VertexList (since we
+   construct g via Graph[Range[n+3q], ...]), so candidate IS its own
+   position.
 
    Cheap short-circuit when candidate IS the canonical-removal vertex
-   (covers most calls during DFS). *)
-isInCanonicalRemovalOrbit[cmplx_List, candidate_String] := Module[
-  {g, vertList, canonRem, canonRemPos, candidatePos, vPositions,
-   autGroup, posOrbits, hostPosOrbit},
+   (covers most calls during DFS). The current McKay predicate uses
+   strict equality and never invokes this orbit check; kept for future
+   reformulations (plan step 4b.5). *)
+isInCanonicalRemovalOrbit[cmplx_List, candidate_Integer] := Module[
+  {g, canonRem, autGroup, posOrbits, hostOrbit, vLabels, n},
   canonRem = canonicalRemovalVSide[cmplx];
   If[canonRem === candidate, Return[True]];
   g = bipartiteIncidenceGraph[cmplx];
-  vertList = VertexList[g];
-  canonRemPos = First @ FirstPosition[vertList, canonRem];
-  candidatePos = First @ FirstPosition[vertList, candidate];
-  vPositions = First @ FirstPosition[vertList, #] & /@
-    ("v_" <> ToString[#] & /@
-      Range[Length[DeleteDuplicates[Flatten[cmplx]]]]);
+  n = Length @ DeleteDuplicates @ Flatten[cmplx];
+  vLabels = Range[n];
   autGroup = GraphAutomorphismGroup[g];
-  posOrbits = GroupOrbits[autGroup, vPositions];
-  hostPosOrbit = First @ Select[posOrbits, MemberQ[#, canonRemPos] &];
-  MemberQ[hostPosOrbit, candidatePos]
+  posOrbits = GroupOrbits[autGroup, vLabels];
+  hostOrbit = First @ Select[posOrbits, MemberQ[#, canonRem] &];
+  MemberQ[hostOrbit, candidate]
 ];
 
 (* ============================================================
@@ -130,8 +141,7 @@ streamingFromStartMcKay[v0_List, p_Integer, q_Integer,
     isMcKayValid[state_List] := If[
       Length[state] <= 1,
       True,
-      canonicalRemovalVSide[convertToFacets[state]] ===
-        ("v_" <> ToString[Length[state]])
+      canonicalRemovalVSide[convertToFacets[state]] === Length[state]
     ];
 
     emit[finishedState_] := Module[{cmplx, key},

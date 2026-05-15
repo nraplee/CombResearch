@@ -1,0 +1,10 @@
+Profiling cells (sequential mode): {{2, 5}}
+Expected |iso|: {26}
+
+----- cell (2,5)   expected |iso|=26 -----
+  cheap     |iso|=26      totalEmitted=794       time=47.86s        peakDelta=0. MB
+  bliss     |iso|=26      totalEmitted=794       time=46.66s        peakDelta=0. MB
+  mckay     |iso|=26      totalEmitted=450       time=35.45s        peakDelta=0. MB
+    -> all three pipelines agree on |iso|=26   (gate ok)
+
+all correctness gates pass.
