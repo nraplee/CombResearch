@@ -53,21 +53,54 @@ Needs["ECGrav`"];
    Bipartite face-incidence graph with side-distinguishing gadget
    ============================================================ *)
 
+(* 2026-05-13 optimization (Phase 4b): integer-labeled instead of
+   string-labeled vertices.
+
+   Layout: V-side -> 1..n, F-side -> n+1..n+q, T-side -> n+q+1..n+3q
+   (two tags per facet at n+q+2(i-1)+1 and +2).
+
+   Strings cost ~120 us per graph build (probe_mckay_primitives.wl
+   baseline 2026-05-13). Integer labels cut hashing + interning cost and
+   downstream CanonicalGraph / FindGraphIsomorphism work on a cheaper
+   representation.
+
+   When V-vertices are already 1..n contiguously (the case for every
+   complex emerging from streamingFromStart's convertToFacets in
+   the DFS), we skip the relabeling step. Otherwise (external callers
+   passing arbitrary labels like the {{10,20},{20,30},{30,40}} sanity
+   test in test_streaming_bliss.wl) we relabel to 1..n.
+
+   Canonical key invariance: two iso complexes still produce equal
+   blissCanonicalKey because CanonicalGraph relabels output regardless
+   of input labels. The new keys are integer-pair edge lists rather
+   than string-pair edge lists, so any across-session cache from the
+   old format must be invalidated; in-run usage is unaffected. *)
 bipartiteIncidenceGraph[complex_List] := Module[
-  {q, vNode, fNode, tNode, bipEdges, gadgetEdges},
+  {q, vList, n, fStart, tStart, relabeledFacets, bipEdges, gadgetEdges},
   q = Length[complex];
-  vNode[v_] := "v_" <> ToString[v];
-  fNode[i_] := "f_" <> ToString[i];
-  tNode[i_, k_] := "t_" <> ToString[i] <> "_" <> ToString[k];
+  (* Sort is critical: DeleteDuplicates preserves first-appearance order,
+     and for DFS complexes the V-vertex IDs (always 1..n) appear in the
+     reversed-facet ordering, not in numeric order. Without Sort, vList
+     would be a permutation of 1..n, vList === Range[n] would fail, and
+     the relabel branch would scramble the V-vertex labels — breaking
+     the McKay predicate's `=== Length[state]` check. *)
+  vList = Sort @ DeleteDuplicates @ Flatten[complex];
+  n = Length[vList];
+  relabeledFacets = If[vList === Range[n],
+    complex,
+    Module[{relabel = AssociationThread[vList -> Range[n]]},
+      (relabel /@ #) & /@ complex]];
+  fStart = n;
+  tStart = n + q;
   bipEdges = Flatten @ Table[
-    UndirectedEdge[vNode[v], fNode[i]],
-    {i, q}, {v, complex[[i]]}];
+    UndirectedEdge[v, fStart + i],
+    {i, q}, {v, relabeledFacets[[i]]}];
   gadgetEdges = Flatten @ Table[
-    {UndirectedEdge[fNode[i], tNode[i, 1]],
-     UndirectedEdge[fNode[i], tNode[i, 2]],
-     UndirectedEdge[tNode[i, 1], tNode[i, 2]]},
+    {UndirectedEdge[fStart + i, tStart + 2 (i - 1) + 1],
+     UndirectedEdge[fStart + i, tStart + 2 (i - 1) + 2],
+     UndirectedEdge[tStart + 2 (i - 1) + 1, tStart + 2 (i - 1) + 2]},
     {i, q}];
-  Graph[Join[bipEdges, gadgetEdges]]
+  Graph[Range[n + 3 q], Join[bipEdges, gadgetEdges]]
 ];
 
 (* Canonical form via BLISS. Two complexes have equal canonical keys

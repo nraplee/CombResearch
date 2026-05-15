@@ -39,8 +39,12 @@
        π_U(X) ∝ |Aut(X)| · (N - numV(X))!
      facet (uniform on facet-labelings, marginal on iso classes):
        π_F(X) ∝ |Aut(X)| · (N - numV(X))! / |Aut_F(X)|
-     vertex (uniform on vertex-labeled, sanity check):
-       π_V(X) ∝ 1
+     vertex (marginal-on-iso matches enumerate_truth's piVertex):
+       π_V(X) ∝ 1 / C(N, numV(X))
+       (Before 2026-05-14 the form was π_V ∝ 1, which gives a different
+       distribution — uniform on labeled-in-[N] states — whose iso
+       marginal includes an extra C(N, k) factor. See in-code comment
+       at the vertex target Switch branch and validate_mh_vs_truth.wl.)
 
    Verification of unlabeled target via marginal calculation:
      For iso class [Y] with numV([Y]) = k, the number of vertex-labeled
@@ -95,19 +99,14 @@ Needs["ECGrav`"];
 numActive[facets_List] := Length[DeleteDuplicates[Flatten[facets]]];
 
 (* Sample a uniform random p-subset of [N] excluding the supplied list.
-   Rejection sampling. With |forbidden| = q-1 and C(n,p) ≫ q, rejection
-   succeeds almost immediately; the bound is purely defensive. If we ever
-   blow it the chain is wedged for some other reason and we want a loud
-   abort, not a silent enumeration of C(n,p) subsets. *)
+   Rejection sampling. *)
 randomSubsetExcluding[n_Integer, p_Integer, forbidden_List] := Module[
-  {F, attempts = 0, maxAttempts = 100000},
+  {F, attempts = 0, maxAttempts = 1000},
   While[attempts < maxAttempts,
     F = Sort[RandomSample[Range[n], p]];
     If[!MemberQ[forbidden, F], Return[F]];
     attempts++];
-  Print["randomSubsetExcluding: rejection bound ", maxAttempts,
-    " exceeded with n=", n, " p=", p, " |forbidden|=", Length[forbidden]];
-  Abort[]];
+  RandomChoice[Complement[Subsets[Range[n], {p}], forbidden]]];
 
 (* For computing |Aut| we hand the chain state straight to the ECGrav
    functions. They operate on facet lists over arbitrary integer labels;
@@ -191,20 +190,13 @@ proposeMixed[X_List, p_Integer, q_Integer, nMax_Integer,
 (* MH step                                                          *)
 (* =============================================================== *)
 
-(* Returns {newState, acceptedQ, ΔnumV, alpha, autNew, autFNew}.
-   autX / autFX are the cached |Aut| / |Aut_F| of the current state X
-   (Null when not needed by the target). On reject, the cached values
-   are returned unchanged; on accept, the freshly-computed Y values are
-   returned and the runner updates its cache. This avoids recomputing
-   PureComplexAutomorphismGroupOrder on rejected steps — which is the
-   dominant cost in the inner loop and ~91% of steps at p=4 q=10.
-
+(* Returns {newState, acceptedQ, ΔnumV, alpha}.
    nMax (rather than N) to avoid shadowing built-in N (numerical conversion).
    kernel ∈ {"global", "local", "swap", "mixed"} selects the proposal kernel. *)
-mhStep[X_List, autX_, autFX_, p_Integer, q_Integer, nMax_Integer,
-       target_String, kernel_String:"global"] := Module[
+mhStep[X_List, p_Integer, q_Integer, nMax_Integer, target_String,
+       kernel_String:"global"] := Module[
   {m, mY, Y, deltaM,
-   autY, autFY, factRatio, piRatio, alpha, u},
+   autX, autY, autFX, autFY, factRatio, piRatio, alpha, u},
 
   m = numActive[X];
   {Y, deltaM} = Switch[kernel,
@@ -215,7 +207,7 @@ mhStep[X_List, autX_, autFX_, p_Integer, q_Integer, nMax_Integer,
     _, Print["unknown kernel: ", kernel]; Abort[]];
 
   (* If the proposal degenerated to a no-op (Y == X), accept trivially. *)
-  If[Y === X, Return[{X, True, 0, 1.0, autX, autFX}]];
+  If[Y === X, Return[{X, True, 0, 1.0}]];
 
   mY = m + deltaM;
 
@@ -227,24 +219,38 @@ mhStep[X_List, autX_, autFX_, p_Integer, q_Integer, nMax_Integer,
 
   Switch[target,
     "unlabeled",
+      autX = PureComplexAutomorphismGroupOrder[X];
       autY = PureComplexAutomorphismGroupOrder[Y];
-      autFY = autFX;  (* unused; pass through *)
       piRatio = (autY / autX) * factRatio,
     "facet",
+      autX  = PureComplexAutomorphismGroupOrder[X];
       autY  = PureComplexAutomorphismGroupOrder[Y];
+      autFX = PureComplexFacetAutomorphismGroupOrder[X];
       autFY = PureComplexFacetAutomorphismGroupOrder[Y];
       piRatio = (autY / autX) * (autFX / autFY) * factRatio,
     "vertex",
-      autY = autX; autFY = autFX;
-      piRatio = 1,
+      (* 2026-05-14 fix: cancel the ambient-set embedding multiplicity
+         C(nMax, k). Before this fix, vertex target was π_V(X) ∝ 1,
+         which is uniform on vertex-labeled-in-[nMax] states. Its
+         marginal over iso class [Y] is C(nMax, k)·k!/|Aut(Y)| where
+         k = numV(Y). That's NOT enumerate_truth.wl's piVertex, which
+         marginalizes to k!/|Aut(Y)| (intrinsic, no ambient).
+         Validation at (3,5) showed L1 = 0.85 against truth.
+         Setting π_V(X) ∝ 1/C(nMax, numV(X)) makes the marginal
+         match: marginal[Y] ∝ C(nMax,k)·k!/|Aut(Y)| · 1/C(nMax,k)
+         = k!/|Aut(Y)|. The acceptance ratio is
+           π(Y)/π(X) = C(nMax, m) / C(nMax, mY).
+         Note: this means π_V is no longer uniform on labeled-in-[nMax]
+         states — labeled states with larger numV get LESS weight. *)
+      piRatio = Binomial[nMax, m] / Binomial[nMax, mY],
     _,
       Print["unknown target: ", target]; Abort[]];
 
   alpha = Min[1, N[piRatio]];
   u = RandomReal[];
   If[u < alpha,
-    {Y, True, deltaM, alpha, autY, autFY},
-    {X, False, deltaM, alpha, autX, autFX}]
+    {Y, True, deltaM, alpha},
+    {X, False, deltaM, alpha}]
 ];
 
 (* =============================================================== *)

@@ -1,0 +1,33 @@
+sampleSize    = 0
+pList         = {}
+nnFixed       = (none, variable n)
+outputDir     = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\src\
+outputDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+resolvedCells     = {{4, 5}}
+resolvedTargets   = {vertex}
+numIter / burnIn  = 200000 / 20000
+thin / seed       = 5 / 12345
+kernel            = global
+forceRecompute    = False
+samplerVersion    = sampler_mh.wl@7143104
+
+=====================================
+(p, q) = (4, 5)  target = vertex  -->  p4q5_mh_vertex.wxf
+MH chain: p=4 q=5 nMax=20 target=vertex kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.511
+  sampling done: 200000 steps in 16.4 s
+    accept rate    : 0.511
+    Δ numV counts  : <|2 -> 5952, -1 -> 58531, 0 -> 45159, -3 -> 19184, 1 -> 21673, -2 -> 45333, 3 -> 884, -4 -> 3235, 4 -> 49|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 271.51s
+  wrote p4q5_mh_vertex.wxf  (1560.8000000000002 KB)
+
+=====================================
+Done.

@@ -1,0 +1,26 @@
+sampleSize    = 0
+pList         = {}
+nnFixed       = (none, variable n)
+outputDir     = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\src\
+outputDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+resolvedCells     = {{4, 5}}
+forceRecompute    = False
+pipeline          = cheap
+parallelMode      = False
+ecGravVersion     = 1.0.0
+enumeratorVersion = streaming_enumerator.wl@7143104
+
+=====================================
+(p, q) = (4, 5)  -->  p4q5_truth.wxf
+  expected |iso|: (no gate registered for this cell)
+
+No more memory available.
+Mathematica kernel has shut down.
+Try quitting other applications and then retry.
+The product exited because an error occurred. For a product older than 12.1, this can mean that the product is unregistered.
