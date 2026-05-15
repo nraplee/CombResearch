@@ -111,5 +111,6 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - `CLAUDE.md` should import this file with `@AGENTS.md` and contain only Claude Code-specific notes.
 - `docs/agent-task.md` is the live handoff. Update it when the goal, status, decisions, likely files, or validation commands change.
 - At the start of a resumed session, read `docs/agent-task.md`, inspect git status/diff, then continue from the recorded state.
-- At the end of substantial work, update `docs/agent-task.md` with what changed, what was checked, and what remains.
+- **Every commit that ships meaningful work MUST include corresponding updates to `docs/agent-task.md`** (status, decisions, files touched, next steps) and to `AGENTS.md` (commands list, coding rules, project overview) when applicable. Stage and commit the handoff updates in the same commit as the work they describe — never as a follow-up. A commit that updates code without refreshing the handoff is treated as incomplete by either agent.
+- At the end of substantial work, also re-confirm `docs/agent-task.md` reflects exactly what changed, what was checked, and what remains.
 
