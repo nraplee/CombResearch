@@ -95,14 +95,19 @@ Needs["ECGrav`"];
 numActive[facets_List] := Length[DeleteDuplicates[Flatten[facets]]];
 
 (* Sample a uniform random p-subset of [N] excluding the supplied list.
-   Rejection sampling. *)
+   Rejection sampling. With |forbidden| = q-1 and C(n,p) ≫ q, rejection
+   succeeds almost immediately; the bound is purely defensive. If we ever
+   blow it the chain is wedged for some other reason and we want a loud
+   abort, not a silent enumeration of C(n,p) subsets. *)
 randomSubsetExcluding[n_Integer, p_Integer, forbidden_List] := Module[
-  {F, attempts = 0, maxAttempts = 1000},
+  {F, attempts = 0, maxAttempts = 100000},
   While[attempts < maxAttempts,
     F = Sort[RandomSample[Range[n], p]];
     If[!MemberQ[forbidden, F], Return[F]];
     attempts++];
-  RandomChoice[Complement[Subsets[Range[n], {p}], forbidden]]];
+  Print["randomSubsetExcluding: rejection bound ", maxAttempts,
+    " exceeded with n=", n, " p=", p, " |forbidden|=", Length[forbidden]];
+  Abort[]];
 
 (* For computing |Aut| we hand the chain state straight to the ECGrav
    functions. They operate on facet lists over arbitrary integer labels;
@@ -186,13 +191,20 @@ proposeMixed[X_List, p_Integer, q_Integer, nMax_Integer,
 (* MH step                                                          *)
 (* =============================================================== *)
 
-(* Returns {newState, acceptedQ, ΔnumV, alpha}.
+(* Returns {newState, acceptedQ, ΔnumV, alpha, autNew, autFNew}.
+   autX / autFX are the cached |Aut| / |Aut_F| of the current state X
+   (Null when not needed by the target). On reject, the cached values
+   are returned unchanged; on accept, the freshly-computed Y values are
+   returned and the runner updates its cache. This avoids recomputing
+   PureComplexAutomorphismGroupOrder on rejected steps — which is the
+   dominant cost in the inner loop and ~91% of steps at p=4 q=10.
+
    nMax (rather than N) to avoid shadowing built-in N (numerical conversion).
    kernel ∈ {"global", "local", "swap", "mixed"} selects the proposal kernel. *)
-mhStep[X_List, p_Integer, q_Integer, nMax_Integer, target_String,
-       kernel_String:"global"] := Module[
+mhStep[X_List, autX_, autFX_, p_Integer, q_Integer, nMax_Integer,
+       target_String, kernel_String:"global"] := Module[
   {m, mY, Y, deltaM,
-   autX, autY, autFX, autFY, factRatio, piRatio, alpha, u},
+   autY, autFY, factRatio, piRatio, alpha, u},
 
   m = numActive[X];
   {Y, deltaM} = Switch[kernel,
@@ -203,7 +215,7 @@ mhStep[X_List, p_Integer, q_Integer, nMax_Integer, target_String,
     _, Print["unknown kernel: ", kernel]; Abort[]];
 
   (* If the proposal degenerated to a no-op (Y == X), accept trivially. *)
-  If[Y === X, Return[{X, True, 0, 1.0}]];
+  If[Y === X, Return[{X, True, 0, 1.0, autX, autFX}]];
 
   mY = m + deltaM;
 
@@ -215,16 +227,15 @@ mhStep[X_List, p_Integer, q_Integer, nMax_Integer, target_String,
 
   Switch[target,
     "unlabeled",
-      autX = PureComplexAutomorphismGroupOrder[X];
       autY = PureComplexAutomorphismGroupOrder[Y];
+      autFY = autFX;  (* unused; pass through *)
       piRatio = (autY / autX) * factRatio,
     "facet",
-      autX  = PureComplexAutomorphismGroupOrder[X];
       autY  = PureComplexAutomorphismGroupOrder[Y];
-      autFX = PureComplexFacetAutomorphismGroupOrder[X];
       autFY = PureComplexFacetAutomorphismGroupOrder[Y];
       piRatio = (autY / autX) * (autFX / autFY) * factRatio,
     "vertex",
+      autY = autX; autFY = autFX;
       piRatio = 1,
     _,
       Print["unknown target: ", target]; Abort[]];
@@ -232,8 +243,8 @@ mhStep[X_List, p_Integer, q_Integer, nMax_Integer, target_String,
   alpha = Min[1, N[piRatio]];
   u = RandomReal[];
   If[u < alpha,
-    {Y, True, deltaM, alpha},
-    {X, False, deltaM, alpha}]
+    {Y, True, deltaM, alpha, autY, autFY},
+    {X, False, deltaM, alpha, autX, autFX}]
 ];
 
 (* =============================================================== *)
