@@ -1,0 +1,16 @@
+Attempting (4,4) cheap pipeline, sequential mode, timeout = 1200 s
+
+==== (4,4) cheap result ====
+  iso class count : 278
+  totalEmitted    : 3642
+  numBuckets      : 162
+  wall-clock      : 260.62 s
+  peak mem        : 450.90000000000003 MB
+
+Implication for (4,5):
+  If (4,5) iso count scales ~5-10x (per (3,4)->(3,5) ratio of 6.7x),
+  expect ~1863 iso classes at (4,5)
+  parallel (k=14) peak mem ~ k * scale * peakMB
+  with k=14 and 10x scale: ~61.6 GB
+  with k=4  and 10x scale: ~17.6 GB
+  with k=2  and 10x scale: ~8.8 GB

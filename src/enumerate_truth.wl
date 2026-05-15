@@ -41,8 +41,12 @@ projectRoot = ParentDirectory[scriptDir];
 outputDir = FileNameJoin[{projectRoot, "data"}];
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
-(* ===== Load streaming enumerator ===== *)
+(* ===== Load streaming enumerators =====
+   Always load all three; the pipeline choice (env var, below) selects
+   which one drives the run. *)
 Get[FileNameJoin[{scriptDir, "streaming_enumerator.wl"}]];
+Get[FileNameJoin[{scriptDir, "streaming_enumerator_bliss.wl"}]];
+Get[FileNameJoin[{scriptDir, "streaming_enumerator_mckay.wl"}]];
 
 (* ===== Pull statsFor + helpers from pure_simplicial_compute.wl =====
    The Get'd script also runs a per-p sampling loop on load; suppress it
@@ -73,6 +77,28 @@ resolvedCells = Which[
 forceRecompute = With[{e = Environment["COMB_FORCE"]},
   StringQ[e] && e === "1"];
 
+(* ===== Pipeline + parallelism env knobs (added 2026-05-13 Phase 4b) =====
+   COMB_TRUTH_PIPELINE selects which enumerator: cheap | bliss | mckay.
+     default = cheap (matches original behavior; battle-tested).
+   COMB_TRUTH_PARALLEL controls subkernel use: true | false.
+     default = true. Set to false for memory-constrained cells (e.g. p=4)
+     where ~14 subkernels would multiply working-set memory past 32 GB.
+   When pipeline != cheap, the output filename gets a `_<pipeline>` tag
+   so cheap and McKay runs of the same cell coexist for cross-validation. *)
+pipelineName = With[{e = Environment["COMB_TRUTH_PIPELINE"]},
+  If[StringQ[e] && StringLength[e] > 0, ToLowerCase[StringTrim[e]],
+    "cheap"]];
+pipelineFn = Switch[pipelineName,
+  "cheap", streamingEnumeratePure,
+  "bliss", streamingEnumeratePureBLISS,
+  "mckay", streamingEnumeratePureMcKay,
+  _, Print["    ERROR: unknown COMB_TRUTH_PIPELINE: ", pipelineName,
+       " (expected cheap | bliss | mckay)"]; Abort[]];
+parallelMode = With[{e = Environment["COMB_TRUTH_PARALLEL"]},
+  If[StringQ[e] && StringLength[e] > 0,
+    ToLowerCase[StringTrim[e]] =!= "false",
+    True]];
+
 (* ===== Provenance ===== *)
 ecGravVersion = "1.0.0";  (* vendored at ECGrav/ECGrav-1.0.0/ *)
 enumeratorVersion = Module[{res, sha},
@@ -87,12 +113,18 @@ Print["scriptDir         = ", scriptDir];
 Print["outputDir         = ", outputDir];
 Print["resolvedCells     = ", resolvedCells];
 Print["forceRecompute    = ", forceRecompute];
+Print["pipeline          = ", pipelineName];
+Print["parallelMode      = ", parallelMode];
 Print["ecGravVersion     = ", ecGravVersion];
 Print["enumeratorVersion = ", enumeratorVersion];
 
-(* ===== Per-cell pipeline ===== *)
+(* ===== Per-cell pipeline =====
+   Non-cheap pipelines get a tagged filename so cheap and McKay runs of
+   the same cell can coexist for cross-validation. *)
 truthFile[p_Integer, q_Integer] := FileNameJoin[{outputDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}];
+  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth"
+    <> If[pipelineName === "cheap", "", "_" <> pipelineName]
+    <> ".wxf"}];
 
 statsHeaders = {"numV", "aut", "autF", "connected",
   "num1VConnComps", "num2VConnComps", "largestCompRatio",
@@ -132,7 +164,7 @@ processCell[{p_Integer, q_Integer}] := Module[
   (* ----- Streaming enumeration ----- *)
   ClearSystemCache[];
   {wallSec, sr} = AbsoluteTiming[
-    streamingEnumeratePure[p, q, Parallel -> True]];
+    pipelineFn[p, q, Parallel -> parallelMode]];
   peakMemMB = N[MaxMemoryUsed[] / 2.0^20];
 
   isoReps = sr["isoReps"];
@@ -199,6 +231,8 @@ processCell[{p_Integer, q_Integer}] := Module[
     "piUnlabeled"       -> piU,
     "wallClockSec"      -> wallSec,
     "peakMemMB"         -> peakMemMB,
+    "pipeline"          -> pipelineName,
+    "parallelMode"      -> parallelMode,
     "ecGravVersion"     -> ecGravVersion,
     "enumeratorVersion" -> enumeratorVersion,
     "createdAt"         -> DateString[]|>;

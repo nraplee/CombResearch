@@ -6,7 +6,7 @@ Canonical shared instructions for Codex and Claude Code in this repository. Keep
 
 TODO: Keep this paragraph current as the paper evolves.
 
-Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Current work centers on Figures 3-15, q=10 sampling/diagnostics, truth enumeration for reachable small `(p, q)` cells, MH validation, and manuscript integration.
+Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validated against truth at 8 of those (27/27 cell×target combinations pass L1 < 0.04); (4,5) MH pending. McKay canonical-augmentation enumerator (`src/streaming_enumerator_mckay.wl`) is the production path at p=4 — the cheap pipeline OOMs at (4,5) even sequentially. Current work centers on Figures 3-15, the (4,5) MH chains, cross-checking the (4,5) iso count = 5,532 against Dr. Betre's independent samples, and manuscript integration.
 
 ## Repo Layout
 
@@ -44,8 +44,28 @@ wolframscript -file src\render_all_figures.wl
 Truth-enumeration and MH commands:
 
 ```powershell
+# Truth enumeration. Env knobs (added 2026-05-13):
+#   COMB_TRUTH_CELLS="p,q;p,q;..."   restrict cells
+#   COMB_TRUTH_PIPELINE=cheap|bliss|mckay   default cheap
+#   COMB_TRUTH_PARALLEL=true|false   default true; set false for p=4 OOM avoidance
+#   COMB_FORCE=1                     overwrite existing WXFs
+# Non-cheap pipelines write to data/p{p}q{q}_truth_<pipeline>.wxf for
+# side-by-side cross-validation. Cheap writes to p{p}q{q}_truth.wxf.
 wolframscript -file src\enumerate_truth.wl
+
+# MH chains. Same env knobs (COMB_MH_CELLS, COMB_MH_TARGETS, COMB_MH_NUMITER,
+# COMB_MH_BURNIN, COMB_MH_THIN, COMB_MH_SEED, COMB_MH_KERNEL, COMB_FORCE).
 wolframscript -file src\run_mh_chains.wl
+
+# Parallel (4,5) MH launch (one process per target) + dashboard:
+powershell -ExecutionPolicy Bypass -File src\run_p4q5_mh_parallel.ps1
+powershell -ExecutionPolicy Bypass -File src\monitor_mh.ps1
+
+# Validation: per-cell × target numV-marginal L1 between MH and truth.
+# Env: COMB_VAL_CELLS, COMB_VAL_TARGETS, COMB_VAL_THRESHOLD (default 0.05).
+wolframscript -file src\validate_mh_vs_truth.wl
+
+# Render manuscript overlay panels (truth + MH + IS layers).
 wolframscript -file src\render_truth_overlay.wl
 ```
 
@@ -54,6 +74,7 @@ Checks/smoke tests:
 ```powershell
 wolframscript -file src\test_streaming.wl
 wolframscript -file src\test_streaming_bliss.wl
+wolframscript -file src\test_streaming_mckay.wl    # validates McKay on (2,4)+(3,4)
 ```
 
 No lint or typecheck command is configured. Use targeted Wolfram scripts as checks. Avoid full overnight or large production runs unless the user asks.
@@ -65,6 +86,8 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - Do not edit generated files in `data/`, `figures/`, or `logs/` unless explicitly asked.
 - Do not edit Figure 2 reference notebooks in `src/reference/` unless explicitly asked.
 - Never use `RandomFacetLabeledPureSimplicialComplex` for the facet-labeled distribution. Use verified reweighting or exact truth data where available.
+- MH sampler vertex target uses `π_V(X) ∝ 1/C(N, numV(X))` (2026-05-14 fix). The earlier `π_V ∝ 1` was wrong by a `C(N, k)` factor and produced L1 = 0.85 vs truth at (3,5). Do NOT revert without re-deriving — see in-code comment at the vertex Switch branch of `mhStep` in `src/sampler_mh.wl`.
+- At p=4 the cheap pipeline (`streamingEnumeratePure`) OOMs at (4,5) even sequential. Use `streamingEnumeratePureMcKay` for p=4 q≥5. Cheap is still fine at (4,4) and below.
 - Keep changes narrowly scoped. Do not reformat unrelated files.
 - Do not add dependencies without asking first.
 

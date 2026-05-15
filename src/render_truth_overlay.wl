@@ -31,8 +31,14 @@ manuscriptPanelsDir = FileNameJoin[{figuresDir, "manuscript_panels"}];
 If[!DirectoryQ[stackedPreviewsDir],  CreateDirectory[stackedPreviewsDir]];
 If[!DirectoryQ[manuscriptPanelsDir], CreateDirectory[manuscriptPanelsDir]];
 
-(* ===== Reachable grid ===== *)
-reachableCells = {{2, 4}, {2, 5}, {2, 6}, {3, 4}, {3, 5}};
+(* ===== Reachable grid =====
+   Extended 2026-05-14: added (2,7), (3,6) from extended-budget enumeration,
+   (4,4) as the first p=4 cell, and (4,5) from McKay sequential (cheap
+   pipeline OOM'd at (4,5)). For cells without MH WXFs yet, the renderer
+   renders truth-only panels and skips the MH layer gracefully. *)
+reachableCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},
+                  {3, 4}, {3, 5}, {3, 6},
+                  {4, 4}, {4, 5}};
 allTargets = {"unlabeled", "facet", "vertex"};
 
 (* ===== Style (mirrors render_all_figures.wl:36-56) ===== *)
@@ -241,9 +247,10 @@ manuscriptName[manStem_, p_, q_, target_, filterSpec_] :=
   "_" <> target;
 
 (* ===== Figure list (adapted from render_all_figures.wl:211-224) =====
-   Drops fig12/fig15 (p=4 only, no truth at p=4).
-   Restricts fig11/fig14 to pSubset = {3} (no truth at p=4).
-   Format: {stackedStem, statColumn, xLabel, panelType, pSubset, filterSpec, manStem} *)
+   Format: {stackedStem, statColumn, xLabel, panelType, pSubset, filterSpec, manStem}
+   2026-05-14: p=4 now has truth at (4,4) and (4,5). Default pSubset
+   (Automatic) extended from {2,3} -> {2,3,4}. fig11/fig14 (Betti2,
+   num2PathConnComps; p>=3 stats) extended from {3} -> {3,4}. *)
 figs = {
   {"fig03_numVertices",      "numV",             "Number of vertices",                  "discrete",    Automatic, None,        "NumVertices"},
   {"fig04_autOrder",         "aut",              "|\[CapitalGamma](X)|",                "logdiscrete", Automatic, None,        "AutGorder"},
@@ -253,14 +260,14 @@ figs = {
   {"fig08_num1VConnComps",   "num1VConnComps",   "Number of 1-vertex conn. components", "discrete",    Automatic, None,        "num1VConnectedComponents"},
   {"fig09_num2VConnComps",   "num2VConnComps",   "Number of 2-vertex conn. components", "discrete",    Automatic, None,        "num2VConnectedComponents"},
   {"fig10_largestCompRatio", "largestCompRatio", "Largest-component vertex ratio",      "continuous",  Automatic, None,        "ratioOflargestCompVsVertexCount"},
-  {"fig11_num2PathConnComps","num2PathConnComps","Number of 2-path conn. components",   "discrete",    {3},       None,        "num2PConnectedComponents"},
+  {"fig11_num2PathConnComps","num2PathConnComps","Number of 2-path conn. components",   "discrete",    {3, 4},    None,        "num2PConnectedComponents"},
   {"fig13_Betti1",           "Betti1",           "\[Beta]_1",                           "discrete",    Automatic, None,        "Betti1"},
-  {"fig14_Betti2",           "Betti2",           "\[Beta]_2",                           "discrete",    {3},       None,        "Betti2"}};
+  {"fig14_Betti2",           "Betti2",           "\[Beta]_2",                           "discrete",    {3, 4},    None,        "Betti2"}};
 
 (* ===== Cell selector ===== *)
 qsForP[p_] := Cases[reachableCells, {p, q_} :> q];
 cellsForFig[pSubset_] := Module[{ps},
-  ps = If[pSubset === Automatic, {2, 3}, pSubset];
+  ps = If[pSubset === Automatic, {2, 3, 4}, pSubset];
   Flatten[Table[{p, q}, {p, ps}, {q, qsForP[p]}], 1]];
 
 (* ===== Render driver ===== *)

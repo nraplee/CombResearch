@@ -1,0 +1,16 @@
+Profiling cells (sequential mode): {{2, 4}, {3, 4}}
+Expected |iso|: {11, 66}
+
+----- cell (2,4)   expected |iso|=11 -----
+  cheap     |iso|=11      totalEmitted=70        time=1.07s         peakDelta=NumberForm[0., {7, 1}] MB
+  bliss     |iso|=11      totalEmitted=70        time=0.96s         peakDelta=NumberForm[0., {7, 1}] MB
+  mckay     |iso|=11      totalEmitted=43        time=1.13s         peakDelta=NumberForm[0., {7, 1}] MB
+    -> all three pipelines agree on |iso|=11   (gate ok)
+
+----- cell (3,4)   expected |iso|=66 -----
+  cheap     |iso|=66      totalEmitted=666       time=18.02s        peakDelta=NumberForm[0., {7, 1}] MB
+  bliss     |iso|=66      totalEmitted=666       time=18.07s        peakDelta=NumberForm[0., {7, 1}] MB
+  mckay     |iso|=66      totalEmitted=396       time=21.56s        peakDelta=NumberForm[0., {7, 1}] MB
+    -> all three pipelines agree on |iso|=66   (gate ok)
+
+all correctness gates pass.

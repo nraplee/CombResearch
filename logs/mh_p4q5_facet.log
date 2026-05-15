@@ -1,0 +1,33 @@
+sampleSize    = 0
+pList         = {}
+nnFixed       = (none, variable n)
+outputDir     = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\src\
+outputDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+resolvedCells     = {{4, 5}}
+resolvedTargets   = {facet}
+numIter / burnIn  = 200000 / 20000
+thin / seed       = 5 / 12345
+kernel            = global
+forceRecompute    = False
+samplerVersion    = sampler_mh.wl@7143104
+
+=====================================
+(p, q) = (4, 5)  target = facet  -->  p4q5_mh_facet.wxf
+MH chain: p=4 q=5 nMax=20 target=facet kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.325
+  sampling done: 200000 steps in 1800.9 s
+    accept rate    : 0.315
+    Δ numV counts  : <|1 -> 56984, 3 -> 27745, 2 -> 56053, 0 -> 34903, -1 -> 14500, -2 -> 3913, -3 -> 722, 4 -> 5115, -4 -> 65|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 226.9s
+  wrote p4q5_mh_facet.wxf  (1526. KB)
+
+=====================================
+Done.

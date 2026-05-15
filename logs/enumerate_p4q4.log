@@ -1,0 +1,29 @@
+sampleSize    = 0
+pList         = {}
+nnFixed       = (none, variable n)
+outputDir     = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\src\
+outputDir         = C:\CombResearch\.claude\worktrees\optimistic-fermi-1eeb56\data
+resolvedCells     = {{4, 4}}
+forceRecompute    = False
+ecGravVersion     = 1.0.0
+enumeratorVersion = streaming_enumerator.wl@7143104
+
+=====================================
+(p, q) = (4, 4)  -->  p4q4_truth.wxf
+  expected |iso|: (no gate registered for this cell)
+  streaming done in 80.24s,   peak mem 505.1 MB
+  |isoReps|     = 278
+  totalEmitted  = 3642
+  numBuckets    = 162
+  computing 12-stat row for 278 iso classes ...
+    stats time  : 1.71s
+  wrote p4q4_truth.wxf  (80.2 KB)
+
+=====================================
+Done.
