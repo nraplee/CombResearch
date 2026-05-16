@@ -1,7 +1,7 @@
 (* test_streaming_bliss.wl
    Correctness + speed validation for streaming_enumerator_bliss.wl
    (Option B). Compares against streaming_enumerator.wl's cheap-key
-   pipeline on the five reachable cells.
+   pipeline on the default five-cell test grid.
 
    Validation gates (iso class counts must match):
      (2,4) -> 11   (2,5) -> 26   (2,6) -> 68

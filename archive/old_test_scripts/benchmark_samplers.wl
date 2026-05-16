@@ -15,7 +15,7 @@ $smokeTestSkip = True;
 Get["src/sampler_mh.wl"];
 
 (* From IS merged data — pre-recorded ESS for unlabeled target.
-   See docs/NEXT.md "Final merged ESS" table. *)
+   See docs/sampling.md. *)
 isESSTable = <|2 -> {2000000, 667}, 3 -> {12000000, 123}, 4 -> {12000000, 25}|>;
 
 Print["benchmarking samplers at q=10 ..."];

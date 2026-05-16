@@ -1,11 +1,7 @@
 (* enumerate_truth.wl
-   Phase 2 of the truth-enumeration plan: per (p, q) in the empirically
-   reachable grid, run the streaming enumerator, compute per-iso-class
-   statistics and the three exact distributions (vertex-labeled,
-   facet-labeled, unlabeled), and persist a single WXF cache per cell.
-
-   Reachable grid (from docs/enumeration_scaling.md):
-     {(2, 4), (2, 5), (2, 6), (3, 4), (3, 5)}.
+   Truth-enumeration driver. For each requested (p, q), run one of the
+   streaming enumerators, compute per-iso-class statistics and the three exact
+   distributions, and persist a WXF cache.
 
    Output: data/p{p}q{q}_truth.wxf, schema:
      <|
@@ -26,12 +22,10 @@
 
    Idempotent: skips cells whose WXF already exists and is non-empty.
    Force-recompute via env var COMB_FORCE=1.
-   Restrict cells via env var COMB_TRUTH_CELLS="p,q;p,q;..." (default:
-   the full reachable grid).
+   Restrict cells via env var COMB_TRUTH_CELLS="p,q;p,q;...".
 
-   Validation gates (per docs/PLAN_TRUTH_ENUMERATION.md): iso-class
-   counts must match {(2,4)->11, (2,5)->26, (2,6)->68, (3,4)->66,
-   (3,5)->445}. Mismatch aborts the run. *)
+   Validation gates cover the default small grid. Add expected counts below
+   when widening the default grid. *)
 
 Needs["ECGrav`"];
 

@@ -29,7 +29,7 @@ Remaining open items:
 - McKay-style canonical-augmentation enumerator is the production path at p=4.
 - `data/p4q5_truth.wxf` is the cheap-style filename but is copied from `p4q5_truth_mckay.wxf` (cheap pipeline failed at this cell).
 - Vertex target's `π_V(X)` is `∝ 1/C(N, numV(X))` (not `∝ 1`). See `mhStep` in `src/sampler_mh.wl`.
-- (4,5) MH chains will run in 3 parallel processes via `src\run_p4q5_mh_parallel.ps1`, monitored via `src\monitor_mh.ps1`.
+- (4,5) MH chains ran in 3 parallel processes via `src\run_p4q5_mh_parallel.ps1`, monitored via `src\monitor_mh.ps1`.
 - Betre's `.mx` re-export request was sent (user-mediated via email/Slack).
 
 ## Files modified this session
@@ -39,14 +39,23 @@ Remaining open items:
 - `src/streaming_enumerator_mckay.wl` — `canonicalRemovalVSide` for integer labels
 - `src/enumerate_truth.wl` — pipeline + parallelism env vars, tagged filenames, payload `pipeline` field
 - `src/render_truth_overlay.wl` — `reachableCells` 5 → 9, p=4 enabled in fig defaults
+- 2026-05-16 Codex comment audit: refreshed stale headers/comments in sampler,
+  truth/MH drivers, overlay renderer, streaming enumerators, and p=4 probe;
+  `validate_mh_vs_truth.wl` now defaults to the current 9-cell grid.
+- 2026-05-16 Codex doc consolidation: replaced historical planning docs with
+  `docs/enumeration.md` and `docs/sampling.md`; README and source references
+  now point at the consolidated docs.
+- 2026-05-16 Codex archive cleanup: moved historical benchmark/probe/scaling
+  scripts from `src/` to `archive/old_test_scripts/`; production renderers and
+  smoke tests remain in `src/`.
 
 ## Files added this session
 
 - `src/validate_mh_vs_truth.wl` — MH-vs-truth validation harness
 - `src/test_streaming_mckay.wl` — McKay correctness gate + profiler
-- `src/probe_mckay_primitives.wl` — per-primitive time attribution probe
-- `src/probe_clique_vs_bipartite.wl` — clique-graph vs bipartite speedup measurement
-- `src/probe_p4_cheap.wl` — (4,4) cheap pipeline scaling probe
+- `archive/old_test_scripts/probe_mckay_primitives.wl` — archived per-primitive time attribution probe
+- `archive/old_test_scripts/probe_clique_vs_bipartite.wl` — archived clique-graph vs bipartite speedup measurement
+- `archive/old_test_scripts/probe_p4_cheap.wl` — archived (4,4) cheap pipeline scaling probe
 - `src/probe_betre_mx.wl` — inspector for Betre's `.mx` files
 - `src/run_p4q5_mh_parallel.ps1` — 3-process parallel launcher for (4,5) MH
 - `src/monitor_mh.ps1` — dashboard for running MH chains
@@ -54,9 +63,9 @@ Remaining open items:
 ## Likely files for the next agent
 
 - `src/sampler_mh.wl` — if MH semantics need further work
-- `src/run_p4q5_mh_parallel.ps1` — to launch (4,5) MH chains
-- `src/validate_mh_vs_truth.wl` — to validate when chains land
-- `data/p4q5_mh_*.wxf` — output of (4,5) MH chains (will appear when launcher runs)
+- `src/run_p4q5_mh_parallel.ps1` — if (4,5) MH chains need to be rerun
+- `src/validate_mh_vs_truth.wl` — MH-vs-truth validation harness
+- `data/p4q5_mh_*.wxf` — output of validated (4,5) MH chains
 - `data/p4q*SXFacetLabeled.wxf`, `data/p4q*SXUnlabeled.wxf` — Betre's data (when he re-exports)
 
 ## Commands/checks to run
@@ -89,7 +98,7 @@ Before continuing, the next agent must:
 
 ## Last updated by
 
-Claude Code on 2026-05-15 (Phase 4b closeout)
+Codex on 2026-05-16 (docs/code cleanup PR)
 
 ## Tool switch prompts
 

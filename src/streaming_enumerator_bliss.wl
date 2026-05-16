@@ -1,12 +1,11 @@
 (* streaming_enumerator_bliss.wl
-   Option B of docs/PLAN_TRUTH_ENUMERATION.md § "Alternative enumeration
-   approaches": replace the cheap 3-tuple canonicalKey of
+   BLISS canonical-key enumerator: replace the cheap 3-tuple canonicalKey of
    streaming_enumerator.wl with a true canonical form via Mathematica's
    CanonicalGraph (BLISS algorithm) on the bipartite face-incidence graph.
 
    STATUS (2026-05-07): correct but NOT a standalone speedup.
-   Empirically validated against expected iso-class counts on the five
-   reachable cells (2,4) (2,5) (2,6) (3,4) (3,5). Speedup vs the cheap-key
+   Empirically validated against expected iso-class counts on the original
+   five-cell test grid (2,4) (2,5) (2,6) (3,4) (3,5). Speedup vs the cheap-key
    pipeline ranges from 1.04× to 2.31× — within noise. Root cause:
    benchmarks at (2,6) show the DFS recursion itself accounts for ≈ 95 %
    of wall-clock; iso testing in the cheap pipeline is a small constant.
@@ -59,7 +58,7 @@ Needs["ECGrav`"];
    Layout: V-side -> 1..n, F-side -> n+1..n+q, T-side -> n+q+1..n+3q
    (two tags per facet at n+q+2(i-1)+1 and +2).
 
-   Strings cost ~120 us per graph build (probe_mckay_primitives.wl
+   Strings cost ~120 us per graph build (archived probe_mckay_primitives.wl
    baseline 2026-05-13). Integer labels cut hashing + interning cost and
    downstream CanonicalGraph / FindGraphIsomorphism work on a cheaper
    representation.

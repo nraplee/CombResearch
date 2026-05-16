@@ -1,13 +1,8 @@
 (* sampler_mh.wl
-   Exploratory Metropolis-Hastings sampler over isomorphism classes of pure
-   simplicial complexes (q facets, purity p).
-
-   STATUS: prototype. Math reviewed and small-example-verified (p=2 q=2 on
-   [N=4] gives uniform iso-class marginal, see comments below). NOT
-   benchmarked vs IS at q=10, NOT in the production pipeline. Written
-   2026-04-29 in response to docs/email_betre_post_batch3.md item 1, pending
-   Dr. Betre's reply. See docs/PIPELINE.md for the IS sampler this is
-   trying to replace at q=10 p∈{3,4}.
+   Metropolis-Hastings sampler over fixed-ambient vertex-labeled pure
+   simplicial complexes, with acceptance ratios chosen so the marginal over
+   isomorphism classes matches the requested target. Validated against exact
+   truth on the current 9-cell grid; see src/validate_mh_vs_truth.wl.
 
    ============================================================================
    PRIOR ATTEMPT (replaced by this file 2026-04-29)
@@ -80,7 +75,7 @@
                  · [|Aut_F(X)|/|Aut_F(Y)|]
                  · [(N-numV(Y))!/(N-numV(X))!]
    For target vertex:
-     π(Y)/π(X) = 1   (chain reduces to RW on vertex-labeled states)
+     π(Y)/π(X) = C(N, numV(X)) / C(N, numV(Y))
 
    Factorial ratio (N-mY)!/(N-m)! depends on Δm = mY - m ∈ {-p, ..., p}:
      Δm =  0  →  1
@@ -123,7 +118,7 @@ randomSubsetExcluding[n_Integer, p_Integer, forbidden_List] := Module[
    the change in numActive (0 for no-op).
 
    Benchmark results at p=4 q=10 / p=2 q=4 are summarized in
-   docs/NEXT.md; tl;dr "global" remains the best for numV-mixing,
+   docs/sampling.md; tl;dr "global" remains the best for numV-mixing,
    "mixed" is comparable on accuracy and ~26% faster wall-clock.
    =============================================================== *)
 

@@ -1,8 +1,6 @@
 (* probe_p4_cheap.wl
-   Phase 4b investigation: does the cheap pipeline reach (4,4)? If so,
-   what's the iso class count, the wall-clock, and the peak memory?
-   This is the first p=4 enumeration the project has ever attempted
-   (beyond IS sampling at (4,10)).
+   Historical Phase 4b probe: check whether the cheap pipeline reaches
+   (4,4), and estimate why it will not scale to (4,5).
 
    Run sequentially (Parallel -> False) to get a clean per-kernel memory
    number — that's the unit that matters for the parallel-mode (4,5)

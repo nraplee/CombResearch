@@ -1,39 +1,54 @@
 # CombResearch
 
-Wolfram Mathematica pipeline for *Random Pure Simplicial Complexes with Fixed Number of Facets* (Raplee & Betre, in preparation). Manuscript draft in `docs/`.
-
-## Quick start
-
-```powershell
-# Compute (default N=10000 per p; produces data/p{2,3,4}q10_n10000_samples.csv)
-wolframscript -file src\pure_simplicial_compute.wl
-
-# Render Figures 3-15 from existing CSV
-wolframscript -file src\render_all_figures.wl
-
-# Larger run — overnight, N=500000
-wolframscript -file src\pure_simplicial_compute_overnight.wl
-
-# Three-process parallel run (one per p)
-powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
-```
-
-Sample CSVs are not checked in (~120 MB total) — regenerate via the compute commands above.
-
-## Layout
-
-```
-src/        — working scripts (compute + render + parallel wrappers)
-data/       — generated CSVs (gitignored)
-figures/    — rendered PDFs/PNGs (manuscript_panels/, stacked_previews/, combined PDF)
-docs/       — PIPELINE.md (technical writeup), HANDOFF.md, manuscript .tex
-logs/       — overnight.log etc.
-archive/    — superseded data, scratch tests, old renders
-```
-
-See [`CLAUDE.md`](CLAUDE.md) for the full project guide and [`docs/PIPELINE.md`](docs/PIPELINE.md) for the technical pipeline writeup.
+Wolfram Mathematica research code for probability distributions of pure simplicial complexes with fixed facet count.
 
 ## Status
 
-- **Figure 2 (q=3):** done, in manuscript.
-- **Figures 3-15 (q=10, p ∈ {2,3,4}):** N=500k samples generated; figures rendered. Importance-sampling reweighting collapses at q=10 for p=3,4 (ESS in single digits) — see `docs/PIPELINE.md` § "Why the hack breaks at q=10."
+- Figure 2 at `q = 3` is complete.
+- Exact truth data exists for 9 cells: `(2,4)`, `(2,5)`, `(2,6)`, `(2,7)`, `(3,4)`, `(3,5)`, `(3,6)`, `(4,4)`, `(4,5)`.
+- MH chains validate against truth for all 27 cell-target combinations at L1 `< 0.05`.
+- `(4,5)` has 5,532 isomorphism classes by McKay enumeration.
+- Current open work is manuscript integration, Betre WXF cross-checks, and deciding whether to attempt `(4,6)`.
+
+## Quick Start
+
+```powershell
+# Exact truth enumeration.
+wolframscript -file src\enumerate_truth.wl
+
+# MH chains.
+wolframscript -file src\run_mh_chains.wl
+
+# Validate MH against truth.
+wolframscript -file src\validate_mh_vs_truth.wl
+
+# Render truth/MH overlay panels.
+wolframscript -file src\render_truth_overlay.wl
+```
+
+Older q=10 importance-sampling commands are still available:
+
+```powershell
+wolframscript -file src\pure_simplicial_compute.wl
+wolframscript -file src\render_all_figures.wl
+powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
+```
+
+## Layout
+
+```text
+src/        Wolfram scripts for compute, rendering, enumeration, MH, probes, checks
+data/       Generated CSV/WXF outputs, gitignored
+figures/    Generated manuscript panels, previews, and combined PDFs
+docs/       Current technical docs and live handoff
+logs/       Generated run logs
+archive/    Old renders, superseded data, and scratch tests
+ECGrav/     Vendored ECGrav paclet sources/snapshots
+```
+
+## Docs
+
+- `AGENTS.md` - canonical working instructions for coding agents.
+- `docs/agent-task.md` - live handoff and current project state.
+- `docs/enumeration.md` - truth enumeration, BLISS, McKay, validation.
+- `docs/sampling.md` - importance sampling, MH sampler, q=10 ESS caveat.
