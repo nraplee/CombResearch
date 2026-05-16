@@ -1,8 +1,8 @@
 (* render_truth_overlay.wl
-   Phase 3 renderer. Overlays exact-truth bars (from p{p}q{q}_truth.wxf)
+   Truth/MH overlay renderer. Overlays exact-truth bars (from p{p}q{q}_truth.wxf)
    against MH chain bars (from p{p}q{q}_mh_{target}.wxf) for the
-   reachable cells {(2,4), (2,5), (2,6), (3,4), (3,5)}. No IS overlay
-   (smoking-gun panel stays in src/render_sampler_progress.wl).
+   reachableCells list below. No IS overlay; q=10 comparison panels stay in
+   src/render_sampler_progress.wl.
 
    Inputs (from data/):
      p{p}q{q}_truth.wxf            — exact iso-class enumeration + 12-stat per class
@@ -32,9 +32,7 @@ If[!DirectoryQ[stackedPreviewsDir],  CreateDirectory[stackedPreviewsDir]];
 If[!DirectoryQ[manuscriptPanelsDir], CreateDirectory[manuscriptPanelsDir]];
 
 (* ===== Reachable grid =====
-   Extended 2026-05-14: added (2,7), (3,6) from extended-budget enumeration,
-   (4,4) as the first p=4 cell, and (4,5) from McKay sequential (cheap
-   pipeline OOM'd at (4,5)). For cells without MH WXFs yet, the renderer
+   Includes the 9-cell truth grid. For cells without MH WXFs, the renderer
    renders truth-only panels and skips the MH layer gracefully. *)
 reachableCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},
                   {3, 4}, {3, 5}, {3, 6},
@@ -248,9 +246,7 @@ manuscriptName[manStem_, p_, q_, target_, filterSpec_] :=
 
 (* ===== Figure list (adapted from render_all_figures.wl:211-224) =====
    Format: {stackedStem, statColumn, xLabel, panelType, pSubset, filterSpec, manStem}
-   2026-05-14: p=4 now has truth at (4,4) and (4,5). Default pSubset
-   (Automatic) extended from {2,3} -> {2,3,4}. fig11/fig14 (Betti2,
-   num2PathConnComps; p>=3 stats) extended from {3} -> {3,4}. *)
+   Automatic covers p in {2, 3, 4}. fig11/fig14 are restricted to p >= 3. *)
 figs = {
   {"fig03_numVertices",      "numV",             "Number of vertices",                  "discrete",    Automatic, None,        "NumVertices"},
   {"fig04_autOrder",         "aut",              "|\[CapitalGamma](X)|",                "logdiscrete", Automatic, None,        "AutGorder"},

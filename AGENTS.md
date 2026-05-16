@@ -6,7 +6,7 @@ Canonical shared instructions for Codex and Claude Code in this repository. Keep
 
 TODO: Keep this paragraph current as the paper evolves.
 
-Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validated against truth at 8 of those (27/27 cell×target combinations pass L1 < 0.04); (4,5) MH pending. McKay canonical-augmentation enumerator (`src/streaming_enumerator_mckay.wl`) is the production path at p=4 — the cheap pipeline OOMs at (4,5) even sequentially. Current work centers on Figures 3-15, the (4,5) MH chains, cross-checking the (4,5) iso count = 5,532 against Dr. Betre's independent samples, and manuscript integration.
+Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validate against truth for all 27 cell×target combinations at L1 < 0.05. McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Current work centers on manuscript integration, cross-checking the (4,5) iso count = 5,532 against Dr. Betre's independent samples, and deciding whether to attempt (4,6).
 
 ## Repo Layout
 
@@ -15,9 +15,9 @@ Current summary: Wolfram Mathematica research project for probability distributi
 - `ECGrav/` - vendored ECGrav paclet sources/snapshots, not a separate app.
 - `data/` - generated CSV/WXF compute outputs; generally do not edit by hand.
 - `figures/` - generated manuscript panels, previews, and review PDFs.
-- `docs/` - pipeline docs, manuscript draft, plans, and handoff files.
+- `docs/` - consolidated technical docs, manuscript draft, and live handoff.
 - `logs/` - generated run logs.
-- `archive/` - old renders, superseded data, and scratch tests.
+- `archive/` - old renders, superseded data, scratch tests, and archived probes.
 
 This is a single-project repo rooted at `C:\CombResearch`; there are no major independent subprojects that need nested `AGENTS.md` files right now.
 
@@ -96,7 +96,7 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - Before continuing prior work, inspect `git status --short` and relevant `git diff`.
 - For documentation-only changes, `git diff -- AGENTS.md CLAUDE.md docs/agent-task.md` is usually enough.
 - For code changes, run the smallest relevant Wolfram check or smoke script and record what ran in the handoff.
-- Treat q=10 facet/unlabeled IS histograms with caution; ESS collapse is documented in `docs/PIPELINE.md`.
+- Treat q=10 facet/unlabeled IS histograms with caution; ESS collapse is documented in `docs/sampling.md`.
 
 ## Git and Worktree Rules
 

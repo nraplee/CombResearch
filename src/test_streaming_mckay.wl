@@ -1,7 +1,6 @@
 (* test_streaming_mckay.wl
-   Phase 4b step 1+2 (per docs/PLAN_TRUTH_ENUMERATION.md alternative D and
-   the Phase 4 plan file): profile and validate the three streaming
-   enumerators sequentially. Sequential mode chosen to get clean
+   Profile and validate the three streaming enumerators sequentially.
+   Sequential mode chosen to get clean
    per-kernel memory peaks free of subkernel overhead. Establishes the
    baseline McKay needs to beat for (4,5).
 

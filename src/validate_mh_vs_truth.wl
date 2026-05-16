@@ -1,8 +1,8 @@
 (* validate_mh_vs_truth.wl
    Per (p, q) × target ∈ {unlabeled, facet, vertex}, compare the MH-sampled
    numV histogram against the exact π_target marginal on numV computed from
-   the truth WXF. Reports per-bin probabilities, total-variation distance
-   (L1/2), and a simple ASCII overlay.
+   the truth WXF. Reports per-bin probabilities, L1 distance, and a simple
+   ASCII overlay.
 
    The MH WXF stores rows of 12 statistics per post-thin kept state, with
    numV in column 1. The truth WXF stores per-iso-class entries with
@@ -14,7 +14,7 @@
    we have data for. Stat-other-than-numV extension is a future feature.
 
    Usage:
-     wolframscript -file src/validate_mh_vs_truth.wl                # all cells × targets
+     wolframscript -file src/validate_mh_vs_truth.wl                # default grid × targets
      COMB_VAL_CELLS="3,3"                wolframscript -file ...
      COMB_VAL_CELLS="3,5"  COMB_VAL_TARGETS="vertex"  wolframscript -file ...
      COMB_VAL_TARGETS="unlabeled,facet"  wolframscript -file ...
@@ -27,7 +27,9 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 dataDir = FileNameJoin[{projectRoot, "data"}];
 
-defaultCells = {{3, 3}, {2, 4}, {2, 5}, {2, 6}, {3, 4}, {3, 5}};
+defaultCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},
+                {3, 4}, {3, 5}, {3, 6},
+                {4, 4}, {4, 5}};
 defaultTargets = {"unlabeled", "facet", "vertex"};
 
 parseEnvCells[s_String] := Module[{pairs},

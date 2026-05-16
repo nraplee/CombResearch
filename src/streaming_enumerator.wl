@@ -41,8 +41,8 @@
        singletons; they're equivalent under the lex symmetry to the
        starts we keep.
 
-   This is a prototype written alongside ECGrav-1.0.0 (not modifying
-   vendored code).
+   This is the baseline "cheap-key" enumerator. It is reliable for small
+   cells, but p=4 q>=5 should use streamingEnumeratePureMcKay to avoid OOM.
 *)
 
 Needs["ECGrav`"];

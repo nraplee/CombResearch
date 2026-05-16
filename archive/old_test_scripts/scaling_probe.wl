@@ -1,5 +1,5 @@
 (* scaling_probe.wl
-   Phase 1 of docs/PLAN_TRUTH_ENUMERATION.md.
+   Historical scaling probe for docs/enumeration.md.
 
    Benchmarks GenerateAllFacetLabeledPureSimplicialComplexes[{p,q}] and
    ChooseNonIsomorphicSimplicialComplexes for a (p,q) grid, recording

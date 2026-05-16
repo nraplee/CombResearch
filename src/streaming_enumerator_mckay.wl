@@ -1,8 +1,7 @@
 (* streaming_enumerator_mckay.wl
-   Option D of docs/PLAN_TRUTH_ENUMERATION.md § "Alternative enumeration
-   approaches": McKay-style canonical-augmentation enumeration. Generates
-   each iso class via exactly one DFS path by pruning at every internal
-   step on a canonical-augmentation predicate.
+   McKay-style canonical-augmentation enumeration. Prunes DFS
+   branches at every internal step with a canonical-augmentation predicate,
+   then uses BLISS keys to dedup any cross-start duplicates at the leaves.
 
    WHY: benchmarks at (2,6) show the existing DFS visits 12,055 leaves
    for only 68 iso classes — a 177× redundancy. The DFS recursion itself
@@ -17,16 +16,13 @@
    bipartite face-incidence graph G(S) under BLISS canonicalization.
    The canonical-augmentation predicate accepts S iff the just-added
    vertex (the one at position n) is in the orbit of m(S) under
-   Aut(G(S)). This guarantees: among all DFS paths that could reach
-   any iso class, exactly one passes the predicate at every step.
+   Aut(G(S)). This selects canonical augmentations within a DFS subtree.
 
    Note: at the DFS root (single starting vertex), the predicate is
    trivially True (one V-vertex, one orbit). Different starting states
    correspond to different bipartite graphs and remain distinct DFS
-   subtrees. We rely on BLISS canonical-key dedup at the leaves to
-   catch any cross-subtree duplicates (different starts that reach the
-   same iso class). In practice the predicate prunes aggressively
-   within each subtree even before the cross-subtree dedup fires.
+   subtrees. BLISS canonical-key dedup at the leaves catches cross-subtree
+   duplicates. In practice the predicate still prunes aggressively.
 
    API mirrors streaming_enumerator.wl one-for-one:
      - streamingEnumeratePureMcKay[p, q] — same {isoReps, totalEmitted, numBuckets}

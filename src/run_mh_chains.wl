@@ -1,10 +1,10 @@
 (* run_mh_chains.wl
-   Phase 3 chain-persistence sister to enumerate_truth.wl. For each
-   reachable (p, q) cell and each target measure, run the MH sampler,
-   compute a 12-stat row per kept post-thin state, and persist a single
-   WXF cache per cell × target.
+   MH chain-persistence driver. For each requested (p, q) cell and target,
+   run the MH sampler, compute a 12-stat row per kept post-thin state, and
+   persist a WXF cache per cell × target.
 
-   Reachable grid (Phase 2): {(2,4), (2,5), (2,6), (3,4), (3,5)}.
+   Default grid is the original Phase 2 smoke grid; set COMB_MH_CELLS for
+   newer cells such as (2,7), (3,6), (4,4), and (4,5).
    Targets: {"unlabeled", "facet", "vertex"}.
 
    Output: data/p{p}q{q}_mh_{target}.wxf, schema:
@@ -34,7 +34,7 @@
      COMB_MH_SEED     = integer           (default 12345)
      COMB_MH_KERNEL   = string            (default "global")
 
-   Validation gate (deferred from Phase 2): when (p,q,target) ==
+   Historical inline gate: when (p,q,target) ==
    (3, 5, "unlabeled") is freshly computed, immediately load
    data/p3q5_truth.wxf, marginalize piUnlabeled onto numV, bin chain
    numV the same way, compute L1, abort if >= 0.05. Single-shot check —
