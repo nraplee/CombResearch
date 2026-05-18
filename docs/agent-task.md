@@ -44,12 +44,30 @@ the same numV marginal. L1 vs truth:
 - Conclusion: the q=10 IS-vs-MH disagreement is the same phenomenon
   observed at q=5 where we have truth to break the tie. MH is right.
 
+**Phase 4c part 3 (overnight 2026-05-17 → 2026-05-18): warm-start + second-seed disambiguation at q=10.**
+Belt-and-suspenders test: run 1M-iter chains with seed 67890 and warm-start
+at numV near the IS mode (14 for p=3, 18 for p=4) at the 4 disagreement
+cells. If the chain stays at the warm-init region, MH-trapped is in play;
+if it descends to the same region the production seed-12345 chains found,
+both chains are stationary in the same basin and the MH answer is locked.
+
+Result: **production and warm chains agree to L1 ≤ 0.06 at every cell.**
+
+| cell  | target    | prod acc | warm acc | L1(IS, prod) | L1(IS, warm) | **L1(prod, warm)** |
+|-------|-----------|---------:|---------:|-------------:|-------------:|-------------------:|
+| (3,10) | unlabeled | 0.18 | 0.19 | 0.559 | 0.532 | **0.034** |
+| (3,10) | facet     | 0.19 | 0.19 | 0.525 | 0.562 | **0.038** |
+| (4,10) | unlabeled | 0.10 | 0.10 | 1.332 | 1.335 | **0.050** |
+| (4,10) | facet     | 0.09 | 0.09 | 1.379 | 1.344 | **0.059** |
+
+Different seed × different init × 5× chain length all settle on the same
+distribution. MH-trapped ruled out. **IS is biased at low ESS; MH is right.**
+Phase 4c is closed.
+
 Remaining open items:
 
-1. **Disambiguate MH-stationary vs MH-trapped** at p=4 q=10 unlabeled/facet:
-   - Second seed (e.g., seed 67890) at (4,10) unlabeled/facet, same 200k budget.
-   - Warm-start the chain from a high-numV state (e.g., near IS mode numV=18) and
-     check whether it descends to numV=15-16 or stays near numV=18.
+1. ~~Disambiguate MH-stationary vs MH-trapped at p=4 q=10 unlabeled/facet~~
+   — closed by Phase 4c part 3 (warm-start + second seed). See below.
 2. **Betre cross-check**: Dr. Betre has independent (4,4) and (4,5) facet-labeled
    and unlabeled samples in `.mx` files. Platform-locked to MacOSX-ARM64.
    Betre asked to re-export as WXF. When `.wxf` files land in
@@ -92,6 +110,33 @@ Remaining open items:
 - 2026-05-16 Codex archive cleanup: moved historical benchmark/probe/scaling
   scripts from `src/` to `archive/old_test_scripts/`; production renderers and
   smoke tests remain in `src/`.
+
+## Files added this session (Phase 4c part 3)
+
+- `src/run_q10_mh_overnight.ps1` — orchestrator for the overnight job.
+  Step 1 restores `p4q10_mh_unlabeled.wxf` at the production 200k budget
+  (a smoke test had overwritten it). Step 2 launches 4 parallel
+  wolframscript processes at 1M iter, seed 67890, warm-start at
+  numV=14 (p=3) or numV=18 (p=4). Outputs tagged
+  `_seed67890_warm{N}` so production is never clobbered.
+- `src/compare_q10_warm_vs_prod.wl` — per-cell L1 table comparing IS,
+  production-seed, and warm-seed chains. Reports L1(prod, warm) as the
+  key disambiguator.
+- `src/render_q10_warm_vs_prod.wl` — 2x2 grouped-bar overlay
+  (IS / prod / warm) at the 4 disagreement cells. Output:
+  `figures/q10_warm_vs_prod.{png,pdf}`.
+
+Sampler patches enabling the overnight job:
+- `src/sampler_mh.wl`: added `warmInitialState[p,q,nMax,mTarget,seed]`
+  that constructs q distinct random p-subsets of `{1..mTarget}` embedded
+  in `[nMax]`. `runMHChain` gained option `initNumV` (default
+  Automatic = existing random-vertex-labeled init).
+- `src/run_mh_chains.wl`: added env vars `COMB_MH_TAG` (output-filename
+  suffix), `COMB_MH_INITNUMV` (forwards to runMHChain), and
+  `COMB_MH_OUTDIR` (override the output dir — needed when running the
+  worktree script with outputs going to the main checkout). Tag and
+  initNumV are persisted to the payload. The (3,5) inline gate is
+  skipped for non-default tag or initNumV.
 
 ## Files added this session (Phase 4c part 2)
 
@@ -172,7 +217,7 @@ Before continuing, the next agent must:
 
 ## Last updated by
 
-Claude Code on 2026-05-17 (Phase 4c part 2: 3-way IS vs MH vs truth at q=5)
+Claude Code on 2026-05-18 (Phase 4c part 3: warm-start + second-seed disambiguation, Phase 4c CLOSED)
 
 ## Tool switch prompts
 

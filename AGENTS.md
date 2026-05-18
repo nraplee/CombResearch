@@ -90,6 +90,12 @@ wolframscript -file src\compare_is_mh_q10.wl
 wolframscript -file src\run_is_at_truth_cells.wl    # 100k IS samples each
 wolframscript -file src\compare_3way.wl             # per-cell L1 table
 wolframscript -file src\render_3way.wl              # 2x3 overlay grid PNG
+
+# Warm-start + second-seed disambiguation at q=10 disagreement cells.
+# 4 chains x 1M iters in parallel, ~5 hr wall.
+powershell -ExecutionPolicy Bypass -File src\run_q10_mh_overnight.ps1
+wolframscript -file src\compare_q10_warm_vs_prod.wl  # per-cell L1 table
+wolframscript -file src\render_q10_warm_vs_prod.wl   # 2x2 grouped-bar PNG
 ```
 
 Checks/smoke tests:
