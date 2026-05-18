@@ -39,9 +39,19 @@ l1[a_, b_] := Module[{keys, av, bv},
   bv = Lookup[b, #, 0.] & /@ keys;
   Total[Abs[av - bv]]];
 
+(* Half-width of each bin's bar rectangle (in numV units). 0.42 leaves
+   a small gap between adjacent bins. *)
+halfW = 0.42;
+
+(* Manuscript style: white background, black frame, IS and MH as
+   translucent overlapping rectangles (so where they agree the colors
+   blend), truth as small filled black dots centered on the bins.
+   Bars and dots share one coordinate system, so dots sit exactly at
+   bar centers. *)
 panel[p_, q_, t_] := Module[
   {is, mh, truth, isBars, mhBars, tBars, keys, isV, mhV, tV,
-   l1IsT, l1MhT, ess, title, truthDots},
+   l1IsT, l1MhT, ess, title, isRects, mhRects, truthPts,
+   yMax, xLo, xHi},
   is    = Import[isFile[p, q, t], "WXF"];
   mh    = Import[mhFile[p, q, t], "WXF"];
   truth = Import[truthFile[p, q], "WXF"];
@@ -64,45 +74,61 @@ panel[p_, q_, t_] := Module[
     "  L1(MH,T)=", NumberForm[l1MhT, {4, 3}],
     "  IS ESS=", NumberForm[ess, 4]}];
 
-  (* IS + MH as overlapping translucent bars sharing the same x.
-     Truth as filled dots on top. ChartLayout -> "Overlapped" puts both
-     series at the same x positions and lets the colors mix where they
-     coincide. Epilog Point positions (i, tV[[i]]) line up with the bar
-     centers, which BarChart places at integer x. *)
-  (* Truth dots: bright yellow with thin black ring for contrast on
-     either dark or light backgrounds. Skip bins where truth is exactly
-     zero so the x-axis isn't littered. *)
-  truthDots = Select[Transpose[{Range[Length[keys]], tV}],
-    #[[2]] > 0 &];
+  isRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
+    {keys, isV}];
+  mhRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
+    {keys, mhV}];
+  truthPts = Pick[Transpose[{keys, tV}], # > 0 & /@ tV];
 
-  BarChart[
-    Transpose[{isV, mhV}],
-    ChartLayout -> "Overlapped",
-    ChartStyle -> {
-      Directive[Opacity[0.55], RGBColor[0.20, 0.45, 0.85]],
-      Directive[Opacity[0.55], RGBColor[0.95, 0.50, 0.10]]},
-    ChartLegends -> Placed[
-      {"IS reweighted", "MH chain", "  truth = \[FilledCircle]"}, Top],
-    ChartLabels -> {ToString /@ keys, None},
+  yMax = 1.08 * Max[isV, mhV, tV];
+  xLo  = First[keys] - 0.6;
+  xHi  = Last[keys]  + 0.6;
+
+  Graphics[{
+    EdgeForm[None],
+    Directive[Opacity[0.55], RGBColor[0.20, 0.45, 0.85]], isRects,
+    Directive[Opacity[0.55], RGBColor[0.95, 0.50, 0.10]], mhRects,
+    Black, AbsolutePointSize[4], Point[truthPts]},
     Frame -> True,
     FrameLabel -> {"numV", "fraction"},
-    PlotLabel -> Style[title, 10],
-    ImageSize -> 520,
-    PlotRangePadding -> {Automatic, Scaled[0.04]},
-    BarSpacing -> {-1, 0.3},
-    ChartElementFunction -> "Rectangle",
-    Epilog -> {
-      AbsolutePointSize[10], Black, Point[truthDots],
-      AbsolutePointSize[7],  RGBColor[1.0, 0.92, 0.0], Point[truthDots]}]];
+    FrameTicks -> {
+      {Automatic, None},  (* y: left only *)
+      {Transpose[{keys, ToString /@ keys}], None}},  (* x: bottom only *)
+    PlotLabel -> Style[title, 10, Black],
+    PlotRange -> {{xLo, xHi}, {0, yMax}},
+    AspectRatio -> 1/2,
+    ImageSize -> 560,
+    Background -> White]];
 
 cells = {{3, 5}, {4, 5}};
 targets = {"vertex", "unlabeled", "facet"};
 
+legendRow = Graphics[{
+  (* IS swatch *)
+  Opacity[0.55], RGBColor[0.20, 0.45, 0.85],
+  EdgeForm[None], Rectangle[{0, 0}, {1.4, 0.7}],
+  Opacity[1], Black,
+  Text[Style["IS reweighted", FontSize -> 12], {1.8, 0.35}, {-1, 0}],
+  (* MH swatch *)
+  Opacity[0.55], RGBColor[0.95, 0.50, 0.10],
+  EdgeForm[None], Rectangle[{5.8, 0}, {7.2, 0.7}],
+  Opacity[1], Black,
+  Text[Style["MH chain", FontSize -> 12], {7.6, 0.35}, {-1, 0}],
+  (* truth dot *)
+  Black, AbsolutePointSize[5], Point[{11.0, 0.35}],
+  Text[Style["truth", FontSize -> 12], {11.3, 0.35}, {-1, 0}]},
+  PlotRange -> {{0, 13}, {-0.3, 1.0}},
+  AspectRatio -> Automatic,
+  ImageSize -> 480, Background -> White];
+
 Print["Rendering 2x3 3-way grid..."];
 panels = Table[panel[cell[[1]], cell[[2]], t],
   {cell, cells}, {t, targets}];
-grid = Grid[panels, Spacings -> {0.5, 0.5},
-  Frame -> All, FrameStyle -> LightGray];
+grid = Column[{
+  legendRow,
+  Grid[panels, Spacings -> {0.5, 0.5},
+    Frame -> All, FrameStyle -> LightGray]},
+  Alignment -> Center, Background -> White];
 
 Export[FileNameJoin[{figDir, "q5_is_mh_truth_3way.png"}], grid,
   ImageResolution -> 144];

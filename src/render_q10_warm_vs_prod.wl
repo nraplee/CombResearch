@@ -35,9 +35,12 @@ l1[a_, b_] := Module[{keys, av, bv},
   bv = Lookup[b, #, 0.] & /@ keys;
   Total[Abs[av - bv]]];
 
+halfW = 0.42;
+
 panel[p_, q_, t_, nW_] := Module[
   {is, prod, warm, isBars, prodBars, warmBars,
-   keys, isV, pV, wV, l1PW, l1IsP, l1IsW, title, isDots},
+   keys, isV, pV, wV, l1PW, l1IsP, l1IsW, title,
+   prodRects, warmRects, isPts, yMax, xLo, xHi},
   is   = Import[isFile[p, q, t], "WXF"];
   prod = Import[mhFile[p, q, t], "WXF"];
   warm = Import[warmFile[p, q, t, nW], "WXF"];
@@ -60,36 +63,53 @@ panel[p_, q_, t_, nW_] := Module[
     "  L1(IS,prod)=", NumberForm[l1IsP, {4, 3}],
     "  L1(IS,warm)=", NumberForm[l1IsW, {4, 3}]}];
 
-  (* MH prod and MH warm as overlapping translucent bars (they should
-     blend to a single tone where they agree). IS as bright dots, since
-     the question is whether the two MH chains agree -- IS is the
-     reference being compared against, not a third stationary chain. *)
-  isDots = Select[Transpose[{Range[Length[keys]], isV}], #[[2]] > 0 &];
+  prodRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
+    {keys, pV}];
+  warmRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
+    {keys, wV}];
+  isPts = Pick[Transpose[{keys, isV}], # > 0 & /@ isV];
+  yMax = 1.08 * Max[isV, pV, wV];
+  xLo  = First[keys] - 0.6;
+  xHi  = Last[keys]  + 0.6;
 
-  BarChart[
-    Transpose[{pV, wV}],
-    ChartLayout -> "Overlapped",
-    ChartStyle -> {
-      Directive[Opacity[0.55], RGBColor[0.85, 0.40, 0.20]],   (* prod *)
-      Directive[Opacity[0.55], RGBColor[0.20, 0.65, 0.30]]},  (* warm *)
-    ChartLegends -> Placed[{"MH prod (seed12345)",
-                            "MH warm (seed67890 warm-init)",
-                            "  IS = \[FilledCircle]"}, Top],
-    ChartLabels -> {ToString /@ keys, None},
+  Graphics[{
+    EdgeForm[None],
+    Directive[Opacity[0.55], RGBColor[0.85, 0.40, 0.20]], prodRects,
+    Directive[Opacity[0.55], RGBColor[0.20, 0.65, 0.30]], warmRects,
+    Black, AbsolutePointSize[4], Point[isPts]},
     Frame -> True,
     FrameLabel -> {"numV", "fraction"},
-    PlotLabel -> Style[title, 10],
-    ImageSize -> 560,
-    BarSpacing -> {-1, 0.3},
-    ChartElementFunction -> "Rectangle",
-    Epilog -> {
-      AbsolutePointSize[10], Black, Point[isDots],
-      AbsolutePointSize[7],  RGBColor[0.20, 0.45, 0.85], Point[isDots]}]];
+    FrameTicks -> {
+      {Automatic, None},
+      {Transpose[{keys, ToString /@ keys}], None}},
+    PlotLabel -> Style[title, 10, Black],
+    PlotRange -> {{xLo, xHi}, {0, yMax}},
+    AspectRatio -> 1/2,
+    ImageSize -> 580,
+    Background -> White]];
+
+legendRow = Graphics[{
+  Opacity[0.55], RGBColor[0.85, 0.40, 0.20],
+  EdgeForm[None], Rectangle[{0, 0}, {1.4, 0.7}],
+  Opacity[1], Black,
+  Text[Style["MH prod (seed12345)", FontSize -> 12], {1.8, 0.35}, {-1, 0}],
+  Opacity[0.55], RGBColor[0.20, 0.65, 0.30],
+  EdgeForm[None], Rectangle[{8.4, 0}, {9.8, 0.7}],
+  Opacity[1], Black,
+  Text[Style["MH warm (seed67890 warm-init)", FontSize -> 12],
+    {10.2, 0.35}, {-1, 0}],
+  Black, AbsolutePointSize[5], Point[{19.0, 0.35}],
+  Text[Style["IS", FontSize -> 12], {19.3, 0.35}, {-1, 0}]},
+  PlotRange -> {{0, 21}, {-0.3, 1.0}},
+  AspectRatio -> Automatic, ImageSize -> 620, Background -> White];
 
 Print["Rendering 2x2 warm-vs-prod grid..."];
 panels = Partition[panel @@@ cells, 2];
-grid = Grid[panels, Spacings -> {0.5, 0.5},
-  Frame -> All, FrameStyle -> LightGray];
+grid = Column[{
+  legendRow,
+  Grid[panels, Spacings -> {0.5, 0.5},
+    Frame -> All, FrameStyle -> LightGray]},
+  Alignment -> Center, Background -> White];
 
 Export[FileNameJoin[{figDir, "q10_warm_vs_prod.png"}], grid,
   ImageResolution -> 144];

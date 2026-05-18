@@ -22,9 +22,11 @@ binMh[mh_Association] := Module[{vals},
   If[Length[vals] == 0, <||>,
     KeySort @ N[Counts[vals] / Length[vals]]]];
 
+halfW = 0.42;
+
 panel[p_, target_] := Module[
-  {is, mh, isBars, mhBars, keys, isV, mhV, l1, ess, niter, acc,
-   pts, title, leg},
+  {is, mh, isBars, mhBars, keys, isV, mhV, l1val, ess, niter, acc,
+   title, isRects, mhRects, yMax, xLo, xHi},
   is = Import[isFile[p, target], "WXF"];
   mh = Import[mhFile[p, target], "WXF"];
   isBars = is["fracHist"];
@@ -32,38 +34,60 @@ panel[p_, target_] := Module[
   keys = Sort @ Union[Keys[isBars], Keys[mhBars]];
   isV  = Lookup[isBars, #, 0.] & /@ keys;
   mhV  = Lookup[mhBars, #, 0.] & /@ keys;
-  l1   = Total[Abs[isV - mhV]];
-  ess  = is["ESS"];
+  l1val = Total[Abs[isV - mhV]];
+  ess   = is["ESS"];
   niter = mh["numIter"];
-  acc  = mh["acceptRate"];
+  acc   = mh["acceptRate"];
   title = Row[{
     "p=", p, ", target=", target,
-    "  |  L1=", NumberForm[l1, {4, 3}],
+    "  |  L1=", NumberForm[l1val, {4, 3}],
     "  IS ESS=", NumberForm[ess, 3],
     "  MH n=", niter,
     "  acc=", NumberForm[acc, {3, 2}]}];
-  BarChart[
-    Transpose[{isV, mhV}],
-    ChartLayout -> "Overlapped",
-    ChartStyle -> {Directive[Opacity[0.55], RGBColor[0.20, 0.45, 0.85]],
-                   Directive[Opacity[0.55], RGBColor[0.95, 0.50, 0.10]]},
-    ChartLegends -> Placed[{"IS reweighted", "MH chain"}, Top],
-    ChartLabels -> {ToString /@ keys, None},
+  isRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
+    {keys, isV}];
+  mhRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
+    {keys, mhV}];
+  yMax = 1.08 * Max[isV, mhV];
+  xLo  = First[keys] - 0.6;
+  xHi  = Last[keys]  + 0.6;
+  Graphics[{
+    EdgeForm[None],
+    Directive[Opacity[0.55], RGBColor[0.20, 0.45, 0.85]], isRects,
+    Directive[Opacity[0.55], RGBColor[0.95, 0.50, 0.10]], mhRects},
     Frame -> True,
     FrameLabel -> {"numV", "fraction"},
-    PlotLabel -> Style[title, 10],
-    ImageSize -> 480,
-    PlotRangePadding -> {Scaled[0.02], Scaled[0.05]},
-    BarSpacing -> {-1, 0.3},
-    ChartElementFunction -> "Rectangle"]];
+    FrameTicks -> {
+      {Automatic, None},
+      {Transpose[{keys, ToString /@ keys}], None}},
+    PlotLabel -> Style[title, 10, Black],
+    PlotRange -> {{xLo, xHi}, {0, yMax}},
+    AspectRatio -> 1/2,
+    ImageSize -> 540,
+    Background -> White]];
+
+legendRow = Graphics[{
+  Opacity[0.55], RGBColor[0.20, 0.45, 0.85],
+  EdgeForm[None], Rectangle[{0, 0}, {1.4, 0.7}],
+  Opacity[1], Black,
+  Text[Style["IS reweighted", FontSize -> 12], {1.8, 0.35}, {-1, 0}],
+  Opacity[0.55], RGBColor[0.95, 0.50, 0.10],
+  EdgeForm[None], Rectangle[{5.8, 0}, {7.2, 0.7}],
+  Opacity[1], Black,
+  Text[Style["MH chain", FontSize -> 12], {7.6, 0.35}, {-1, 0}]},
+  PlotRange -> {{0, 11}, {-0.3, 1.0}},
+  AspectRatio -> Automatic, ImageSize -> 360, Background -> White];
 
 ps = {2, 3, 4};
 targets = {"vertex", "unlabeled", "facet"};
 
 Print["Rendering 3x3 grid..."];
 panels = Table[panel[p, t], {p, ps}, {t, targets}];
-grid = Grid[panels, Spacings -> {0.5, 0.5}, Frame -> All,
-  FrameStyle -> LightGray];
+grid = Column[{
+  legendRow,
+  Grid[panels, Spacings -> {0.5, 0.5}, Frame -> All,
+    FrameStyle -> LightGray]},
+  Alignment -> Center, Background -> White];
 
 Export[FileNameJoin[{figDir, "q10_is_vs_mh_grid.png"}], grid,
   ImageResolution -> 144];
@@ -74,8 +98,11 @@ Print["wrote figures/q10_is_vs_mh_grid.pdf"];
 
 (* Also render a focused 1x2 panel: (4,10) unlabeled and facet, the
    most-dramatic disagreement cells, for the writeup. *)
-focus = Grid[{{panel[4, "unlabeled"], panel[4, "facet"]}},
-  Spacings -> 0.5];
+focus = Column[{
+  legendRow,
+  Grid[{{panel[4, "unlabeled"], panel[4, "facet"]}},
+    Spacings -> 0.5, Frame -> All, FrameStyle -> LightGray]},
+  Alignment -> Center, Background -> White];
 Export[FileNameJoin[{figDir, "q10_p4_focus.png"}], focus,
   ImageResolution -> 144];
 Print["wrote figures/q10_p4_focus.png"];
