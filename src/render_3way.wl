@@ -39,19 +39,49 @@ l1[a_, b_] := Module[{keys, av, bv},
   bv = Lookup[b, #, 0.] & /@ keys;
   Total[Abs[av - bv]]];
 
-(* Half-width of each bin's bar rectangle (in numV units). 0.42 leaves
-   a small gap between adjacent bins. *)
-halfW = 0.42;
+(* ===== Manuscript style (matches src/render_all_figures.wl) ===== *)
+colorIS    = RGBColor[0.122, 0.471, 0.706];   (* blue, like "facet" *)
+colorMH    = RGBColor[0.890, 0.290, 0.200];   (* red, like "unlabeled" *)
+colorTruth = Black;
 
-(* Manuscript style: white background, black frame, IS and MH as
-   translucent overlapping rectangles (so where they agree the colors
-   blend), truth as small filled black dots centered on the bins.
-   Bars and dots share one coordinate system, so dots sit exactly at
-   bar centers. *)
+frameOpts = Sequence[
+  Frame -> True,
+  FrameStyle -> Directive[Black, AbsoluteThickness[1]],
+  LabelStyle -> Directive[FontFamily -> "Times", FontSize -> 11, Black],
+  ImageSize -> {380, 280},
+  PlotRange -> All,
+  ImageMargins -> 5,
+  Background -> White];
+
+panelLabel[p_, q_, t_, l1IsT_, l1MhT_, ess_] := Column[{
+  Style["p = " <> ToString[p] <> ", q = " <> ToString[q] <>
+        ", target = " <> t,
+    FontFamily -> "Times", FontSize -> 12, Bold],
+  Style[Row[{
+    "L1(IS,T)=", NumberForm[l1IsT, {4, 3}],
+    "   L1(MH,T)=", NumberForm[l1MhT, {4, 3}],
+    "   IS ESS=", NumberForm[ess, 4]}],
+    FontFamily -> "Times", FontSize -> 9, Black]},
+  Center, 0.2];
+
+translucentLegend = SwatchLegend[
+  {Directive[colorIS, Opacity[0.55],
+     EdgeForm[Directive[colorIS, AbsoluteThickness[0.4]]]],
+   Directive[colorMH, Opacity[0.55],
+     EdgeForm[Directive[colorMH, AbsoluteThickness[0.4]]]],
+   Directive[Black, PointSize[Medium]]},
+  {"IS reweighted", "MH chain", "truth"},
+  LegendMarkerSize -> 14,
+  LabelStyle -> Directive[FontFamily -> "Times", FontSize -> 10, Black]];
+
+(* Build a Histogram with two WeightedData "series" from precomputed
+   per-bin fractions by treating each bin's fraction as the weight of
+   one fake sample at that bin center. With bin breaks {lo-0.5, hi+0.5,
+   1} and "PDF" normalization, the resulting bar heights equal the
+   fraction values exactly, and adjacent bars touch. *)
 panel[p_, q_, t_] := Module[
   {is, mh, truth, isBars, mhBars, tBars, keys, isV, mhV, tV,
-   l1IsT, l1MhT, ess, title, isRects, mhRects, truthPts,
-   yMax, xLo, xHi},
+   l1IsT, l1MhT, ess, lo, hi, truthPts},
   is    = Import[isFile[p, q, t], "WXF"];
   mh    = Import[mhFile[p, q, t], "WXF"];
   truth = Import[truthFile[p, q], "WXF"];
@@ -62,73 +92,39 @@ panel[p_, q_, t_] := Module[
   keys = Sort @ Union[Keys[isBars], Keys[mhBars], Keys[tBars]];
   isV  = Lookup[isBars, #, 0.] & /@ keys;
   mhV  = Lookup[mhBars, #, 0.] & /@ keys;
-  tV   = N @ Lookup[tBars,  #, 0.] & /@ keys;
+  tV   = N @ Lookup[tBars, #, 0.] & /@ keys;
 
   l1IsT = l1[isBars, tBars];
   l1MhT = l1[mhBars, tBars];
   ess   = is["ESS"];
 
-  title = Row[{
-    "p=", p, ",q=", q, ", target=", t,
-    "  |  L1(IS,T)=", NumberForm[l1IsT, {4, 3}],
-    "  L1(MH,T)=", NumberForm[l1MhT, {4, 3}],
-    "  IS ESS=", NumberForm[ess, 4]}];
-
-  isRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
-    {keys, isV}];
-  mhRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
-    {keys, mhV}];
+  lo = First[keys]; hi = Last[keys];
   truthPts = Pick[Transpose[{keys, tV}], # > 0 & /@ tV];
 
-  yMax = 1.08 * Max[isV, mhV, tV];
-  xLo  = First[keys] - 0.6;
-  xHi  = Last[keys]  + 0.6;
-
-  Graphics[{
-    EdgeForm[None],
-    Directive[Opacity[0.55], RGBColor[0.20, 0.45, 0.85]], isRects,
-    Directive[Opacity[0.55], RGBColor[0.95, 0.50, 0.10]], mhRects,
-    Black, AbsolutePointSize[4], Point[truthPts]},
-    Frame -> True,
-    FrameLabel -> {"numV", "fraction"},
-    FrameTicks -> {
-      {Automatic, None},  (* y: left only *)
-      {Transpose[{keys, ToString /@ keys}], None}},  (* x: bottom only *)
-    PlotLabel -> Style[title, 10, Black],
-    PlotRange -> {{xLo, xHi}, {0, yMax}},
-    AspectRatio -> 1/2,
-    ImageSize -> 560,
-    Background -> White]];
+  Show[
+    Histogram[
+      {WeightedData[keys, isV], WeightedData[keys, mhV]},
+      {lo - 0.5, hi + 0.5, 1},
+      "PDF",
+      ChartStyle -> {
+        Directive[colorIS, Opacity[0.55],
+          EdgeForm[Directive[colorIS, AbsoluteThickness[0.4]]]],
+        Directive[colorMH, Opacity[0.55],
+          EdgeForm[Directive[colorMH, AbsoluteThickness[0.4]]]]},
+      ChartLegends -> Placed[translucentLegend, Top],
+      FrameLabel -> {{"fraction", None}, {"numV", None}},
+      PlotLabel -> panelLabel[p, q, t, l1IsT, l1MhT, ess],
+      frameOpts],
+    Graphics[{Black, AbsolutePointSize[4], Point[truthPts]}]]];
 
 cells = {{3, 5}, {4, 5}};
 targets = {"vertex", "unlabeled", "facet"};
 
-legendRow = Graphics[{
-  (* IS swatch *)
-  Opacity[0.55], RGBColor[0.20, 0.45, 0.85],
-  EdgeForm[None], Rectangle[{0, 0}, {1.4, 0.7}],
-  Opacity[1], Black,
-  Text[Style["IS reweighted", FontSize -> 12], {1.8, 0.35}, {-1, 0}],
-  (* MH swatch *)
-  Opacity[0.55], RGBColor[0.95, 0.50, 0.10],
-  EdgeForm[None], Rectangle[{5.8, 0}, {7.2, 0.7}],
-  Opacity[1], Black,
-  Text[Style["MH chain", FontSize -> 12], {7.6, 0.35}, {-1, 0}],
-  (* truth dot *)
-  Black, AbsolutePointSize[5], Point[{11.0, 0.35}],
-  Text[Style["truth", FontSize -> 12], {11.3, 0.35}, {-1, 0}]},
-  PlotRange -> {{0, 13}, {-0.3, 1.0}},
-  AspectRatio -> Automatic,
-  ImageSize -> 480, Background -> White];
-
 Print["Rendering 2x3 3-way grid..."];
 panels = Table[panel[cell[[1]], cell[[2]], t],
   {cell, cells}, {t, targets}];
-grid = Column[{
-  legendRow,
-  Grid[panels, Spacings -> {0.5, 0.5},
-    Frame -> All, FrameStyle -> LightGray]},
-  Alignment -> Center, Background -> White];
+grid = Grid[panels, Spacings -> {0.5, 0.5},
+  Frame -> None, Background -> White];
 
 Export[FileNameJoin[{figDir, "q5_is_mh_truth_3way.png"}], grid,
   ImageResolution -> 144];

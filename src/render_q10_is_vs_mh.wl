@@ -22,11 +22,30 @@ binMh[mh_Association] := Module[{vals},
   If[Length[vals] == 0, <||>,
     KeySort @ N[Counts[vals] / Length[vals]]]];
 
-halfW = 0.42;
+(* ===== Manuscript style ===== *)
+colorIS = RGBColor[0.122, 0.471, 0.706];
+colorMH = RGBColor[0.890, 0.290, 0.200];
+
+frameOpts = Sequence[
+  Frame -> True,
+  FrameStyle -> Directive[Black, AbsoluteThickness[1]],
+  LabelStyle -> Directive[FontFamily -> "Times", FontSize -> 11, Black],
+  ImageSize -> {380, 280},
+  PlotRange -> All,
+  ImageMargins -> 5,
+  Background -> White];
+
+translucentLegend = SwatchLegend[
+  {Directive[colorIS, Opacity[0.55],
+     EdgeForm[Directive[colorIS, AbsoluteThickness[0.4]]]],
+   Directive[colorMH, Opacity[0.55],
+     EdgeForm[Directive[colorMH, AbsoluteThickness[0.4]]]]},
+  {"IS reweighted", "MH chain"},
+  LegendMarkerSize -> 14,
+  LabelStyle -> Directive[FontFamily -> "Times", FontSize -> 10, Black]];
 
 panel[p_, target_] := Module[
-  {is, mh, isBars, mhBars, keys, isV, mhV, l1val, ess, niter, acc,
-   title, isRects, mhRects, yMax, xLo, xHi},
+  {is, mh, isBars, mhBars, keys, isV, mhV, l1val, ess, niter, acc, lo, hi},
   is = Import[isFile[p, target], "WXF"];
   mh = Import[mhFile[p, target], "WXF"];
   isBars = is["fracHist"];
@@ -38,56 +57,38 @@ panel[p_, target_] := Module[
   ess   = is["ESS"];
   niter = mh["numIter"];
   acc   = mh["acceptRate"];
-  title = Row[{
-    "p=", p, ", target=", target,
-    "  |  L1=", NumberForm[l1val, {4, 3}],
-    "  IS ESS=", NumberForm[ess, 3],
-    "  MH n=", niter,
-    "  acc=", NumberForm[acc, {3, 2}]}];
-  isRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
-    {keys, isV}];
-  mhRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
-    {keys, mhV}];
-  yMax = 1.08 * Max[isV, mhV];
-  xLo  = First[keys] - 0.6;
-  xHi  = Last[keys]  + 0.6;
-  Graphics[{
-    EdgeForm[None],
-    Directive[Opacity[0.55], RGBColor[0.20, 0.45, 0.85]], isRects,
-    Directive[Opacity[0.55], RGBColor[0.95, 0.50, 0.10]], mhRects},
-    Frame -> True,
-    FrameLabel -> {"numV", "fraction"},
-    FrameTicks -> {
-      {Automatic, None},
-      {Transpose[{keys, ToString /@ keys}], None}},
-    PlotLabel -> Style[title, 10, Black],
-    PlotRange -> {{xLo, xHi}, {0, yMax}},
-    AspectRatio -> 1/2,
-    ImageSize -> 540,
-    Background -> White]];
+  lo = First[keys]; hi = Last[keys];
 
-legendRow = Graphics[{
-  Opacity[0.55], RGBColor[0.20, 0.45, 0.85],
-  EdgeForm[None], Rectangle[{0, 0}, {1.4, 0.7}],
-  Opacity[1], Black,
-  Text[Style["IS reweighted", FontSize -> 12], {1.8, 0.35}, {-1, 0}],
-  Opacity[0.55], RGBColor[0.95, 0.50, 0.10],
-  EdgeForm[None], Rectangle[{5.8, 0}, {7.2, 0.7}],
-  Opacity[1], Black,
-  Text[Style["MH chain", FontSize -> 12], {7.6, 0.35}, {-1, 0}]},
-  PlotRange -> {{0, 11}, {-0.3, 1.0}},
-  AspectRatio -> Automatic, ImageSize -> 360, Background -> White];
+  Histogram[
+    {WeightedData[keys, isV], WeightedData[keys, mhV]},
+    {lo - 0.5, hi + 0.5, 1},
+    "PDF",
+    ChartStyle -> {
+      Directive[colorIS, Opacity[0.55],
+        EdgeForm[Directive[colorIS, AbsoluteThickness[0.4]]]],
+      Directive[colorMH, Opacity[0.55],
+        EdgeForm[Directive[colorMH, AbsoluteThickness[0.4]]]]},
+    ChartLegends -> Placed[translucentLegend, Top],
+    FrameLabel -> {{"fraction", None}, {"numV", None}},
+    PlotLabel -> Column[{
+      Style["p = " <> ToString[p] <> ", q = 10, target = " <> target,
+        FontFamily -> "Times", FontSize -> 12, Bold],
+      Style[Row[{
+        "L1(IS,MH)=", NumberForm[l1val, {4, 3}],
+        "   IS ESS=", NumberForm[ess, 3],
+        "   MH n=", niter,
+        "   acc=", NumberForm[acc, {3, 2}]}],
+        FontFamily -> "Times", FontSize -> 9, Black]},
+      Center, 0.2],
+    frameOpts]];
 
 ps = {2, 3, 4};
 targets = {"vertex", "unlabeled", "facet"};
 
 Print["Rendering 3x3 grid..."];
 panels = Table[panel[p, t], {p, ps}, {t, targets}];
-grid = Column[{
-  legendRow,
-  Grid[panels, Spacings -> {0.5, 0.5}, Frame -> All,
-    FrameStyle -> LightGray]},
-  Alignment -> Center, Background -> White];
+grid = Grid[panels, Spacings -> {0.5, 0.5},
+  Frame -> None, Background -> White];
 
 Export[FileNameJoin[{figDir, "q10_is_vs_mh_grid.png"}], grid,
   ImageResolution -> 144];
@@ -98,11 +99,8 @@ Print["wrote figures/is_vs_mh/q10_is_vs_mh_grid.pdf"];
 
 (* Also render a focused 1x2 panel: (4,10) unlabeled and facet, the
    most-dramatic disagreement cells, for the writeup. *)
-focus = Column[{
-  legendRow,
-  Grid[{{panel[4, "unlabeled"], panel[4, "facet"]}},
-    Spacings -> 0.5, Frame -> All, FrameStyle -> LightGray]},
-  Alignment -> Center, Background -> White];
+focus = Grid[{{panel[4, "unlabeled"], panel[4, "facet"]}},
+  Spacings -> 0.5, Frame -> None, Background -> White];
 Export[FileNameJoin[{figDir, "q10_p4_focus.png"}], focus,
   ImageResolution -> 144];
 Print["wrote figures/is_vs_mh/q10_p4_focus.png"];

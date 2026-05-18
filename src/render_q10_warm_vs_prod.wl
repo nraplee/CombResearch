@@ -35,12 +35,32 @@ l1[a_, b_] := Module[{keys, av, bv},
   bv = Lookup[b, #, 0.] & /@ keys;
   Total[Abs[av - bv]]];
 
-halfW = 0.42;
+(* ===== Manuscript style ===== *)
+colorProd = RGBColor[0.890, 0.290, 0.200];   (* red *)
+colorWarm = RGBColor[0.984, 0.757, 0.369];   (* warm gold *)
+
+frameOpts = Sequence[
+  Frame -> True,
+  FrameStyle -> Directive[Black, AbsoluteThickness[1]],
+  LabelStyle -> Directive[FontFamily -> "Times", FontSize -> 11, Black],
+  ImageSize -> {420, 300},
+  PlotRange -> All,
+  ImageMargins -> 5,
+  Background -> White];
+
+translucentLegend = SwatchLegend[
+  {Directive[colorProd, Opacity[0.55],
+     EdgeForm[Directive[colorProd, AbsoluteThickness[0.4]]]],
+   Directive[colorWarm, Opacity[0.55],
+     EdgeForm[Directive[colorWarm, AbsoluteThickness[0.4]]]],
+   Directive[Black, PointSize[Medium]]},
+  {"MH prod (seed12345)", "MH warm (seed67890 warm-init)", "IS"},
+  LegendMarkerSize -> 14,
+  LabelStyle -> Directive[FontFamily -> "Times", FontSize -> 10, Black]];
 
 panel[p_, q_, t_, nW_] := Module[
   {is, prod, warm, isBars, prodBars, warmBars,
-   keys, isV, pV, wV, l1PW, l1IsP, l1IsW, title,
-   prodRects, warmRects, isPts, yMax, xLo, xHi},
+   keys, isV, pV, wV, l1PW, l1IsP, l1IsW, lo, hi, isPts},
   is   = Import[isFile[p, q, t], "WXF"];
   prod = Import[mhFile[p, q, t], "WXF"];
   warm = Import[warmFile[p, q, t, nW], "WXF"];
@@ -57,59 +77,38 @@ panel[p_, q_, t_, nW_] := Module[
   l1IsW = l1[isBars, warmBars];
   l1PW  = l1[prodBars, warmBars];
 
-  title = Row[{
-    "p=", p, ", target=", t, ", warm@numV=", nW,
-    "  |  L1(prod,warm)=", NumberForm[l1PW, {4, 3}],
-    "  L1(IS,prod)=", NumberForm[l1IsP, {4, 3}],
-    "  L1(IS,warm)=", NumberForm[l1IsW, {4, 3}]}];
-
-  prodRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
-    {keys, pV}];
-  warmRects = MapThread[Rectangle[{# - halfW, 0}, {# + halfW, #2}] &,
-    {keys, wV}];
+  lo = First[keys]; hi = Last[keys];
   isPts = Pick[Transpose[{keys, isV}], # > 0 & /@ isV];
-  yMax = 1.08 * Max[isV, pV, wV];
-  xLo  = First[keys] - 0.6;
-  xHi  = Last[keys]  + 0.6;
 
-  Graphics[{
-    EdgeForm[None],
-    Directive[Opacity[0.55], RGBColor[0.85, 0.40, 0.20]], prodRects,
-    Directive[Opacity[0.55], RGBColor[0.20, 0.65, 0.30]], warmRects,
-    Black, AbsolutePointSize[4], Point[isPts]},
-    Frame -> True,
-    FrameLabel -> {"numV", "fraction"},
-    FrameTicks -> {
-      {Automatic, None},
-      {Transpose[{keys, ToString /@ keys}], None}},
-    PlotLabel -> Style[title, 10, Black],
-    PlotRange -> {{xLo, xHi}, {0, yMax}},
-    AspectRatio -> 1/2,
-    ImageSize -> 580,
-    Background -> White]];
-
-legendRow = Graphics[{
-  Opacity[0.55], RGBColor[0.85, 0.40, 0.20],
-  EdgeForm[None], Rectangle[{0, 0}, {1.4, 0.7}],
-  Opacity[1], Black,
-  Text[Style["MH prod (seed12345)", FontSize -> 12], {1.8, 0.35}, {-1, 0}],
-  Opacity[0.55], RGBColor[0.20, 0.65, 0.30],
-  EdgeForm[None], Rectangle[{8.4, 0}, {9.8, 0.7}],
-  Opacity[1], Black,
-  Text[Style["MH warm (seed67890 warm-init)", FontSize -> 12],
-    {10.2, 0.35}, {-1, 0}],
-  Black, AbsolutePointSize[5], Point[{19.0, 0.35}],
-  Text[Style["IS", FontSize -> 12], {19.3, 0.35}, {-1, 0}]},
-  PlotRange -> {{0, 21}, {-0.3, 1.0}},
-  AspectRatio -> Automatic, ImageSize -> 620, Background -> White];
+  Show[
+    Histogram[
+      {WeightedData[keys, pV], WeightedData[keys, wV]},
+      {lo - 0.5, hi + 0.5, 1},
+      "PDF",
+      ChartStyle -> {
+        Directive[colorProd, Opacity[0.55],
+          EdgeForm[Directive[colorProd, AbsoluteThickness[0.4]]]],
+        Directive[colorWarm, Opacity[0.55],
+          EdgeForm[Directive[colorWarm, AbsoluteThickness[0.4]]]]},
+      ChartLegends -> Placed[translucentLegend, Top],
+      FrameLabel -> {{"fraction", None}, {"numV", None}},
+      PlotLabel -> Column[{
+        Style["p = " <> ToString[p] <> ", q = " <> ToString[q] <>
+              ", target = " <> t <> ", warm@numV=" <> ToString[nW],
+          FontFamily -> "Times", FontSize -> 12, Bold],
+        Style[Row[{
+          "L1(prod,warm)=", NumberForm[l1PW, {4, 3}],
+          "   L1(IS,prod)=", NumberForm[l1IsP, {4, 3}],
+          "   L1(IS,warm)=", NumberForm[l1IsW, {4, 3}]}],
+          FontFamily -> "Times", FontSize -> 9, Black]},
+        Center, 0.2],
+      frameOpts],
+    Graphics[{Black, AbsolutePointSize[4], Point[isPts]}]]];
 
 Print["Rendering 2x2 warm-vs-prod grid..."];
 panels = Partition[panel @@@ cells, 2];
-grid = Column[{
-  legendRow,
-  Grid[panels, Spacings -> {0.5, 0.5},
-    Frame -> All, FrameStyle -> LightGray]},
-  Alignment -> Center, Background -> White];
+grid = Grid[panels, Spacings -> {0.5, 0.5},
+  Frame -> None, Background -> White];
 
 Export[FileNameJoin[{figDir, "q10_warm_vs_prod.png"}], grid,
   ImageResolution -> 144];
