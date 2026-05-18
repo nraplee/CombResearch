@@ -33,6 +33,11 @@
      COMB_MH_THIN     = integer           (default 5)
      COMB_MH_SEED     = integer           (default 12345)
      COMB_MH_KERNEL   = string            (default "global")
+     COMB_MH_TAG      = string            (default ""; appended to output
+                                          stem, e.g. "_seed67890_warm18")
+     COMB_MH_INITNUMV = integer or unset  (default unset; if set, chain
+                                          init is q random p-subsets of
+                                          [INITNUMV], embedded in [N=qp])
 
    Historical inline gate: when (p,q,target) ==
    (3, 5, "unlabeled") is freshly computed, immediately load
@@ -49,8 +54,6 @@
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
-outputDir = FileNameJoin[{projectRoot, "data"}];
-If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
 (* ===== Load sampler_mh.wl with smoke test suppressed ===== *)
 $smokeTestSkip = True;
@@ -63,6 +66,14 @@ Get[FileNameJoin[{scriptDir, "sampler_mh.wl"}]];
 Block[{pListOverride = {}, sampleSizeOverride = 0,
        useParallelOverride = False},
   Get[FileNameJoin[{scriptDir, "pure_simplicial_compute.wl"}]]];
+
+(* outputDir override AFTER the Get's — pure_simplicial_compute.wl sets
+   outputDir = projectRoot/data on its own, which would otherwise clobber
+   COMB_MH_OUTDIR. Setting here lets the env var win. *)
+outputDir = With[{e = Environment["COMB_MH_OUTDIR"]},
+  If[StringQ[e] && StringLength[e] > 0, e,
+    FileNameJoin[{projectRoot, "data"}]]];
+If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
 (* ===== Defaults ===== *)
 defaultCells = {{2, 4}, {2, 5}, {2, 6}, {3, 4}, {3, 5}};
@@ -104,6 +115,9 @@ burnInVal   = parseIntEnv["COMB_MH_BURNIN",   20000];
 thinVal     = parseIntEnv["COMB_MH_THIN",         5];
 seedVal     = parseIntEnv["COMB_MH_SEED",     12345];
 kernelVal   = parseStringEnv["COMB_MH_KERNEL", "global"];
+tagVal      = parseStringEnv["COMB_MH_TAG",         ""];
+initNumVVal = With[{e = Environment["COMB_MH_INITNUMV"]},
+  If[StringQ[e] && StringLength[e] > 0, ToExpression[e], Automatic]];
 forceRecompute = With[{e = Environment["COMB_FORCE"]},
   StringQ[e] && e === "1"];
 
@@ -123,13 +137,15 @@ Print["resolvedTargets   = ", resolvedTargets];
 Print["numIter / burnIn  = ", numIterVal, " / ", burnInVal];
 Print["thin / seed       = ", thinVal, " / ", seedVal];
 Print["kernel            = ", kernelVal];
+Print["tag               = ", "\"" <> tagVal <> "\""];
+Print["initNumV          = ", initNumVVal];
 Print["forceRecompute    = ", forceRecompute];
 Print["samplerVersion    = ", samplerVersion];
 
 (* ===== Per-cell paths ===== *)
 mhFile[p_Integer, q_Integer, target_String] := FileNameJoin[{outputDir,
   "p" <> ToString[p] <> "q" <> ToString[q] <>
-  "_mh_" <> target <> ".wxf"}];
+  "_mh_" <> target <> tagVal <> ".wxf"}];
 
 truthFile[p_Integer, q_Integer] := FileNameJoin[{outputDir,
   "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}];
@@ -171,7 +187,8 @@ processCellTarget[p_Integer, q_Integer, target_String] := Module[
   (* ----- Run the chain ----- *)
   result = runMHChain[p, q, target, numIterVal,
     burnIn -> burnInVal, thin -> thinVal,
-    seed   -> seedVal,   kernel -> kernelVal];
+    seed   -> seedVal,   kernel -> kernelVal,
+    initNumV -> initNumVVal];
 
   (* ----- Compute 12-stat row per kept post-thin state ----- *)
   Print["  computing ", Length[result["trace"]], " stats rows ..."];
@@ -189,6 +206,8 @@ processCellTarget[p_Integer, q_Integer, target_String] := Module[
     "burnIn"          -> burnInVal,
     "thin"            -> thinVal,
     "seed"            -> seedVal,
+    "tag"             -> tagVal,
+    "initNumV"        -> initNumVVal,
     "headers"         -> statsHeaders,
     "rows"            -> rows,
     "acceptRate"      -> result["acceptRate"],
@@ -201,8 +220,11 @@ processCellTarget[p_Integer, q_Integer, target_String] := Module[
   Print["  wrote ", FileNameTake[outFile],
     "  (", Round[FileByteCount[outFile] / 1024., 0.1], " KB)"];
 
-  (* ----- Validation gate: (3,5) × unlabeled vs truth on numV ----- *)
-  If[p == 3 && q == 5 && target == "unlabeled",
+  (* ----- Validation gate: (3,5) × unlabeled vs truth on numV -----
+     Skip if non-default tag or warm-start init in play — the gate is
+     for catching sampler regressions on the production case. *)
+  If[p == 3 && q == 5 && target == "unlabeled"
+       && tagVal === "" && initNumVVal === Automatic,
     gateFile = truthFile[3, 5];
     If[FileExistsQ[gateFile],
       truth = Import[gateFile, "WXF"];

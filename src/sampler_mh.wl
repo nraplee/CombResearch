@@ -261,31 +261,66 @@ initialState[p_Integer, q_Integer, nMax_Integer, seed_Integer] := Module[
   sorted = Sort[Sort /@ complex];
   sorted];
 
+(* Warm-start init: q distinct random p-subsets drawn from labels {1..mTarget},
+   embedded into [nMax] as the first mTarget labels. The resulting state has
+   numV ≤ mTarget (typically = mTarget for moderate q vs C(mTarget,p)). Use
+   when you want to test convergence from a region with smaller-than-typical
+   numV. Returns a sorted state in the same format as initialState. *)
+warmInitialState[p_Integer, q_Integer, nMax_Integer, mTarget_Integer,
+                 seed_Integer] := Module[
+  {pool, facets, tries, ok},
+  If[mTarget < p || mTarget > nMax,
+    Print["warmInitialState: mTarget=", mTarget,
+      " must lie in [", p, ", ", nMax, "]"]; Abort[]];
+  If[Binomial[mTarget, p] < q,
+    Print["warmInitialState: C(", mTarget, ",", p, ")=",
+      Binomial[mTarget, p], " < q=", q,
+      " — not enough distinct facets in label pool"]; Abort[]];
+  SeedRandom[seed];
+  pool = Range[mTarget];
+  (* Rejection-loop to get q distinct p-subsets of pool. *)
+  facets = {}; tries = 0; ok = False;
+  While[!ok,
+    tries++;
+    facets = DeleteDuplicates[
+      Table[Sort[RandomSample[pool, p]], {2 q}]];
+    If[Length[facets] >= q,
+      facets = Take[facets, q]; ok = True];
+    If[tries > 100,
+      Print["warmInitialState: failed to assemble q distinct facets"];
+      Abort[]]];
+  Sort[facets]];
+
 (* =============================================================== *)
 (* Chain runner                                                     *)
 (* =============================================================== *)
 
 Options[runMHChain] = {burnIn -> 0, thin -> 1, seed -> 12345,
-  verbose -> True, kernel -> "global"};
+  verbose -> True, kernel -> "global", initNumV -> Automatic};
 
 runMHChain[p_Integer, q_Integer, target_String, numIter_Integer,
            opts:OptionsPattern[]] := Module[
-  {bIn, th, sd, vrb, kn, NN, X, traceLen, trace, accepts = 0, deltas,
-   step, idx, t0, t1},
+  {bIn, th, sd, vrb, kn, iNumV, NN, X, traceLen, trace, accepts = 0,
+   deltas, step, idx, t0, t1},
 
-  bIn = OptionValue[burnIn];
-  th  = OptionValue[thin];
-  sd  = OptionValue[seed];
-  vrb = OptionValue[verbose];
-  kn  = OptionValue[kernel];
+  bIn   = OptionValue[burnIn];
+  th    = OptionValue[thin];
+  sd    = OptionValue[seed];
+  vrb   = OptionValue[verbose];
+  kn    = OptionValue[kernel];
+  iNumV = OptionValue[initNumV];
 
   NN = q * p;
-  X  = initialState[p, q, NN, sd];
+  X  = If[iNumV === Automatic,
+    initialState[p, q, NN, sd],
+    warmInitialState[p, q, NN, iNumV, sd]];
 
   If[vrb,
     Print["MH chain: p=", p, " q=", q, " nMax=", NN,
       " target=", target, " kernel=", kn,
-      " numIter=", numIter, " burnIn=", bIn, " thin=", th]];
+      " numIter=", numIter, " burnIn=", bIn, " thin=", th,
+      " init=", If[iNumV === Automatic, "default", "warm@numV=" <> ToString[iNumV]],
+      " initNumV(actual)=", Length[Union @@ X]]];
 
   t0 = AbsoluteTime[];
 
