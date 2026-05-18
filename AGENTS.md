@@ -85,6 +85,11 @@ powershell -ExecutionPolicy Bypass -File src\run_q10_mh_parallel.ps1
 
 # Per-cell ASCII overlay + L1 summary, IS vs MH at q=10.
 wolframscript -file src\compare_is_mh_q10.wl
+
+# 3-way comparison at q=5 truth cells (3,5) and (4,5): IS, MH, truth.
+wolframscript -file src\run_is_at_truth_cells.wl    # 100k IS samples each
+wolframscript -file src\compare_3way.wl             # per-cell L1 table
+wolframscript -file src\render_3way.wl              # 2x3 overlay grid PNG
 ```
 
 Checks/smoke tests:

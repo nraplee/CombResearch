@@ -20,6 +20,30 @@ First pass (pilot 10k + production 200k) shows:
   trapping until a second seed and a warm-start from a high-numV state are
   tried.
 
+**Phase 4c part 2: 3-way IS vs MH vs truth at (3,5) and (4,5).**
+Ran 100k IS samples at the truth cells and compared all three estimators on
+the same numV marginal. L1 vs truth:
+
+| cell  | target    | L1(IS,T) | L1(MH,T) | ratio |
+|-------|-----------|---------:|---------:|------:|
+| (3,5) | vertex    |   0.003  |   0.014  |  0.2x |
+| (3,5) | unlabeled |   0.097  |   0.022  |  4.5x |
+| (3,5) | facet     |   0.071  |   0.005  | 15x   |
+| (4,5) | vertex    |   0.005  |   0.009  |  0.6x |
+| (4,5) | unlabeled |   0.132  |   0.025  |  5.3x |
+| (4,5) | facet     |   0.093  |   0.029  |  3.2x |
+
+- On **vertex** target, IS and MH both reach truth within ~0.01 L1. IS is
+  marginally better (no chain mixing concerns).
+- On **unlabeled** and **facet** targets at p∈{3,4}, **MH agrees with truth
+  3-15x more tightly than IS does**. At (3,5) facet IS has L1=0.071 vs MH
+  L1=0.005 — the same pattern as the q=10 case at smaller scale.
+- IS systematically under-samples the high-|Aut|/low-numV corners. At (4,5)
+  unlabeled, truth has ~2.5% of mass at numV ∈ {5,6,7}, and IS has zero
+  there — exactly the bias predicted by ESS=134.
+- Conclusion: the q=10 IS-vs-MH disagreement is the same phenomenon
+  observed at q=5 where we have truth to break the tie. MH is right.
+
 Remaining open items:
 
 1. **Disambiguate MH-stationary vs MH-trapped** at p=4 q=10 unlabeled/facet:
@@ -69,7 +93,19 @@ Remaining open items:
   scripts from `src/` to `archive/old_test_scripts/`; production renderers and
   smoke tests remain in `src/`.
 
-## Files added this session (Phase 4c)
+## Files added this session (Phase 4c part 2)
+
+- `src/run_is_at_truth_cells.wl` — chunked IS sampler at (3,5) and (4,5),
+  100k samples each, ParallelMap on the {numV, |Aut|, |Aut_F|} stats step.
+  Writes the same `data/p{p}q{q}_is_{target}_numv_hist.wxf` schema as the
+  q=10 aggregator so the comparison/render code is shared.
+- `src/compare_3way.wl` — per (p, q, target) prints L1 against truth for
+  both IS and MH plus the IS-vs-MH L1, with an ASCII overlay. Writes
+  `data/is_mh_truth_3way_summary.wxf`.
+- `src/render_3way.wl` — 2x3 grid of grouped bar overlays (truth, IS, MH).
+  Output: `figures/q5_is_mh_truth_3way.{png,pdf}`.
+
+## Files added this session (Phase 4c part 1)
 
 - `src/precompute_is_histograms_q10.wl` — aggregates the merged 12M-row q=10 IS
   stats into 9 small numV-fraction WXFs (one per p × target). Uses GroupBy for
@@ -136,7 +172,7 @@ Before continuing, the next agent must:
 
 ## Last updated by
 
-Claude Code on 2026-05-17 (Phase 4c kickoff: q=10 IS-vs-MH pilot + 200k production)
+Claude Code on 2026-05-17 (Phase 4c part 2: 3-way IS vs MH vs truth at q=5)
 
 ## Tool switch prompts
 
