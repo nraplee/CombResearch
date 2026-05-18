@@ -37,7 +37,7 @@ l1[a_, b_] := Module[{keys, av, bv},
 
 panel[p_, q_, t_, nW_] := Module[
   {is, prod, warm, isBars, prodBars, warmBars,
-   keys, isV, pV, wV, l1PW, l1IsP, l1IsW, title},
+   keys, isV, pV, wV, l1PW, l1IsP, l1IsW, title, isDots},
   is   = Import[isFile[p, q, t], "WXF"];
   prod = Import[mhFile[p, q, t], "WXF"];
   warm = Import[warmFile[p, q, t, nW], "WXF"];
@@ -60,20 +60,31 @@ panel[p_, q_, t_, nW_] := Module[
     "  L1(IS,prod)=", NumberForm[l1IsP, {4, 3}],
     "  L1(IS,warm)=", NumberForm[l1IsW, {4, 3}]}];
 
+  (* MH prod and MH warm as overlapping translucent bars (they should
+     blend to a single tone where they agree). IS as bright dots, since
+     the question is whether the two MH chains agree -- IS is the
+     reference being compared against, not a third stationary chain. *)
+  isDots = Select[Transpose[{Range[Length[keys]], isV}], #[[2]] > 0 &];
+
   BarChart[
-    Transpose[{isV, pV, wV}],
-    ChartLayout -> "Grouped",
+    Transpose[{pV, wV}],
+    ChartLayout -> "Overlapped",
     ChartStyle -> {
-      Directive[Opacity[0.85], RGBColor[0.20, 0.45, 0.85]],     (* IS *)
-      Directive[Opacity[0.85], RGBColor[0.85, 0.40, 0.20]],     (* prod *)
-      Directive[Opacity[0.85], RGBColor[0.20, 0.65, 0.30]]},    (* warm *)
-    ChartLegends -> Placed[{"IS", "MH prod (seed12345)",
-                            "MH warm (seed67890 warm-init)"}, Top],
+      Directive[Opacity[0.55], RGBColor[0.85, 0.40, 0.20]],   (* prod *)
+      Directive[Opacity[0.55], RGBColor[0.20, 0.65, 0.30]]},  (* warm *)
+    ChartLegends -> Placed[{"MH prod (seed12345)",
+                            "MH warm (seed67890 warm-init)",
+                            "  IS = \[FilledCircle]"}, Top],
     ChartLabels -> {ToString /@ keys, None},
     Frame -> True,
     FrameLabel -> {"numV", "fraction"},
     PlotLabel -> Style[title, 10],
-    ImageSize -> 560]];
+    ImageSize -> 560,
+    BarSpacing -> {-1, 0.3},
+    ChartElementFunction -> "Rectangle",
+    Epilog -> {
+      AbsolutePointSize[10], Black, Point[isDots],
+      AbsolutePointSize[7],  RGBColor[0.20, 0.45, 0.85], Point[isDots]}]];
 
 Print["Rendering 2x2 warm-vs-prod grid..."];
 panels = Partition[panel @@@ cells, 2];

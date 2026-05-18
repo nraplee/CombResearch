@@ -44,16 +44,18 @@ panel[p_, target_] := Module[
     "  acc=", NumberForm[acc, {3, 2}]}];
   BarChart[
     Transpose[{isV, mhV}],
-    ChartLayout -> "Grouped",
-    ChartStyle -> {Directive[Opacity[0.85], RGBColor[0.20, 0.45, 0.85]],
-                   Directive[Opacity[0.85], RGBColor[0.85, 0.40, 0.20]]},
+    ChartLayout -> "Overlapped",
+    ChartStyle -> {Directive[Opacity[0.55], RGBColor[0.20, 0.45, 0.85]],
+                   Directive[Opacity[0.55], RGBColor[0.95, 0.50, 0.10]]},
     ChartLegends -> Placed[{"IS reweighted", "MH chain"}, Top],
     ChartLabels -> {ToString /@ keys, None},
     Frame -> True,
     FrameLabel -> {"numV", "fraction"},
     PlotLabel -> Style[title, 10],
     ImageSize -> 480,
-    PlotRangePadding -> {Scaled[0.02], Scaled[0.05]}]];
+    PlotRangePadding -> {Scaled[0.02], Scaled[0.05]},
+    BarSpacing -> {-1, 0.3},
+    ChartElementFunction -> "Rectangle"]];
 
 ps = {2, 3, 4};
 targets = {"vertex", "unlabeled", "facet"};

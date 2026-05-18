@@ -41,7 +41,7 @@ l1[a_, b_] := Module[{keys, av, bv},
 
 panel[p_, q_, t_] := Module[
   {is, mh, truth, isBars, mhBars, tBars, keys, isV, mhV, tV,
-   l1IsT, l1MhT, ess, title},
+   l1IsT, l1MhT, ess, title, truthDots},
   is    = Import[isFile[p, q, t], "WXF"];
   mh    = Import[mhFile[p, q, t], "WXF"];
   truth = Import[truthFile[p, q], "WXF"];
@@ -64,19 +64,36 @@ panel[p_, q_, t_] := Module[
     "  L1(MH,T)=", NumberForm[l1MhT, {4, 3}],
     "  IS ESS=", NumberForm[ess, 4]}];
 
+  (* IS + MH as overlapping translucent bars sharing the same x.
+     Truth as filled dots on top. ChartLayout -> "Overlapped" puts both
+     series at the same x positions and lets the colors mix where they
+     coincide. Epilog Point positions (i, tV[[i]]) line up with the bar
+     centers, which BarChart places at integer x. *)
+  (* Truth dots: bright yellow with thin black ring for contrast on
+     either dark or light backgrounds. Skip bins where truth is exactly
+     zero so the x-axis isn't littered. *)
+  truthDots = Select[Transpose[{Range[Length[keys]], tV}],
+    #[[2]] > 0 &];
+
   BarChart[
-    Transpose[{tV, isV, mhV}],
-    ChartLayout -> "Grouped",
+    Transpose[{isV, mhV}],
+    ChartLayout -> "Overlapped",
     ChartStyle -> {
-      Directive[Opacity[0.95], Black],
-      Directive[Opacity[0.85], RGBColor[0.20, 0.45, 0.85]],
-      Directive[Opacity[0.85], RGBColor[0.85, 0.40, 0.20]]},
-    ChartLegends -> Placed[{"truth", "IS reweighted", "MH chain"}, Top],
+      Directive[Opacity[0.55], RGBColor[0.20, 0.45, 0.85]],
+      Directive[Opacity[0.55], RGBColor[0.95, 0.50, 0.10]]},
+    ChartLegends -> Placed[
+      {"IS reweighted", "MH chain", "  truth = \[FilledCircle]"}, Top],
     ChartLabels -> {ToString /@ keys, None},
     Frame -> True,
     FrameLabel -> {"numV", "fraction"},
     PlotLabel -> Style[title, 10],
-    ImageSize -> 520]];
+    ImageSize -> 520,
+    PlotRangePadding -> {Automatic, Scaled[0.04]},
+    BarSpacing -> {-1, 0.3},
+    ChartElementFunction -> "Rectangle",
+    Epilog -> {
+      AbsolutePointSize[10], Black, Point[truthDots],
+      AbsolutePointSize[7],  RGBColor[1.0, 0.92, 0.0], Point[truthDots]}]];
 
 cells = {{3, 5}, {4, 5}};
 targets = {"vertex", "unlabeled", "facet"};
