@@ -4,12 +4,12 @@
    IS-reweighted numV histogram against the MH-sampled one at q=10.
 
    Writes:
-     figures/q10_is_vs_mh_grid.png
-     figures/q10_is_vs_mh_grid.pdf
+     figures/is_vs_mh/q10_is_vs_mh_grid.png
+     figures/is_vs_mh/q10_is_vs_mh_grid.pdf
 *)
 
 dataDir = "C:/CombResearch/data";
-figDir  = "C:/CombResearch/figures";
+figDir  = "C:/CombResearch/figures/is_vs_mh";
 If[!DirectoryQ[figDir], CreateDirectory[figDir]];
 
 isFile[p_, t_] := FileNameJoin[{dataDir,
@@ -91,10 +91,10 @@ grid = Column[{
 
 Export[FileNameJoin[{figDir, "q10_is_vs_mh_grid.png"}], grid,
   ImageResolution -> 144];
-Print["wrote figures/q10_is_vs_mh_grid.png"];
+Print["wrote figures/is_vs_mh/q10_is_vs_mh_grid.png"];
 
 Export[FileNameJoin[{figDir, "q10_is_vs_mh_grid.pdf"}], grid];
-Print["wrote figures/q10_is_vs_mh_grid.pdf"];
+Print["wrote figures/is_vs_mh/q10_is_vs_mh_grid.pdf"];
 
 (* Also render a focused 1x2 panel: (4,10) unlabeled and facet, the
    most-dramatic disagreement cells, for the writeup. *)
@@ -105,6 +105,6 @@ focus = Column[{
   Alignment -> Center, Background -> White];
 Export[FileNameJoin[{figDir, "q10_p4_focus.png"}], focus,
   ImageResolution -> 144];
-Print["wrote figures/q10_p4_focus.png"];
+Print["wrote figures/is_vs_mh/q10_p4_focus.png"];
 
 Print["Done."];

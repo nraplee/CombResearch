@@ -4,12 +4,12 @@
    warm-start) numV histograms.
 
    Writes:
-     figures/q10_warm_vs_prod.png
-     figures/q10_warm_vs_prod.pdf
+     figures/is_vs_mh/q10_warm_vs_prod.png
+     figures/is_vs_mh/q10_warm_vs_prod.pdf
 *)
 
 dataDir = "C:/CombResearch/data";
-figDir  = "C:/CombResearch/figures";
+figDir  = "C:/CombResearch/figures/is_vs_mh";
 If[!DirectoryQ[figDir], CreateDirectory[figDir]];
 
 cells = {{3, 10, "unlabeled", 14}, {3, 10, "facet", 14},
@@ -113,7 +113,7 @@ grid = Column[{
 
 Export[FileNameJoin[{figDir, "q10_warm_vs_prod.png"}], grid,
   ImageResolution -> 144];
-Print["wrote figures/q10_warm_vs_prod.png"];
+Print["wrote figures/is_vs_mh/q10_warm_vs_prod.png"];
 Export[FileNameJoin[{figDir, "q10_warm_vs_prod.pdf"}], grid];
-Print["wrote figures/q10_warm_vs_prod.pdf"];
+Print["wrote figures/is_vs_mh/q10_warm_vs_prod.pdf"];
 Print["Done."];

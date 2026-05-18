@@ -1,6 +1,6 @@
 (* render_sampler_progress.wl
    One-off renderer for the MH sampler progress figure.
-   Output: figures/sampler_mh_progress.{pdf,png}
+   Output: figures/sampler_diagnostics/sampler_mh_progress.{pdf,png}
    Four panels:
      A. p=2, q=4 — MH vs full enumeration (numV histogram)
      B. p=3, q=4 — MH vs full enumeration (numV histogram)
@@ -101,7 +101,9 @@ panelC = panelStyle[
 Print["composing ..."];
 fig = Grid[{{panelA, panelB, panelC}}, Spacings -> {2, 2}];
 
-If[!DirectoryQ["figures"], CreateDirectory["figures"]];
-Export["figures/sampler_mh_progress.pdf", fig];
-Export["figures/sampler_mh_progress.png", fig, ImageResolution -> 150];
-Print["wrote figures/sampler_mh_progress.{pdf,png}"];
+If[!DirectoryQ["figures/sampler_diagnostics"],
+  CreateDirectory["figures/sampler_diagnostics"]];
+Export["figures/sampler_diagnostics/sampler_mh_progress.pdf", fig];
+Export["figures/sampler_diagnostics/sampler_mh_progress.png", fig,
+  ImageResolution -> 150];
+Print["wrote figures/sampler_diagnostics/sampler_mh_progress.{pdf,png}"];

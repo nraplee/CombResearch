@@ -4,12 +4,12 @@
    truth as grouped bars.
 
    Writes:
-     figures/q5_is_mh_truth_3way.png
-     figures/q5_is_mh_truth_3way.pdf
+     figures/is_vs_mh/q5_is_mh_truth_3way.png
+     figures/is_vs_mh/q5_is_mh_truth_3way.pdf
 *)
 
 dataDir = "C:/CombResearch/data";
-figDir  = "C:/CombResearch/figures";
+figDir  = "C:/CombResearch/figures/is_vs_mh";
 If[!DirectoryQ[figDir], CreateDirectory[figDir]];
 
 truthFile[p_, q_] := FileNameJoin[{dataDir,
@@ -132,9 +132,9 @@ grid = Column[{
 
 Export[FileNameJoin[{figDir, "q5_is_mh_truth_3way.png"}], grid,
   ImageResolution -> 144];
-Print["wrote figures/q5_is_mh_truth_3way.png"];
+Print["wrote figures/is_vs_mh/q5_is_mh_truth_3way.png"];
 
 Export[FileNameJoin[{figDir, "q5_is_mh_truth_3way.pdf"}], grid];
-Print["wrote figures/q5_is_mh_truth_3way.pdf"];
+Print["wrote figures/is_vs_mh/q5_is_mh_truth_3way.pdf"];
 
 Print["Done."];
