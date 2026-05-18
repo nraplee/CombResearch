@@ -69,6 +69,24 @@ wolframscript -file src\validate_mh_vs_truth.wl
 wolframscript -file src\render_truth_overlay.wl
 ```
 
+q=10 IS-vs-MH comparison (no truth at q=10):
+
+```powershell
+# Aggregate the merged 12M-row IS data into 9 small numV histograms
+# (one per p in {2,3,4} x target in {vertex, unlabeled, facet}).
+wolframscript -file src\precompute_is_histograms_q10.wl
+
+# Sequential 10k-iter MH pilot, all 9 (p, target) at q=10.
+powershell -ExecutionPolicy Bypass -File src\run_q10_mh_pilot.ps1
+
+# 200k-iter production chains for the 4 IS-vs-MH disagreement cells
+# (p in {3,4} x target in {unlabeled, facet}), launched in parallel.
+powershell -ExecutionPolicy Bypass -File src\run_q10_mh_parallel.ps1
+
+# Per-cell ASCII overlay + L1 summary, IS vs MH at q=10.
+wolframscript -file src\compare_is_mh_q10.wl
+```
+
 Checks/smoke tests:
 
 ```powershell
