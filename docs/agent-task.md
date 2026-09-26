@@ -2,17 +2,79 @@
 
 ## Goal
 
-**Phase 4b complete (2026-05-15).** Truth+MH on 9 cells × 3 targets, all 27 combinations PASS at L1 < 0.05. (4,5) MH chains landed and validated:
-- unlabeled L1 = 0.0253
-- facet L1 = 0.0294
-- vertex L1 = 0.0086
+**Phase 4b complete (2026-05-15).** Truth+MH on 9 cells × 3 targets, all 27 combinations PASS at L1 < 0.05.
 
-Renderer produces 273 manuscript panels, all with full overlays (no truth-only rows remaining).
+**Phase 4c started (2026-05-17): IS-vs-MH q=10 comparison (numV marginal).**
+With no truth available at q=10, we cross-check the two estimators against each other.
+First pass (pilot 10k + production 200k) shows:
+
+- **p=2 (all targets), vertex target everywhere**: L1(IS, MH) ≤ 0.10 — agreement
+  within sampling noise.
+- **p∈{3,4} × {unlabeled, facet}**: structural disagreement. 200k-iter chains give
+  L1 ∈ [0.53, 1.38]; 20× the pilot budget barely moved the L1 (Δ ≤ 0.16). MH chains
+  are stationary in a region of numV materially different from IS.
+- Most likely reading: IS is broken at low ESS (as predicted; ESS=25/29 at p=4
+  unlabeled/facet, ESS=123/118 at p=3). MH is sampling the high-|Aut| / low-numV
+  corners that IS cannot reach. The p=2 agreement confirms MH is calibrated.
+- Caveat: MH accept rate is 9% at p=4 q=10. Cannot fully rule out metastable
+  trapping until a second seed and a warm-start from a high-numV state are
+  tried.
+
+**Phase 4c part 2: 3-way IS vs MH vs truth at (3,5) and (4,5).**
+Ran 100k IS samples at the truth cells and compared all three estimators on
+the same numV marginal. L1 vs truth:
+
+| cell  | target    | L1(IS,T) | L1(MH,T) | ratio |
+|-------|-----------|---------:|---------:|------:|
+| (3,5) | vertex    |   0.003  |   0.014  |  0.2x |
+| (3,5) | unlabeled |   0.097  |   0.022  |  4.5x |
+| (3,5) | facet     |   0.071  |   0.005  | 15x   |
+| (4,5) | vertex    |   0.005  |   0.009  |  0.6x |
+| (4,5) | unlabeled |   0.132  |   0.025  |  5.3x |
+| (4,5) | facet     |   0.093  |   0.029  |  3.2x |
+
+- On **vertex** target, IS and MH both reach truth within ~0.01 L1. IS is
+  marginally better (no chain mixing concerns).
+- On **unlabeled** and **facet** targets at p∈{3,4}, **MH agrees with truth
+  3-15x more tightly than IS does**. At (3,5) facet IS has L1=0.071 vs MH
+  L1=0.005 — the same pattern as the q=10 case at smaller scale.
+- IS systematically under-samples the high-|Aut|/low-numV corners. At (4,5)
+  unlabeled, truth has ~2.5% of mass at numV ∈ {5,6,7}, and IS has zero
+  there — exactly the bias predicted by ESS=134.
+- Conclusion: the q=10 IS-vs-MH disagreement is the same phenomenon
+  observed at q=5 where we have truth to break the tie. MH is right.
+
+**Phase 4c part 3 (overnight 2026-05-17 → 2026-05-18): warm-start + second-seed disambiguation at q=10.**
+Belt-and-suspenders test: run 1M-iter chains with seed 67890 and warm-start
+at numV near the IS mode (14 for p=3, 18 for p=4) at the 4 disagreement
+cells. If the chain stays at the warm-init region, MH-trapped is in play;
+if it descends to the same region the production seed-12345 chains found,
+both chains are stationary in the same basin and the MH answer is locked.
+
+Result: **production and warm chains agree to L1 ≤ 0.06 at every cell.**
+
+| cell  | target    | prod acc | warm acc | L1(IS, prod) | L1(IS, warm) | **L1(prod, warm)** |
+|-------|-----------|---------:|---------:|-------------:|-------------:|-------------------:|
+| (3,10) | unlabeled | 0.18 | 0.19 | 0.559 | 0.532 | **0.034** |
+| (3,10) | facet     | 0.19 | 0.19 | 0.525 | 0.562 | **0.038** |
+| (4,10) | unlabeled | 0.10 | 0.10 | 1.332 | 1.335 | **0.050** |
+| (4,10) | facet     | 0.09 | 0.09 | 1.379 | 1.344 | **0.059** |
+
+Different seed × different init × 5× chain length all settle on the same
+distribution. MH-trapped ruled out. **IS is biased at low ESS; MH is right.**
+Phase 4c is closed.
 
 Remaining open items:
 
-1. **Betre cross-check**: Dr. Betre has independent (4,4) and (4,5) facet-labeled and unlabeled samples in `.mx` files. These are platform-locked to MacOSX-ARM64 and don't load on Windows. Betre is being asked to re-export as WXF (one-liner: `Export["p4q5SXUnlabeled.wxf", p4q5SXUnlabeled, "WXF"]`). When `.wxf` files land in `C:\CombResearch\data\`, cross-check our (4,5) iso count = 5,532.
-2. **Next-phase decision** (user input needed): manuscript text integration (Phase 5), attempt (4,6) via McKay, IS-vs-MH q=10 comparison, or other priorities.
+1. ~~Disambiguate MH-stationary vs MH-trapped at p=4 q=10 unlabeled/facet~~
+   — closed by Phase 4c part 3 (warm-start + second seed). See below.
+2. **Betre cross-check**: Dr. Betre has independent (4,4) and (4,5) facet-labeled
+   and unlabeled samples in `.mx` files. Platform-locked to MacOSX-ARM64.
+   Betre asked to re-export as WXF. When `.wxf` files land in
+   `C:\CombResearch\data\`, cross-check our (4,5) iso count = 5,532.
+3. **Next-phase decision** (user input needed): manuscript text integration
+   (Phase 5), attempt (4,6) via McKay, broaden q=10 comparison to remaining
+   Figure 3+ statistics, or other priorities.
 
 ## Current status (2026-05-15)
 
@@ -49,7 +111,64 @@ Remaining open items:
   scripts from `src/` to `archive/old_test_scripts/`; production renderers and
   smoke tests remain in `src/`.
 
-## Files added this session
+## Files added this session (Phase 4c part 3)
+
+- `src/run_q10_mh_overnight.ps1` — orchestrator for the overnight job.
+  Step 1 restores `p4q10_mh_unlabeled.wxf` at the production 200k budget
+  (a smoke test had overwritten it). Step 2 launches 4 parallel
+  wolframscript processes at 1M iter, seed 67890, warm-start at
+  numV=14 (p=3) or numV=18 (p=4). Outputs tagged
+  `_seed67890_warm{N}` so production is never clobbered.
+- `src/compare_q10_warm_vs_prod.wl` — per-cell L1 table comparing IS,
+  production-seed, and warm-seed chains. Reports L1(prod, warm) as the
+  key disambiguator.
+- `src/render_q10_warm_vs_prod.wl` — 2x2 grouped-bar overlay
+  (IS / prod / warm) at the 4 disagreement cells. Output:
+  `figures/q10_warm_vs_prod.{png,pdf}`.
+
+Sampler patches enabling the overnight job:
+- `src/sampler_mh.wl`: added `warmInitialState[p,q,nMax,mTarget,seed]`
+  that constructs q distinct random p-subsets of `{1..mTarget}` embedded
+  in `[nMax]`. `runMHChain` gained option `initNumV` (default
+  Automatic = existing random-vertex-labeled init).
+- `src/run_mh_chains.wl`: added env vars `COMB_MH_TAG` (output-filename
+  suffix), `COMB_MH_INITNUMV` (forwards to runMHChain), and
+  `COMB_MH_OUTDIR` (override the output dir — needed when running the
+  worktree script with outputs going to the main checkout). Tag and
+  initNumV are persisted to the payload. The (3,5) inline gate is
+  skipped for non-default tag or initNumV.
+
+## Files added this session (Phase 4c part 2)
+
+- `src/run_is_at_truth_cells.wl` — chunked IS sampler at (3,5) and (4,5),
+  100k samples each, ParallelMap on the {numV, |Aut|, |Aut_F|} stats step.
+  Writes the same `data/p{p}q{q}_is_{target}_numv_hist.wxf` schema as the
+  q=10 aggregator so the comparison/render code is shared.
+- `src/compare_3way.wl` — per (p, q, target) prints L1 against truth for
+  both IS and MH plus the IS-vs-MH L1, with an ASCII overlay. Writes
+  `data/is_mh_truth_3way_summary.wxf`.
+- `src/render_3way.wl` — 2x3 grid of grouped bar overlays (truth, IS, MH).
+  Output: `figures/q5_is_mh_truth_3way.{png,pdf}`.
+
+## Files added this session (Phase 4c part 1)
+
+- `src/precompute_is_histograms_q10.wl` — aggregates the merged 12M-row q=10 IS
+  stats into 9 small numV-fraction WXFs (one per p × target). Uses GroupBy for
+  the bin aggregation; the older Merge[Thread[..., Total]] was unusably slow on
+  2M+ rows. Outputs: `data/p{2,3,4}q10_is_{vertex,unlabeled,facet}_numv_hist.wxf`.
+- `src/run_q10_mh_pilot.ps1` — sequential 10k-iter MH pilot at q=10 for all 9
+  (p, target) combos. Environment-overridable iter count.
+- `src/run_q10_mh_parallel.ps1` — production launcher: 4 parallel
+  wolframscript processes, one per cell × target at (3,10) and (4,10) ×
+  {unlabeled, facet}. 200k iter, 20k burn-in, thin 5; ~45 min wall when run
+  in parallel.
+- `src/compare_is_mh_q10.wl` — bins MH numV column 1, compares against
+  precomputed IS frac-hist, prints per-bin ASCII overlay + per-cell L1 and
+  summary table. Writes `data/q10_is_vs_mh_summary.wxf`.
+- Pilot archive: `data/q10_pilot_archive/p{3,4}q10_mh_{unlabeled,facet}_pilot10k.wxf`
+  preserved before production rerun overwrote the WXFs.
+
+## Files added this session (previous: Phase 4b)
 
 - `src/validate_mh_vs_truth.wl` — MH-vs-truth validation harness
 - `src/test_streaming_mckay.wl` — McKay correctness gate + profiler
@@ -98,7 +217,7 @@ Before continuing, the next agent must:
 
 ## Last updated by
 
-Codex on 2026-05-16 (docs/code cleanup PR)
+Claude Code on 2026-05-18 (Phase 4c part 3: warm-start + second-seed disambiguation, Phase 4c CLOSED)
 
 ## Tool switch prompts
 

@@ -12,7 +12,7 @@
    match. Any systematic deviation in the ECGrav bars from truth is
    evidence that the sampler is biased.
 
-   Output: figures/sampler_ecgrav_compare.{pdf,png} *)
+   Output: figures/sampler_diagnostics/sampler_ecgrav_compare.{pdf,png} *)
 
 Needs["ECGrav`"];
 $smokeTestSkip = True;
@@ -94,7 +94,9 @@ panel = Show[
   BaseStyle -> {FontFamily -> fontFam, FontSize -> fontSz},
   ImageSize -> {800, 400}];
 
-If[!DirectoryQ["figures"], CreateDirectory["figures"]];
-Export["figures/sampler_ecgrav_compare.pdf", panel];
-Export["figures/sampler_ecgrav_compare.png", panel, ImageResolution -> 150];
-Print["wrote figures/sampler_ecgrav_compare.{pdf,png}"];
+If[!DirectoryQ["figures/sampler_diagnostics"],
+  CreateDirectory["figures/sampler_diagnostics"]];
+Export["figures/sampler_diagnostics/sampler_ecgrav_compare.pdf", panel];
+Export["figures/sampler_diagnostics/sampler_ecgrav_compare.png", panel,
+  ImageResolution -> 150];
+Print["wrote figures/sampler_diagnostics/sampler_ecgrav_compare.{pdf,png}"];

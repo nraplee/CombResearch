@@ -8,7 +8,7 @@
    Outputs:
      ../figures/stacked_previews/fig{03..15}_*.{pdf,png}   (one stacked column per fig)
      ../figures/manuscript_panels/p{p}q10[conn]SX{Stat}_merged.pdf (~30 panels)
-     ../figures/combined_all_figures_merged.pdf            (multi-page combined)
+     ../figures/combined/combined_all_figures_merged.pdf   (multi-page combined)
    Prints per-p ESS at startup. *)
 
 (* ===== paths ===== *)
@@ -19,9 +19,11 @@ dataDir             = FileNameJoin[{projectRoot, "data"}];
 figuresDir          = FileNameJoin[{projectRoot, "figures"}];
 stackedPreviewsDir  = FileNameJoin[{figuresDir, "stacked_previews"}];
 manuscriptPanelsDir = FileNameJoin[{figuresDir, "manuscript_panels"}];
+combinedDir         = FileNameJoin[{figuresDir, "combined"}];
 
 If[!DirectoryQ[stackedPreviewsDir],  CreateDirectory[stackedPreviewsDir]];
 If[!DirectoryQ[manuscriptPanelsDir], CreateDirectory[manuscriptPanelsDir]];
+If[!DirectoryQ[combinedDir],         CreateDirectory[combinedDir]];
 
 Print["projectRoot         = ", projectRoot];
 Print["dataDir             = ", dataDir];
@@ -264,7 +266,7 @@ Do[
 
 (* ===== combined multi-page PDF ===== *)
 Print["----- combined PDF -----"];
-Module[{combinedPath = FileNameJoin[{figuresDir,
+Module[{combinedPath = FileNameJoin[{combinedDir,
     "combined_all_figures_" <> sampleTag <> ".pdf"}]},
   Export[combinedPath, allCombinedPages];
   Print["wrote ", FileNameTake[combinedPath]]];

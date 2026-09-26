@@ -11,7 +11,7 @@
    Outputs:
      figures/manuscript_panels/truthSX{Stat}[_conn]_p{p}q{q}_{target}.pdf
      figures/stacked_previews/truth_{stackedStem}_{target}.{pdf,png}
-     figures/combined_truth_overlay.pdf
+     figures/combined/combined_truth_overlay.pdf
 
    For each (stat, p, q, target) where truth WXF exists:
      truth bar = marginalize pi{Target} onto values of stat across
@@ -28,8 +28,10 @@ dataDir             = FileNameJoin[{projectRoot, "data"}];
 figuresDir          = FileNameJoin[{projectRoot, "figures"}];
 stackedPreviewsDir  = FileNameJoin[{figuresDir, "stacked_previews"}];
 manuscriptPanelsDir = FileNameJoin[{figuresDir, "manuscript_panels"}];
+combinedDir         = FileNameJoin[{figuresDir, "combined"}];
 If[!DirectoryQ[stackedPreviewsDir],  CreateDirectory[stackedPreviewsDir]];
 If[!DirectoryQ[manuscriptPanelsDir], CreateDirectory[manuscriptPanelsDir]];
+If[!DirectoryQ[combinedDir],         CreateDirectory[combinedDir]];
 
 (* ===== Reachable grid =====
    Includes the 9-cell truth grid. For cells without MH WXFs, the renderer
@@ -322,7 +324,7 @@ Do[
   {f, figs}];
 
 (* ===== Combined multi-page PDF ===== *)
-Module[{combinedPath = FileNameJoin[{figuresDir, "combined_truth_overlay.pdf"}]},
+Module[{combinedPath = FileNameJoin[{combinedDir, "combined_truth_overlay.pdf"}]},
   Export[combinedPath, allCombinedPages];
   Print["wrote ", FileNameTake[combinedPath], " (", Length[allCombinedPages], " pages)"]];
 

@@ -69,6 +69,35 @@ wolframscript -file src\validate_mh_vs_truth.wl
 wolframscript -file src\render_truth_overlay.wl
 ```
 
+q=10 IS-vs-MH comparison (no truth at q=10):
+
+```powershell
+# Aggregate the merged 12M-row IS data into 9 small numV histograms
+# (one per p in {2,3,4} x target in {vertex, unlabeled, facet}).
+wolframscript -file src\precompute_is_histograms_q10.wl
+
+# Sequential 10k-iter MH pilot, all 9 (p, target) at q=10.
+powershell -ExecutionPolicy Bypass -File src\run_q10_mh_pilot.ps1
+
+# 200k-iter production chains for the 4 IS-vs-MH disagreement cells
+# (p in {3,4} x target in {unlabeled, facet}), launched in parallel.
+powershell -ExecutionPolicy Bypass -File src\run_q10_mh_parallel.ps1
+
+# Per-cell ASCII overlay + L1 summary, IS vs MH at q=10.
+wolframscript -file src\compare_is_mh_q10.wl
+
+# 3-way comparison at q=5 truth cells (3,5) and (4,5): IS, MH, truth.
+wolframscript -file src\run_is_at_truth_cells.wl    # 100k IS samples each
+wolframscript -file src\compare_3way.wl             # per-cell L1 table
+wolframscript -file src\render_3way.wl              # 2x3 overlay grid PNG
+
+# Warm-start + second-seed disambiguation at q=10 disagreement cells.
+# 4 chains x 1M iters in parallel, ~5 hr wall.
+powershell -ExecutionPolicy Bypass -File src\run_q10_mh_overnight.ps1
+wolframscript -file src\compare_q10_warm_vs_prod.wl  # per-cell L1 table
+wolframscript -file src\render_q10_warm_vs_prod.wl   # 2x2 grouped-bar PNG
+```
+
 Checks/smoke tests:
 
 ```powershell

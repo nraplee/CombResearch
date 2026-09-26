@@ -7,7 +7,7 @@
      Panel B: target="facet"     — truth is q!/|Aut_F([Y])| per iso class
                                    (normalized).
 
-   Output: figures/sampler_mh_uniformity.{pdf,png} *)
+   Output: figures/sampler_diagnostics/sampler_mh_uniformity.{pdf,png} *)
 
 Needs["ECGrav`"];
 $smokeTestSkip = True;
@@ -111,8 +111,10 @@ panelF = panelStyle[
     PlotRange -> {0, Automatic}],
   "p=2 q=4 — target=facet (truth ∝ q!/|Aut_F|)"];
 
-If[!DirectoryQ["figures"], CreateDirectory["figures"]];
+If[!DirectoryQ["figures/sampler_diagnostics"],
+  CreateDirectory["figures/sampler_diagnostics"]];
 fig = Grid[{{panelU}, {panelF}}, Spacings -> {0, 1}];
-Export["figures/sampler_mh_uniformity.pdf", fig];
-Export["figures/sampler_mh_uniformity.png", fig, ImageResolution -> 150];
-Print["wrote figures/sampler_mh_uniformity.{pdf,png}"];
+Export["figures/sampler_diagnostics/sampler_mh_uniformity.pdf", fig];
+Export["figures/sampler_diagnostics/sampler_mh_uniformity.png", fig,
+  ImageResolution -> 150];
+Print["wrote figures/sampler_diagnostics/sampler_mh_uniformity.{pdf,png}"];
