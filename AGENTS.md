@@ -6,7 +6,7 @@ Canonical shared instructions for Codex and Claude Code in this repository. Keep
 
 TODO: Keep this paragraph current as the paper evolves.
 
-Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validate against truth for all 27 cell×target combinations at L1 < 0.05. McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Current work centers on manuscript integration, cross-checking the (4,5) iso count = 5,532 against Dr. Betre's independent samples, and deciding whether to attempt (4,6).
+Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validate against truth for all 27 cell×target combinations at L1 < 0.05. McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Phase 5a (2026-09-26): ECGrav 1.17.0 validated against the truth grid. Its exact counters match our truth at every n on all 9 cells (confirming the (4,5) iso count 5,532), and its exact samplers (`RandomUniformUnlabeled…`, `RandomUniformFacetLabeled…`, `RandomVertexLabeled…`) pass all 27 cell×target combinations. `RandomPureSimplicialComplexMCMC` passes L1 but returns correlated samples for unlabeled. Next: q=10 with the exact samplers as reference, then manuscript integration.
 
 ## Repo Layout
 
@@ -29,7 +29,7 @@ Install/setup:
 
 - No dependency installation step is defined for this repo.
 - `wolframscript` must be on `PATH`.
-- ECGrav is expected to be installed and loadable with `Needs["ECGrav`"]`.
+- ECGrav 1.17.0 is installed globally (Wolfram 15.0.1). New Phase 5a scripts load the vendored `ECGrav/ECGrav-1.17.0/` via `src/load_ecgrav.wl` (`COMB_ECGRAV_VERSION`, default 1.17.0); older scripts use `Needs["ECGrav`"]`. `ECGrav/ECGrav-1.0.0/` is kept to reproduce Phase 4.
 - Do not add or install dependencies without asking first.
 
 Main compute/render commands:
@@ -67,6 +67,19 @@ wolframscript -file src\validate_mh_vs_truth.wl
 
 # Render manuscript overlay panels (truth + MH + IS layers).
 wolframscript -file src\render_truth_overlay.wl
+
+# ECGrav 1.17 sampler campaign (Phase 5a).
+#   COMB_ECG_SAMPLER=exact|mcmc|legacyfacet, COMB_ECG_CELLS, COMB_ECG_TARGETS,
+#   COMB_ECG_N, COMB_ECG_SEED, COMB_ECG_TRACE_STEPS, COMB_FORCE
+#   -> data/p{p}q{q}_ecg{sampler}_{target}.wxf
+wolframscript -file src\validate_counts_vs_truth.wl   # ECGrav counters vs truth
+wolframscript -file src\run_ecgrav_samplers.wl
+powershell -ExecutionPolicy Bypass -File src\run_ecgrav_campaign.ps1   # 3 parallel targets
+powershell -ExecutionPolicy Bypass -File src\monitor_ecgrav.ps1        # COMB_MON_SAMPLER
+# Validate any sample source: COMB_VAL_SOURCE=mh|ecgexact|ecgmcmc|ecglegacyfacet
+wolframscript -file src\validate_mh_vs_truth.wl
+# ESS / ESS-per-second table across all sources (COMB_EFF_CELLS, COMB_EFF_TARGETS).
+wolframscript -file src\compare_samplers_efficiency.wl
 ```
 
 q=10 IS-vs-MH comparison (no truth at q=10):
@@ -114,7 +127,9 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - Use `wolframscript -file` for non-trivial Wolfram execution; shell quoting around Wolfram backticks is fragile.
 - Do not edit generated files in `data/`, `figures/`, or `logs/` unless explicitly asked.
 - Do not edit Figure 2 reference notebooks in `src/reference/` unless explicitly asked.
-- Never use `RandomFacetLabeledPureSimplicialComplex` for the facet-labeled distribution. Use verified reweighting or exact truth data where available.
+- Never use `RandomFacetLabeledPureSimplicialComplex` for the facet-labeled distribution (still non-uniform in 1.17.0; it is the harness negative control). Use `RandomUniformFacetLabeledPureSimplicialComplex` (validated 2026-09-26) or exact truth data.
+- Load ECGrav through `src/load_ecgrav.wl` in new scripts, before any other file that calls `Needs["ECGrav`"]`.
+- Vertex MH WXFs copied from the `adoring-hoover-18d09b` worktree predate the vertex fix (L1 ~0.75). Rerun before use.
 - MH sampler vertex target uses `π_V(X) ∝ 1/C(N, numV(X))` (2026-05-14 fix). The earlier `π_V ∝ 1` was wrong by a `C(N, k)` factor and produced L1 = 0.85 vs truth at (3,5). Do NOT revert without re-deriving — see in-code comment at the vertex Switch branch of `mhStep` in `src/sampler_mh.wl`.
 - At p=4 the cheap pipeline (`streamingEnumeratePure`) OOMs at (4,5) even sequential. Use `streamingEnumeratePureMcKay` for p=4 q≥5. Cheap is still fine at (4,4) and below.
 - Keep changes narrowly scoped. Do not reformat unrelated files.
