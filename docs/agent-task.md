@@ -103,8 +103,15 @@ Renderer produces 273 manuscript panels, all with full overlays (no truth-only r
 
 Remaining open items:
 
-1. **Betre cross-check**: Dr. Betre has independent (4,4) and (4,5) facet-labeled and unlabeled samples in `.mx` files. These are platform-locked to MacOSX-ARM64 and don't load on Windows. Betre is being asked to re-export as WXF (one-liner: `Export["p4q5SXUnlabeled.wxf", p4q5SXUnlabeled, "WXF"]`). When `.wxf` files land in `C:\CombResearch\data\`, cross-check our (4,5) iso count = 5,532.
-2. **Next-phase decision** (user input needed): manuscript text integration (Phase 5), attempt (4,6) via McKay, IS-vs-MH q=10 comparison, or other priorities.
+1. ~~Disambiguate MH-stationary vs MH-trapped at p=4 q=10 unlabeled/facet~~
+   — closed by Phase 4c part 3 (warm-start + second seed). See below.
+2. **Betre cross-check**: Dr. Betre has independent (4,4) and (4,5) facet-labeled
+   and unlabeled samples in `.mx` files. Platform-locked to MacOSX-ARM64.
+   Betre asked to re-export as WXF. When `.wxf` files land in
+   `C:\CombResearch\data\`, cross-check our (4,5) iso count = 5,532.
+3. **Next-phase decision** (user input needed): manuscript text integration
+   (Phase 5), attempt (4,6) via McKay, broaden q=10 comparison to remaining
+   Figure 3+ statistics, or other priorities.
 
 ## Current status (2026-05-15)
 
@@ -141,7 +148,64 @@ Remaining open items:
   scripts from `src/` to `archive/old_test_scripts/`; production renderers and
   smoke tests remain in `src/`.
 
-## Files added this session
+## Files added this session (Phase 4c part 3)
+
+- `src/run_q10_mh_overnight.ps1` — orchestrator for the overnight job.
+  Step 1 restores `p4q10_mh_unlabeled.wxf` at the production 200k budget
+  (a smoke test had overwritten it). Step 2 launches 4 parallel
+  wolframscript processes at 1M iter, seed 67890, warm-start at
+  numV=14 (p=3) or numV=18 (p=4). Outputs tagged
+  `_seed67890_warm{N}` so production is never clobbered.
+- `src/compare_q10_warm_vs_prod.wl` — per-cell L1 table comparing IS,
+  production-seed, and warm-seed chains. Reports L1(prod, warm) as the
+  key disambiguator.
+- `src/render_q10_warm_vs_prod.wl` — 2x2 grouped-bar overlay
+  (IS / prod / warm) at the 4 disagreement cells. Output:
+  `figures/q10_warm_vs_prod.{png,pdf}`.
+
+Sampler patches enabling the overnight job:
+- `src/sampler_mh.wl`: added `warmInitialState[p,q,nMax,mTarget,seed]`
+  that constructs q distinct random p-subsets of `{1..mTarget}` embedded
+  in `[nMax]`. `runMHChain` gained option `initNumV` (default
+  Automatic = existing random-vertex-labeled init).
+- `src/run_mh_chains.wl`: added env vars `COMB_MH_TAG` (output-filename
+  suffix), `COMB_MH_INITNUMV` (forwards to runMHChain), and
+  `COMB_MH_OUTDIR` (override the output dir — needed when running the
+  worktree script with outputs going to the main checkout). Tag and
+  initNumV are persisted to the payload. The (3,5) inline gate is
+  skipped for non-default tag or initNumV.
+
+## Files added this session (Phase 4c part 2)
+
+- `src/run_is_at_truth_cells.wl` — chunked IS sampler at (3,5) and (4,5),
+  100k samples each, ParallelMap on the {numV, |Aut|, |Aut_F|} stats step.
+  Writes the same `data/p{p}q{q}_is_{target}_numv_hist.wxf` schema as the
+  q=10 aggregator so the comparison/render code is shared.
+- `src/compare_3way.wl` — per (p, q, target) prints L1 against truth for
+  both IS and MH plus the IS-vs-MH L1, with an ASCII overlay. Writes
+  `data/is_mh_truth_3way_summary.wxf`.
+- `src/render_3way.wl` — 2x3 grid of grouped bar overlays (truth, IS, MH).
+  Output: `figures/q5_is_mh_truth_3way.{png,pdf}`.
+
+## Files added this session (Phase 4c part 1)
+
+- `src/precompute_is_histograms_q10.wl` — aggregates the merged 12M-row q=10 IS
+  stats into 9 small numV-fraction WXFs (one per p × target). Uses GroupBy for
+  the bin aggregation; the older Merge[Thread[..., Total]] was unusably slow on
+  2M+ rows. Outputs: `data/p{2,3,4}q10_is_{vertex,unlabeled,facet}_numv_hist.wxf`.
+- `src/run_q10_mh_pilot.ps1` — sequential 10k-iter MH pilot at q=10 for all 9
+  (p, target) combos. Environment-overridable iter count.
+- `src/run_q10_mh_parallel.ps1` — production launcher: 4 parallel
+  wolframscript processes, one per cell × target at (3,10) and (4,10) ×
+  {unlabeled, facet}. 200k iter, 20k burn-in, thin 5; ~45 min wall when run
+  in parallel.
+- `src/compare_is_mh_q10.wl` — bins MH numV column 1, compares against
+  precomputed IS frac-hist, prints per-bin ASCII overlay + per-cell L1 and
+  summary table. Writes `data/q10_is_vs_mh_summary.wxf`.
+- Pilot archive: `data/q10_pilot_archive/p{3,4}q10_mh_{unlabeled,facet}_pilot10k.wxf`
+  preserved before production rerun overwrote the WXFs.
+
+## Files added this session (previous: Phase 4b)
 
 - `src/validate_mh_vs_truth.wl` — MH-vs-truth validation harness
 - `src/test_streaming_mckay.wl` — McKay correctness gate + profiler
@@ -191,6 +255,7 @@ Before continuing, the next agent must:
 ## Last updated by
 
 Claude Code on 2026-09-25 (Phase 5a ECGrav 1.17 sampler validation, in progress)
+Claude Code on 2026-05-18 (Phase 4c part 3: warm-start + second-seed disambiguation, Phase 4c CLOSED)
 
 ## Tool switch prompts
 
