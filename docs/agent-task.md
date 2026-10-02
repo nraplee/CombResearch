@@ -2,6 +2,98 @@
 
 ## Goal
 
+**Phase 5a (started 2026-09-25): validate the ECGrav 1.17.0 samplers** against
+our truth grid and repeat the Phase 4 metrics (numV L1, per-class fit, ESS,
+ESS/s). Requested by Dr. Betre. Plan: Claude plan file
+`big-things-happening-it-s-eager-sprout.md` (steps 0-6 summarized below).
+
+New in ECGrav (v1.0.0 -> v1.17.0, github.com/kassabetre/ECGrav @ d15739c):
+exact rejection-free `RandomUniformFacetLabeledPureSimplicialComplex` and
+`RandomUniformUnlabeledPureSimplicialComplex` (n free, drawn from the counts),
+ECGrav's own `RandomPureSimplicialComplexMCMC` (labeling 0/1/2), faster
+`RandomVertexLabeledPureSimplicialComplex`, and exact counters
+`Num{Vertex,Facet,Un}LabeledPureComplexes`.
+
+### Phase 5a status
+
+- Step 0 DONE: 1.17.0 source vendored at `ECGrav/ECGrav-1.17.0/`. Its
+  PacletInfo says WolframVersion 15.0+, which the paclet system filters out
+  on 14.3, so `src/load_ecgrav.wl` `Get`s the kernel file directly (works on
+  14.3). User is installing Wolfram 15.0.1 (2026-09-25); after that a global
+  PacletInstall also works, but the loader stays the pinned path.
+  (4,4) truth regenerated via McKay (278 classes, 262 s) ->
+  `data/p4q4_truth.wxf`. Other truth/MH WXFs copied from the
+  `adoring-hoover-18d09b` worktree and `C:\CombResearch\data`.
+- Step 1 DONE: `src/validate_counts_vs_truth.wl` - ECGrav U/F/V counts match
+  our truth EXACTLY per n on all 9 cells. **(4,5) iso count 5,532
+  independently confirmed** (NumUnlabeledPureComplexes[4,5]). This closes
+  the Betre .mx cross-check item.
+- Step 2 IN PROGRESS: `src/run_ecgrav_samplers.wl` written; smoke run at
+  (2,4),(3,4), N=20k, all 3 targets: 0 unmatched samples, all classes hit
+  (vertex misses 2 rare classes at (3,4)). Validation harness extended but
+  its first run was interrupted by the Wolfram upgrade.
+- Step 2 DONE (2026-09-26): full exact campaign, 9 cells x 3 targets,
+  N=100k each (`src
+un_ecgrav_campaign.ps1`, ~1 h). **27/27 PASS**, numV L1
+  0.002-0.011 (mean ~0.006 vs 0.018 for our MH), per-class chi-square p
+  0.058-0.977, iid p-values look uniform (min 0.018 of 27), 0 unmatched
+  samples. Negative control `ecglegacyfacet` at (2,4),(3,4): FAILS as
+  required (L1 0.22, chi-square p = 0; was 0.43 under 1.0.0).
+- Step 4 partial: `src/compare_samplers_efficiency.wl` ran on the 9 cells.
+  Exact samplers: tau ~0.5 (draws independent), ESS/s 150-15000. Our MH:
+  ESS/s 1-13 for unlabeled/facet. IS from vertex draws: ESS/N falls to
+  ~0.001 by (3,6)/(4,5) - same collapse as Phase 3.
+- Step 3 DONE (2026-09-26, 03:00-05:10): ECGrav MCMC, 9 cells x 3 targets,
+  N=20k. All converged, 0 unmatched. **27/27 PASS** the Phase 4 criterion
+  (numV L1 < 0.05; range 0.006-0.030). Wall: vertex/facet ~15 min each,
+  unlabeled ~2 h 10 min.
+  - Caveat: ECGrav's returned samples are NOT independent for unlabeled.
+    corrT (2-5 sweeps) is shorter than the numV τ_int per sweep (1.5-4.6),
+    so ESS/N on the sample stream is only 0.31-0.73 for unlabeled
+    (0.53-0.96 facet/vertex). The usage message promises independent samples.
+  - (4,5) unlabeled fails the strict iid/per-class checks (iid p = 0.000,
+    class p = 0.001, L1 0.0296 vs ~0.018 expected at its ESS ~13k). This is
+    probably autocorrelation plus possibly slow mixing; not yet separated.
+    Follow-up: rerun (4,5) unlabeled with longer spacing, or report the
+    corrT issue to Betre.
+  - ESS/s: ECGrav MCMC beats our MH (unlabeled 7-44 vs 3-9; facet 65-624 vs
+    1-12) but is 10-100x behind the exact samplers.
+- q=10 exact runs deferred by user (plan: 100k facet, ~10k unlabeled per p).
+- q=10 timing pilot: unlabeled exact is slow (88 ms / 494 ms / 3.9 s per
+  sample at p=2/3/4); facet 1.7 / 4.5 / 25 ms; vertex 0.4 ms.
+- STALE DATA: the vertex MH WXFs copied from `adoring-hoover-18d09b`
+  ((2,4),(2,5),(2,6),(3,4),(3,5)) fail with L1 ~0.7-0.85 - they predate the
+  2026-05-14 vertex fix. Rerun before using them. (4,5) vertex MH (from
+  `C:\CombResearch\data`) is post-fix and passes (L1 0.0086).
+- ECGrav 1.17.0 also installed globally (Wolfram 15.0.1, 2026-09-25).
+
+### Findings so far
+
+- ECGrav MCMC (`RandomPureSimplicialComplexMCMCSweep`) is the same global
+  remove-one/add-one kernel on N = p q labels as our `proposeGlobal`, with
+  weights 1/C(N,k) (vertex), FacetStabilizer*q!/(C(N,k) k!) (facet),
+  Aut/(C(N,k) k!) (unlabeled). These equal our π_V/π_F/π_U on labeled
+  states (FacetStabilizer = aut/autF). Vertex weight dated 05/14/2026 - same
+  fix as ours.
+- Exact samplers run serially unless kernels are already launched
+  ($KernelCount > 0); we parallelize per target process instead.
+
+### Phase 5a next steps
+
+1. Once Wolfram 15 is up: `COMB_VAL_SOURCE=ecgexact COMB_VAL_CELLS="2,4;3,4"`
+   validate smoke data; debug harness if needed.
+2. Negative control: `COMB_ECG_SAMPLER=legacyfacet COMB_ECG_CELLS="2,4"` then
+   validate with `COMB_VAL_SOURCE=ecglegacyfacet` (must FAIL, L1 ~0.43).
+3. Full exact campaign: `src
+un_ecgrav_campaign.ps1` (9 cells, N=100k).
+4. MCMC campaign: `COMB_ECG_SAMPLER=mcmc` (N=20k), long - ask user first.
+5. q=10 exact: `COMB_ECG_CELLS="2,10;3,10;4,10"` after a timing pilot.
+6. `src/compare_samplers_efficiency.wl` for the ESS table.
+7. Missing MH WXFs for (2,7),(3,6),(4,4) - rerun `run_mh_chains.wl` if the
+   efficiency table needs our MH at those cells.
+
+## Previous goal (Phase 4b, complete 2026-05-15)
+
 **Phase 4b complete (2026-05-15).** Truth+MH on 9 cells × 3 targets, all 27 combinations PASS at L1 < 0.05. (4,5) MH chains landed and validated:
 - unlabeled L1 = 0.0253
 - facet L1 = 0.0294
@@ -98,7 +190,7 @@ Before continuing, the next agent must:
 
 ## Last updated by
 
-Codex on 2026-05-16 (docs/code cleanup PR)
+Claude Code on 2026-09-25 (Phase 5a ECGrav 1.17 sampler validation, in progress)
 
 ## Tool switch prompts
 
