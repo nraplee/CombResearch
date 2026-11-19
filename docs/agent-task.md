@@ -60,15 +60,77 @@ Checked 2026-11-18 on the i5-14500T laptop (Wolfram 15.0.1, no truth WXFs here):
   server to `~/.claude.json` on the laptop (a Wolfram kernel running
   AgentTools). It is kept global by user choice.
 
-Next, on the Ryzen 7 5800X PC (has the truth WXFs):
-1. Pull, then run `wolframscript -file src\install_ecgrav_global.wl`.
-   Then run `wolframscript -file src\test_streaming_mckay.wl` as a sanity
-   check.
-2. Re-validate the pin:
-   `src\validate_counts_vs_truth.wl`, then `src\run_ecgrav_campaign.ps1`, then
-   `validate_mh_vs_truth.wl` with `COMB_VAL_SOURCE=ecgexact`.
-3. Optionally install the same snapshot globally for notebooks. Scripts do
-   not need it.
+## Ryzen PC setup checklist (next session there, after pulling)
+
+**Do this first on the Ryzen 7 5800X PC.** Its truth WXFs and Phase 5a
+sample WXFs are untracked (`data/*.wxf` is gitignored), so they exist only
+there. The laptop has done steps 2-3; nothing else here has run on the Ryzen.
+Tick items off in this file and commit the results (handoff protocol).
+
+1. **Pull.** Run `git status --short` first and keep any local work there
+   (do not revert it). Then `git pull`. This brings in commits 98d4045
+   (pinned loader) and baa6a3d (global-install script).
+   - The `COMB_ECGRAV_MAIN` env switch and `ECGrav/ECGrav-main` are gone.
+     Unset `COMB_ECGRAV_MAIN` / `COMB_ECGRAV_VERSION` if a shell or profile
+     sets them, so the default pin is used.
+2. **Wolfram.** `wolframscript -version` should report 15.0.1 (the pin needs
+   15.0+). If `wolframscript` is not found, add
+   `C:\Program Files\Wolfram Research\WolframScript` to PATH and open a new
+   shell. Use `-file` scripts, not `-code`: PowerShell 5.1 strips quotes.
+3. **Global paclet.** `wolframscript -file src\install_ecgrav_global.wl`.
+   - Expect `installed ECGrav 1.18.0 (1.18.0-474b5c2)`. It uninstalls every
+     other installed ECGrav. That is intended: Phase 4/5a reproduce through
+     `COMB_ECGRAV_VERSION=1.0.0` / `1.17.0`, not the global paclet.
+   - Needed only for notebooks, `src/reference/` and the Wolfram MCP server;
+     scripts always `Get` the vendored snapshot.
+4. **Wolfram MCP server (optional).** For Claude Code to use the Wolfram
+   kernel on this PC, enable Wolfram's "Services for AIs" option. It adds a
+   user-scope `Wolfram` server to `~/.claude.json` (laptop: done, kept
+   global). It applies only to new Claude Code sessions. Its kernel loads
+   the global paclet from step 3.
+5. **Smoke test.** `wolframscript -file src\test_streaming_mckay.wl`. Expect
+   `ECGrav loaded: 1.18.0-474b5c2` and all gates passing.
+6. **Truth files present.** `data\p{p}q{q}_truth.wxf` for all 9 cells:
+   (2,4) (2,5) (2,6) (2,7) (3,4) (3,5) (3,6) (4,4) (4,5). `p4q5_truth.wxf`
+   is a copy of `p4q5_truth_mckay.wxf`. If any is missing, stop: the
+   (4,5) re-enumeration took 17 h.
+7. **Counters vs truth.** `wolframscript -file src\validate_counts_vs_truth.wl`.
+   Expect every n on all 9 cells to match, as Phase 5a did.
+8. **Back up the Phase 5a (1.17.0) exact-sampler outputs** before
+   overwriting them. They are gitignored, so this copy is the only one. The
+   WXF payload does not record the ECGrav version.
+   ```powershell
+   New-Item -ItemType Directory -Force data\phase5a_ecgrav-1.17.0
+   Copy-Item data\p*q*_ecgexact_*.wxf, data\validation_ecgexact_summary.wxf data\phase5a_ecgrav-1.17.0\
+   ```
+9. **Exact-sampler campaign on the pin.** Without `COMB_FORCE=1` it skips
+   every existing WXF and re-validates nothing.
+   ```powershell
+   $env:COMB_FORCE = '1'; powershell -ExecutionPolicy Bypass -File src\run_ecgrav_campaign.ps1; Remove-Item Env:COMB_FORCE
+   ```
+   - It runs 3 parallel processes, 100k samples each, all 9 cells.
+   - Phase 5a wall time on 1.17.0: vertex and facet ~15 min each,
+     unlabeled ~2 h 10 min. Unlabeled should be much faster now.
+   - Monitor with `src\monitor_ecgrav.ps1`.
+   - Check `logs\ecgexact_*.log` for `unmatched samples: 0`.
+10. **Distribution validation.**
+    ```powershell
+    $env:COMB_VAL_SOURCE = 'ecgexact'; wolframscript -file src\validate_mh_vs_truth.wl
+    ```
+    Pass means all 27 cell x target L1 < 0.05. Compare against the Phase 5a
+    backup: 1.17.0 ranged 0.006-0.030.
+11. **Optional MCMC check.** Run the campaign with
+    `$env:COMB_ECG_SAMPLER='mcmc'` (back up `*_ecgmcmc_*.wxf` first), then
+    validate with `COMB_VAL_SOURCE=ecgmcmc`. This checks the trap fix and
+    the new `"effectiveSampleSize"` keys. `compare_samplers_efficiency.wl`
+    gives ESS/s.
+12. **Record and commit.**
+    - Put the results in this file.
+    - In `AGENTS.md`, replace "this pin is not yet re-validated" in the
+      overview.
+    - Note the Ryzen global install under Setup.
+    - Commit and push in one commit.
+    - Then move on to q=10 with the exact samplers as the reference.
 
 ## Phase 5a goal
 
