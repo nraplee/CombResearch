@@ -29,9 +29,10 @@ Install/setup:
 
 - No dependency installation step is defined for this repo.
 - `wolframscript` must be on `PATH`.
-- Wolfram 15.0+ is required (the pinned ECGrav declares `WolframVersion -> "15.0+"`). As of 2026-11-18 Wolfram is not installed on this machine.
+- Wolfram 15.0+ is required (the pinned ECGrav declares `WolframVersion -> "15.0+"`). Wolfram 15.0.1 is installed on both machines (i5 laptop and Ryzen 7 5800X PC; heavy runs go on the Ryzen).
+- Global paclet: `wolframscript -file src\install_ecgrav_global.wl` replaces any installed ECGrav with the pinned snapshot, so notebooks, `src/reference/` and the Wolfram MCP server (plain `Needs`) match the scripts. Rerun it on each machine whenever the pin changes. Done on the laptop 2026-11-18. The installed paclet reports version `1.18.0`; its `SOURCE_COMMIT.txt` gives the commit.
 - Every script loads ECGrav through `src/load_ecgrav.wl`, which `Get`s a vendored snapshot; the globally installed paclet is never used. Default: `ECGrav/ECGrav-1.18.0-474b5c2/` (upstream github.com/kassabetre/ECGrav main @ 474b5c2, see its `SOURCE_COMMIT.txt`). `COMB_ECGRAV_VERSION=1.17.0` reproduces Phase 5a, `=1.0.0` Phase 4. The old `ECGrav-main` snapshot (actually upstream v1.1.0) is archived at `archive/ECGrav-v1.1.0-snapshot/`.
-- To update ECGrav: vendor `Kernel/`, `PacletInfo.wl`, `LICENSE` from upstream into `ECGrav/ECGrav-<version>-<shortsha>/` with a `SOURCE_COMMIT.txt`, change the default in `load_ecgrav.wl`, and re-validate before using it in figures.
+- To update ECGrav: vendor `Kernel/`, `PacletInfo.wl`, `LICENSE` from upstream into `ECGrav/ECGrav-<version>-<shortsha>/` with a `SOURCE_COMMIT.txt`, change the default in `load_ecgrav.wl` and `install_ecgrav_global.wl`, rerun the global install, and re-validate before using it in figures.
 - Do not add or install dependencies without asking first.
 
 Main compute/render commands:

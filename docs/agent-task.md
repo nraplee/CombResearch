@@ -50,11 +50,20 @@ Checked 2026-11-18 on the i5-14500T laptop (Wolfram 15.0.1, no truth WXFs here):
   - (3,10): 0.004 s/sample (1.17.0: 0.49 s). Setup is ~9 s.
 - Not checked: the distribution re-validation (needs truth WXFs, on the
   Ryzen PC).
-- `src/reference/` notebooks still use `ParallelNeeds["ECGrav`"]` (installed
-  paclet); left unedited per the rules.
+- `src/reference/` notebooks still use `ParallelNeeds["ECGrav`"]`, which loads
+  the installed paclet; left unedited per the rules. To match, the laptop's
+  global paclet was replaced 1.0.0 -> 474b5c2 with the new
+  `src/install_ecgrav_global.wl`. A plain `Needs` and subkernel
+  `ParallelNeeds` were both verified to resolve to it, and the (4,5) total
+  is 5532.
+- The Wolfram 15 "Services for AIs" option added a user-scope `Wolfram` MCP
+  server to `~/.claude.json` on the laptop (a Wolfram kernel running
+  AgentTools). It is kept global by user choice.
 
 Next, on the Ryzen 7 5800X PC (has the truth WXFs):
-1. Pull, then `wolframscript -file src\test_streaming_mckay.wl` as a sanity check.
+1. Pull, then run `wolframscript -file src\install_ecgrav_global.wl`.
+   Then run `wolframscript -file src\test_streaming_mckay.wl` as a sanity
+   check.
 2. Re-validate the pin:
    `src\validate_counts_vs_truth.wl`, then `src\run_ecgrav_campaign.ps1`, then
    `validate_mh_vs_truth.wl` with `COMB_VAL_SOURCE=ecgexact`.
