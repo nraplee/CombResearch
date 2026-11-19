@@ -27,7 +27,7 @@
    Validation gates cover the default small grid. Add expected counts below
    when widening the default grid. *)
 
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];

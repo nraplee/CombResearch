@@ -85,7 +85,7 @@
      etc. Bounded by polynomial factor in N.
 *)
 
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 
 (* =============================================================== *)
 (* Helpers                                                          *)

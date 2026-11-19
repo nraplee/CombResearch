@@ -21,7 +21,7 @@
    script as a quick correctness check by default.
 *)
 
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "streaming_enumerator.wl"}]];
 
 cells = {{2, 4, 70, 11}, {2, 5, 794, 26}, {3, 4, 666, 66}};

@@ -14,7 +14,7 @@
 
    Output: figures/sampler_diagnostics/sampler_ecgrav_compare.{pdf,png} *)
 
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 $smokeTestSkip = True;
 Get["src/sampler_mh.wl"];
 

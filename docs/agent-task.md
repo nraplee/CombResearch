@@ -1,6 +1,67 @@
 # Current Agent Task
 
-## Goal
+## ECGrav dist consolidation (2026-11-18)
+
+**Goal:** every script uses one ECGrav distribution.
+
+Done:
+- Upstream github.com/kassabetre/ECGrav main @ 474b5c2 (2026-11-11, v1.18.0
+  + 19 commits) vendored at `ECGrav/ECGrav-1.18.0-474b5c2/`. Its `Kernel/` is
+  byte-identical to upstream (CR-insensitive diff). It is now the default in
+  `src/load_ecgrav.wl`.
+- All 11 scripts that used a bare `Needs["ECGrav`"]` now `Get`
+  `load_ecgrav.wl`: `enumerate_truth`, `pure_simplicial_compute`, three
+  `render_*` scripts, `run_is_at_truth_cells`, `sampler_mh`,
+  `streaming_enumerator{,_bliss,_mckay}` and `test_streaming`.
+  `load_ecgrav.wl` is now idempotent.
+- The three `ParallelEvaluate[Needs["ECGrav`"]]` calls are now
+  `combLoadECGravOnKernels[]`. Previously subkernels silently loaded the
+  installed paclet.
+- Removed the `COMB_ECGRAV_MAIN` switch from `pure_simplicial_compute.wl`.
+  nnFixed mode works on the pinned dist.
+- Moved `ECGrav/ECGrav-main` to `archive/ECGrav-v1.1.0-snapshot/`. Despite
+  its PacletInfo saying 1.0.0, it was upstream v1.1.0 (cb2dd35).
+- Provenance check: `ECGrav-1.0.0` = upstream v1.0.0 and `ECGrav-1.17.0` =
+  upstream v1.17.0, both byte-identical. Both are kept and selectable with
+  `COMB_ECGRAV_VERSION`.
+- Changes 1.17.0 -> 474b5c2 that matter here, from the upstream CHANGELOG:
+  - Unlabeled exact sampler 4-230x faster per sample.
+  - Facet-labeled sampler free-n setup 25x faster.
+  - MCMC no longer starts a replica in the disjoint-facets trap.
+  - MCMC usage text no longer promises independent samples, and the result
+    gains `"effectiveSampleSize"` keys. These answer our validation note.
+  - Upstream says sampler distributions are unchanged. API changes to the
+    14 functions we call are additive only.
+  - Seeded runs of the unlabeled sampler and the MCMC may differ from Phase 5a.
+
+Checked 2026-11-18 on the i5-14500T laptop (Wolfram 15.0.1, no truth WXFs here):
+- Static: no bare `Needs["ECGrav` remains in `src/*.wl` outside
+  `load_ecgrav.wl`, the vendor diff is empty, and the diff was reviewed.
+- Smoke test:
+  - The loader picks up 1.18.0-474b5c2, and a second load is a no-op.
+  - `combLoadECGravOnKernels[]` gives both subkernels the new snapshot.
+  - `NumUnlabeledPureComplexes` totals match truth: (2,4)=11, (2,5)=26,
+    (3,4)=66, (4,4)=278, (4,5)=5532.
+- `src\test_streaming_mckay.wl`: all gates pass. Cheap, bliss and mckay agree
+  at (2,4)=11 and (3,4)=66.
+- Unlabeled exact sampler at q=10, after one-time setup:
+  - (4,10): 0.015 s/sample (1.17.0 pilot: 3.9 s). Setup is ~85 s per
+    process, paid on the first draw.
+  - (3,10): 0.004 s/sample (1.17.0: 0.49 s). Setup is ~9 s.
+- Not checked: the distribution re-validation (needs truth WXFs, on the
+  Ryzen PC).
+- `src/reference/` notebooks still use `ParallelNeeds["ECGrav`"]` (installed
+  paclet); left unedited per the rules.
+
+Next, on the Ryzen 7 5800X PC (has the truth WXFs):
+1. Pull, then `wolframscript -file src\test_streaming_mckay.wl` as a sanity check.
+2. Re-validate the pin:
+   `src\validate_counts_vs_truth.wl`, then `src\run_ecgrav_campaign.ps1`, then
+   `validate_mh_vs_truth.wl` with `COMB_VAL_SOURCE=ecgexact`.
+3. Optionally install the same snapshot globally for notebooks. Scripts do
+   not need it.
+
+## Phase 5a goal
 
 **Phase 5a (started 2026-09-25): validate the ECGrav 1.17.0 samplers** against
 our truth grid and repeat the Phase 4 metrics (numV L1, per-class fit, ESS,
@@ -254,6 +315,7 @@ Before continuing, the next agent must:
 
 ## Last updated by
 
+Claude Code on 2026-11-18 (ECGrav dist consolidation onto upstream 474b5c2)
 Claude Code on 2026-09-25 (Phase 5a ECGrav 1.17 sampler validation, in progress)
 Claude Code on 2026-05-18 (Phase 4c part 3: warm-start + second-seed disambiguation, Phase 4c CLOSED)
 

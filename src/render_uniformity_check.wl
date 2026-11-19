@@ -9,7 +9,7 @@
 
    Output: figures/sampler_diagnostics/sampler_mh_uniformity.{pdf,png} *)
 
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 $smokeTestSkip = True;
 Get["src/sampler_mh.wl"];
 

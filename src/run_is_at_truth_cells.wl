@@ -28,7 +28,7 @@
    truth/MH WXFs and the q=10 IS hists live there. *)
 dataDir = "C:/CombResearch/data";
 
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 
 parseEnvCells[s_String] := Module[{pairs},
   pairs = StringSplit[StringTrim[s], ";"];
@@ -61,7 +61,7 @@ If[useParallel,
   Print["launching parallel kernels..."];
   LaunchKernels[];
   Print["  ", Length[Kernels[]], " kernels active"];
-  ParallelEvaluate[Needs["ECGrav`"]]];
+  combLoadECGravOnKernels[]];
 
 oneSkeleton[c_List] := Graph[Union @@ (Subsets[#, {2}] & /@ c)];
 

@@ -46,7 +46,7 @@
      CanonicalGraph[G(c1)] === CanonicalGraph[G(c2)]
 *)
 
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 
 (* ============================================================
    Bipartite face-incidence graph with side-distinguishing gadget

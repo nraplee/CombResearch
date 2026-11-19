@@ -6,7 +6,7 @@ Canonical shared instructions for Codex and Claude Code in this repository. Keep
 
 TODO: Keep this paragraph current as the paper evolves.
 
-Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validate against truth for all 27 cell×target combinations at L1 < 0.05. McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Phase 5a (2026-09-26): ECGrav 1.17.0 validated against the truth grid. Its exact counters match our truth at every n on all 9 cells (confirming the (4,5) iso count 5,532), and its exact samplers (`RandomUniformUnlabeled…`, `RandomUniformFacetLabeled…`, `RandomVertexLabeled…`) pass all 27 cell×target combinations. `RandomPureSimplicialComplexMCMC` passes L1 but returns correlated samples for unlabeled. Next: q=10 with the exact samplers as reference, then manuscript integration.
+Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validate against truth for all 27 cell×target combinations at L1 < 0.05. McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Phase 5a (2026-09-26): ECGrav 1.17.0 validated against the truth grid. Its exact counters match our truth at every n on all 9 cells (confirming the (4,5) iso count 5,532), and its exact samplers (`RandomUniformUnlabeled…`, `RandomUniformFacetLabeled…`, `RandomVertexLabeled…`) pass all 27 cell×target combinations. `RandomPureSimplicialComplexMCMC` passes L1 but returns correlated samples for unlabeled. 2026-11-18: every script now loads one pinned ECGrav, upstream main @ 474b5c2 (`ECGrav/ECGrav-1.18.0-474b5c2/`); this pin is not yet re-validated against the truth grid. Next: re-validate the pin, then q=10 with the exact samplers as reference, then manuscript integration.
 
 ## Repo Layout
 
@@ -29,7 +29,9 @@ Install/setup:
 
 - No dependency installation step is defined for this repo.
 - `wolframscript` must be on `PATH`.
-- ECGrav 1.17.0 is installed globally (Wolfram 15.0.1). New Phase 5a scripts load the vendored `ECGrav/ECGrav-1.17.0/` via `src/load_ecgrav.wl` (`COMB_ECGRAV_VERSION`, default 1.17.0); older scripts use `Needs["ECGrav`"]`. `ECGrav/ECGrav-1.0.0/` is kept to reproduce Phase 4.
+- Wolfram 15.0+ is required (the pinned ECGrav declares `WolframVersion -> "15.0+"`). As of 2026-11-18 Wolfram is not installed on this machine.
+- Every script loads ECGrav through `src/load_ecgrav.wl`, which `Get`s a vendored snapshot; the globally installed paclet is never used. Default: `ECGrav/ECGrav-1.18.0-474b5c2/` (upstream github.com/kassabetre/ECGrav main @ 474b5c2, see its `SOURCE_COMMIT.txt`). `COMB_ECGRAV_VERSION=1.17.0` reproduces Phase 5a, `=1.0.0` Phase 4. The old `ECGrav-main` snapshot (actually upstream v1.1.0) is archived at `archive/ECGrav-v1.1.0-snapshot/`.
+- To update ECGrav: vendor `Kernel/`, `PacletInfo.wl`, `LICENSE` from upstream into `ECGrav/ECGrav-<version>-<shortsha>/` with a `SOURCE_COMMIT.txt`, change the default in `load_ecgrav.wl`, and re-validate before using it in figures.
 - Do not add or install dependencies without asking first.
 
 Main compute/render commands:
@@ -128,7 +130,7 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - Do not edit generated files in `data/`, `figures/`, or `logs/` unless explicitly asked.
 - Do not edit Figure 2 reference notebooks in `src/reference/` unless explicitly asked.
 - Never use `RandomFacetLabeledPureSimplicialComplex` for the facet-labeled distribution (still non-uniform in 1.17.0; it is the harness negative control). Use `RandomUniformFacetLabeledPureSimplicialComplex` (validated 2026-09-26) or exact truth data.
-- Load ECGrav through `src/load_ecgrav.wl` in new scripts, before any other file that calls `Needs["ECGrav`"]`.
+- Load ECGrav only through `src/load_ecgrav.wl` (`Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]]`); never a bare `Needs["ECGrav`"]`. After `LaunchKernels[]` use `combLoadECGravOnKernels[]`, not `ParallelEvaluate[Needs["ECGrav`"]]`, so subkernels run the same snapshot.
 - Vertex MH WXFs copied from the `adoring-hoover-18d09b` worktree predate the vertex fix (L1 ~0.75). Rerun before use.
 - MH sampler vertex target uses `π_V(X) ∝ 1/C(N, numV(X))` (2026-05-14 fix). The earlier `π_V ∝ 1` was wrong by a `C(N, k)` factor and produced L1 = 0.85 vs truth at (3,5). Do NOT revert without re-deriving — see in-code comment at the vertex Switch branch of `mhStep` in `src/sampler_mh.wl`.
 - At p=4 the cheap pipeline (`streamingEnumeratePure`) OOMs at (4,5) even sequential. Use `streamingEnumeratePureMcKay` for p=4 q≥5. Cheap is still fine at (4,4) and below.

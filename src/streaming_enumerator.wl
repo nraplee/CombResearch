@@ -45,7 +45,7 @@
    cells, but p=4 q>=5 should use streamingEnumeratePureMcKay to avoid OOM.
 *)
 
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 
 (* ============================================================
    Canonical-key bucketing
@@ -178,7 +178,8 @@ streamingEnumeratePure[purity_Integer, facetOrder_Integer,
   If[useParallel,
     (* Subkernels need ECGrav (for IsomorphicSimplicialComplexQ) and our
        canonicalKey + streamingFromStart definitions. *)
-    ParallelEvaluate[Needs["ECGrav`"]; ClearSystemCache[]];
+    combLoadECGravOnKernels[];
+    ParallelEvaluate[ClearSystemCache[]];
     DistributeDefinitions[
       canonicalKey, streamingFromStart, chooseNonIsoBucketWithin];
 

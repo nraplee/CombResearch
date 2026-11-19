@@ -6,26 +6,7 @@
      {stem}_complexes.wxf — Association with the raw sampled complexes
    Independent of histograms_handoff_v2.nb / histograms_paper_figures.nb. *)
 
-(* ===== Optional ECGrav source switch =====
-   1.0.0 (installed paclet) does NOT have the 3-arg
-   RandomVertexLabeledPureSimplicialComplex[{p, q, nV}, n] form.
-   The vendored ECGrav-main snapshot does. Set
-     useECGravMainOverride = True
-   or env COMB_ECGRAV_MAIN=1 to load main from ECGrav/ECGrav-main/
-   instead of the installed 1.0.0. Required for nnFixed mode below. *)
-useECGravMain = If[ValueQ[useECGravMainOverride], useECGravMainOverride,
-  With[{e = Environment["COMB_ECGRAV_MAIN"]},
-    StringQ[e] && e === "1"]];
-
-If[useECGravMain,
-  Module[{here, mainDir},
-    here = If[ValueQ[$InputFileName] && $InputFileName =!= "",
-      DirectoryName[$InputFileName], Directory[]];
-    mainDir = FileNameJoin[{ParentDirectory[here], "ECGrav", "ECGrav-main"}];
-    Print["loading ECGrav from main snapshot: ", mainDir];
-    PacletDirectoryLoad[mainDir]]];
-
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 
 (* ===== Parameters ===== *)
 qVal = 10;
@@ -40,15 +21,10 @@ randomSeed = 123456;
    constants across samples (same numV ⇒ same denominators), so the
    ESS heavy-tail at q=10 disappears. Bars produced are CONDITIONAL
    probabilities π(· | numV = nnFixed), not the marginal.
-   Requires useECGravMain = True (3-arg form not in 1.0.0). *)
+   The 3-arg form is absent from ECGrav 1.0.0 (COMB_ECGRAV_VERSION=1.0.0). *)
 nnFixed = If[ValueQ[nnFixedOverride], nnFixedOverride,
   With[{e = Environment["COMB_NN_FIXED"]},
     If[StringQ[e] && StringLength[e] > 0, ToExpression[e], None]]];
-
-If[nnFixed =!= None && !useECGravMain,
-  Print["ERROR: nnFixed requires useECGravMain=True (3-arg form not in ECGrav 1.0.0)"];
-  Print["       Set COMB_ECGRAV_MAIN=1 alongside COMB_NN_FIXED=", nnFixed];
-  Abort[]];
 
 (* Optional run tag. When set (e.g. via env var COMB_RUNTAG="batch2") the output
    filename becomes p{p}q10_n{N}_{runTag}_samples.csv AND the per-chunk seed is
@@ -155,7 +131,7 @@ If[useParallel,
   Print["launching parallel kernels ..."];
   LaunchKernels[];
   Print["  ", Length[Kernels[]], " kernels active"];
-  ParallelEvaluate[Needs["ECGrav`"]];
+  combLoadECGravOnKernels[];
   DistributeDefinitions[oneSkeleton, kPathComps, simplicesOfDim,
     boundaryMatrix, bettiNumber, statsFor, qVal]];
 

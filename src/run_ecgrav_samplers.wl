@@ -1,5 +1,5 @@
 (* run_ecgrav_samplers.wl
-   Draw samples from the ECGrav 1.17 samplers and persist them in the same
+   Draw samples from the ECGrav exact/MCMC samplers and persist them in the same
    {headers, rows} layout as run_mh_chains.wl, so validate_mh_vs_truth.wl
    and the renderers can consume them unchanged.
 
@@ -34,7 +34,8 @@
      COMB_ECG_SEED      default 24680
      COMB_ECG_TRACE_STEPS  mcmc trace length in MH proposals
                         (default 200000, matching run_mh_chains.wl numIter)
-     COMB_ECGRAV_VERSION  see load_ecgrav.wl (default 1.17.0)
+     COMB_ECGRAV_VERSION  see load_ecgrav.wl (default 1.18.0-474b5c2;
+                          1.17.0 reproduces the Phase 5a campaign)
      COMB_FORCE=1       overwrite existing WXF
 *)
 
@@ -45,7 +46,7 @@ projectRoot = ParentDirectory[scriptDir];
 outputDir = FileNameJoin[{projectRoot, "data"}];
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
-(* ===== Load ECGrav 1.17 first, then our helpers (their Needs are no-ops) ===== *)
+(* ===== Load the pinned ECGrav, then our helpers ===== *)
 Get[FileNameJoin[{scriptDir, "load_ecgrav.wl"}]];
 Get[FileNameJoin[{scriptDir, "streaming_enumerator_bliss.wl"}]];
 Block[{pListOverride = {}, sampleSizeOverride = 0,

@@ -7,7 +7,7 @@
      C. p=4, q=10 — MH unlabeled vs IS-reweighted unlabeled (numV histogram)
      D. p=4, q=10 — running mean of numV across 4 independent MH seeds *)
 
-Needs["ECGrav`"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 $smokeTestSkip = True;
 Get["src/sampler_mh.wl"];
 

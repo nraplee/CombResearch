@@ -43,7 +43,7 @@ figures/    Generated manuscript panels, previews, and combined PDFs
 docs/       Current technical docs and live handoff
 logs/       Generated run logs
 archive/    Old renders, superseded data, and scratch tests
-ECGrav/     Vendored ECGrav paclet sources/snapshots
+ECGrav/     Vendored ECGrav snapshots; scripts load one pinned snapshot via src/load_ecgrav.wl
 ```
 
 ## Docs
