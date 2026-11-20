@@ -45,7 +45,8 @@
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
-dataDir = FileNameJoin[{projectRoot, "data"}];
+Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 defaultCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},
                 {3, 4}, {3, 5}, {3, 6},

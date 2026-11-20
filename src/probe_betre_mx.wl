@@ -4,7 +4,8 @@
    (or check the obvious symbol name) and inspect.
 *)
 
-dataDir = "C:/CombResearch/data";
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 files = {
   "p4q4SXFacetLabeled.mx", "p4q4SXUnlabeled.mx",
   "p4q5SXFacetLabeled.mx", "p4q5SXUnlabeled.mx"};

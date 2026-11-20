@@ -15,7 +15,8 @@
 
 $ErrorActionPreference = "Continue"
 
-$root    = Split-Path -Parent $PSScriptRoot   # parent of src/
+. (Join-Path $PSScriptRoot "comb_paths.ps1")
+$root    = $CombRoot   # outputs: main checkout (comb_paths.ps1)
 $logsDir = Join-Path $root "logs"
 $dataDir = Join-Path $root "data"
 

@@ -22,7 +22,8 @@
      COMB_CMP_TARGETS  = "vertex,unlabeled,facet" (default)
 *)
 
-dataDir = "C:/CombResearch/data";
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 parseEnvList[s_String] := StringTrim /@ StringSplit[StringTrim[s], ","];
 

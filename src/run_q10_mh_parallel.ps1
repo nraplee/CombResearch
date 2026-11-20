@@ -10,8 +10,9 @@
 # Output: data/p{p}q10_mh_{target}.wxf  (overwrites pilot results)
 
 $ErrorActionPreference = "Stop"
-$repoRoot = "C:\CombResearch"
-$srcDir   = Join-Path $repoRoot "src"
+. (Join-Path $PSScriptRoot "comb_paths.ps1")
+$repoRoot = $CombRoot        # outputs: main checkout
+$srcDir   = $PSScriptRoot    # code: this checkout
 $logDir   = Join-Path $repoRoot "logs"
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
 

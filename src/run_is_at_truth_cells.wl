@@ -26,7 +26,8 @@
 
 (* Always read/write to the canonical main checkout data dir, since
    truth/MH WXFs and the q=10 IS hists live there. *)
-dataDir = "C:/CombResearch/data";
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 

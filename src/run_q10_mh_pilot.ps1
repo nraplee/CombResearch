@@ -9,8 +9,9 @@
 # Defaults: 10k iter, 1k burn-in, thin 2 -> ~4500 kept states.
 
 $ErrorActionPreference = "Stop"
-$repoRoot = "C:\CombResearch"
-$srcDir   = Join-Path $repoRoot "src"
+. (Join-Path $PSScriptRoot "comb_paths.ps1")
+$repoRoot = $CombRoot        # outputs: main checkout
+$srcDir   = $PSScriptRoot    # code: this checkout
 $logDir   = Join-Path $repoRoot "logs"
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
 

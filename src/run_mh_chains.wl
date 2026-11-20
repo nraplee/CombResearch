@@ -58,6 +58,7 @@ projectRoot = ParentDirectory[scriptDir];
 (* ===== Load sampler_mh.wl with smoke test suppressed ===== *)
 $smokeTestSkip = True;
 Get[FileNameJoin[{scriptDir, "sampler_mh.wl"}]];
+Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 
 (* ===== Pull statsFor + helpers from pure_simplicial_compute.wl =====
    The Get'd script also runs a per-p sampling loop on load; suppress
@@ -72,7 +73,7 @@ Block[{pListOverride = {}, sampleSizeOverride = 0,
    COMB_MH_OUTDIR. Setting here lets the env var win. *)
 outputDir = With[{e = Environment["COMB_MH_OUTDIR"]},
   If[StringQ[e] && StringLength[e] > 0, e,
-    FileNameJoin[{projectRoot, "data"}]]];
+    $CombDataDir]];
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
 (* ===== Defaults ===== *)

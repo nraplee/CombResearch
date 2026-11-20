@@ -21,11 +21,15 @@ qVal = 10;
 pList = {2, 3, 4};
 sampleSize = 500000;
 
-(* CSV location: prefer sibling ../data/ (repo layout), else fall back to
-   NotebookDirectory[] (zip-alongside-CSVs layout). *)
-dataDir = With[
-  {sibling = FileNameJoin[{ParentDirectory[NotebookDirectory[]], \"data\"}]},
-  If[DirectoryQ[sibling], sibling, NotebookDirectory[]]];
+(* CSV location: in the repo, the shared data/ of the main checkout via
+   comb_paths.wl (also when opened from a git worktree); else sibling
+   ../data/; else NotebookDirectory[] (zip-alongside-CSVs layout). *)
+dataDir = Which[
+  FileExistsQ[FileNameJoin[{NotebookDirectory[], \"comb_paths.wl\"}]],
+    Get[FileNameJoin[{NotebookDirectory[], \"comb_paths.wl\"}]]; $CombDataDir,
+  DirectoryQ[FileNameJoin[{ParentDirectory[NotebookDirectory[]], \"data\"}]],
+    FileNameJoin[{ParentDirectory[NotebookDirectory[]], \"data\"}],
+  True, NotebookDirectory[]];
 
 (* Paper Figure 2 palette *)
 colorVertex    = RGBColor[0.984, 0.757, 0.369];

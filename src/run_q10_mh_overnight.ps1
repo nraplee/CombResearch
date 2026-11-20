@@ -17,12 +17,13 @@
 #
 # Total estimated wall: ~30 min restore + ~4-5 hr parallel = ~5 hr.
 #
-# All chains write to C:\CombResearch\data via COMB_MH_OUTDIR.
+# All chains write to the main checkout's data/ (comb_paths.ps1) via
+# COMB_MH_OUTDIR.
 
 $ErrorActionPreference = "Continue"
-$repoRoot   = "C:\CombResearch"
-$worktree   = "C:\CombResearch\.claude\worktrees\crazy-dhawan-f7fd60"
-$srcDir     = Join-Path $worktree "src"   # use worktree's patched scripts
+. (Join-Path $PSScriptRoot "comb_paths.ps1")
+$repoRoot   = $CombRoot        # outputs: main checkout
+$srcDir     = $PSScriptRoot    # code: this checkout
 $dataDir    = Join-Path $repoRoot "data"
 $logDir     = Join-Path $repoRoot "logs"
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }

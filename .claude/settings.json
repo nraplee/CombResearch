@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/src/sync_worktree_data.ps1\" -Quiet",
+            "timeout": 300,
+            "statusMessage": "Syncing worktree outputs to the main checkout"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/src/sync_worktree_data.ps1\" -Quiet",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}

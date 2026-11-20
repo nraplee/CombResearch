@@ -43,7 +43,8 @@
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
-outputDir = FileNameJoin[{projectRoot, "data"}];
+Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
 (* ===== Load the pinned ECGrav, then our helpers ===== *)

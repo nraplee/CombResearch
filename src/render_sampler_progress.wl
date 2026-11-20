@@ -8,6 +8,7 @@
      D. p=4, q=10 — running mean of numV across 4 independent MH seeds *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 $smokeTestSkip = True;
 Get["src/sampler_mh.wl"];
 
@@ -67,7 +68,7 @@ panelB = panelStyle[
    Use the 500k CSV instead of the 12M WXF — same qualitative comparison,
    loads in seconds instead of waiting on a 1.36GB import. *)
 Print["[C] p=4 q=10 MH + IS reweighted (500k CSV) ..."];
-isCsvFile = "data/p4q10_n500000_samples.csv";
+isCsvFile = FileNameJoin[{$CombDataDir, "p4q10_n500000_samples.csv"}];
 isCsv = Import[isCsvFile, "CSV"];
 isHeader = First[isCsv]; isCsvRows = Rest[isCsv];
 Print["  loaded ", Length[isCsvRows], " rows from CSV"];
@@ -101,9 +102,9 @@ panelC = panelStyle[
 Print["composing ..."];
 fig = Grid[{{panelA, panelB, panelC}}, Spacings -> {2, 2}];
 
-If[!DirectoryQ["figures/sampler_diagnostics"],
-  CreateDirectory["figures/sampler_diagnostics"]];
-Export["figures/sampler_diagnostics/sampler_mh_progress.pdf", fig];
-Export["figures/sampler_diagnostics/sampler_mh_progress.png", fig,
+If[!DirectoryQ[FileNameJoin[{$CombFiguresDir, "sampler_diagnostics"}]],
+  CreateDirectory[FileNameJoin[{$CombFiguresDir, "sampler_diagnostics"}]]];
+Export[FileNameJoin[{$CombFiguresDir, "sampler_diagnostics", "sampler_mh_progress.pdf"}], fig];
+Export[FileNameJoin[{$CombFiguresDir, "sampler_diagnostics", "sampler_mh_progress.png"}], fig,
   ImageResolution -> 150];
 Print["wrote figures/sampler_diagnostics/sampler_mh_progress.{pdf,png}"];

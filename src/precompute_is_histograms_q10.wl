@@ -16,7 +16,8 @@
    checkout, not the worktree.
 *)
 
-dataDir = "C:/CombResearch/data";
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 targetColumn = <|"vertex" -> "wVertex", "unlabeled" -> "wUnlabeled",
                  "facet"  -> "wFacet"|>;

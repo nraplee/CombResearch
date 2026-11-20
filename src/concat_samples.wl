@@ -22,7 +22,8 @@ pList = {2, 3, 4};
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
-dataDir = FileNameJoin[{projectRoot, "data"}];
+Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 mergedStatsName[p_]     := "p" <> ToString[p] <> "q" <> ToString[qVal] <> "_merged_stats.wxf";
 mergedComplexesName[p_] := "p" <> ToString[p] <> "q" <> ToString[qVal] <> "_merged_complexes.wxf";

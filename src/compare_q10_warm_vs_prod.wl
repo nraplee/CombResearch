@@ -19,7 +19,8 @@
      data/q10_warm_vs_prod_summary.wxf
 *)
 
-dataDir = "C:/CombResearch/data";
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 cells = {{3, 10, "unlabeled", 14}, {3, 10, "facet", 14},
          {4, 10, "unlabeled", 18}, {4, 10, "facet", 18}};
