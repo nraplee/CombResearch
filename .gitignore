@@ -1,9 +1,10 @@
 # --- Large generated data (regenerable from src/pure_simplicial_compute.wl) ---
-data/*.csv
+data/**/*.csv
 data/*_chunk_*.csv
 data/*.tmp
 archive/superseded_data/*.csv
-data/*.wxf
+data/**/*.wxf
+data/**/*.wxf.bak
 data/*_chunk_*.wxf
 archive/superseded_data/*.wxf
 

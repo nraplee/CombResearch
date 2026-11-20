@@ -1,0 +1,33 @@
+﻿sampleSize    = 0
+pList         = {}
+nnFixed       = (none, variable n)
+outputDir     = C:\CombResearch\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\src\
+outputDir         = C:\CombResearch\data
+resolvedCells     = {{3, 10}}
+resolvedTargets   = {unlabeled}
+numIter / burnIn  = 200000 / 20000
+thin / seed       = 5 / 12345
+kernel            = global
+forceRecompute    = True
+samplerVersion    = sampler_mh.wl@955238d
+
+=====================================
+(p, q) = (3, 10)  target = unlabeled  -->  p3q10_mh_unlabeled.wxf
+MH chain: p=3 q=10 nMax=30 target=unlabeled kernel=global numIter=200000 burnIn=20000 thin=5
+  burn-in done: 20000 steps, accept rate 0.177
+  sampling done: 200000 steps in 1218.8 s
+    accept rate    : 0.183
+    ╬ö numV counts  : <|0 -> 26959, 1 -> 65978, 2 -> 72246, -1 -> 6036, 3 -> 27903, -2 -> 825, -3 -> 53|>
+    trace length   : 40000
+  computing 40000 stats rows ...
+    stats time : 368.23s
+  wrote p3q10_mh_unlabeled.wxf  (1524. KB)
+
+=====================================
+Done.
