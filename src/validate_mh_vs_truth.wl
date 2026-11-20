@@ -280,9 +280,10 @@ Print["Total: ", Length[allResults], "  Failures: ", failCount];
 If[failCount > 0, Print["At least one cell×target exceeded L1 threshold ",
   threshold, ". Investigate."]];
 If[missingInputs =!= {},
+  missingInputs = DeleteDuplicates[missingInputs];
   Print["*** ", Length[missingInputs], " input file(s) missing in ", dataDir,
     "; those cell x target combinations were NOT validated:"];
-  Scan[Print["      ", FileNameTake[#]] &, DeleteDuplicates[missingInputs]];
+  Scan[Print["      ", FileNameTake[#]] &, missingInputs];
   Print["    Truth: wolframscript -file src/enumerate_truth.wl (COMB_TRUTH_CELLS)"];
   Print["    Samples: src/run_mh_chains.wl (source mh) or src/run_ecgrav_samplers.wl (COMB_ECG_SAMPLER)"]];
 
