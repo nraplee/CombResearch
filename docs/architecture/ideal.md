@@ -1,49 +1,51 @@
-# Ideal architecture (target for public release)
+# Ideal architecture
 
-The goal: an outside researcher clones from GitHub, installs Wolfram 15+,
-and with one command per goal either **downloads** the published data and
-rebuilds every figure in minutes, or **regenerates** everything from
-scratch. Nothing needs Windows, PowerShell, git worktrees, a global paclet,
-manual renames or hand-copied figures.
+Revised 2026-11-20 for the project direction:
+
+- always run on the **latest upstream ECGrav** (Dr. Betre's main branch);
+- the algorithms here should eventually be **merged into ECGrav**;
+- **data is not published**, so a reproducer regenerates it;
+- LaTeX lives on **Overleaf**, and local `.tex` files are reference only.
+
+The goal: an outside researcher clones the repo, installs Wolfram 15+, and
+regenerates the data and figures with one command. We keep working the way
+we do now: worktrees, one shared data store, long parallel runs on the
+Ryzen.
 
 ## Target layout
 
 ```
-README.md                  quickstart: 3 commands
+README.md                    quickstart
+run.wl                       orchestrator: wolframscript -file run.wl <stage|all> [--profile quick|paper] [--cells ...]
 config/
-  cells.wl                 THE config: cells, N, seeds, targets, profiles quick|paper
-  ecgrav.wl                ECGrav pin (one place) + expected version check
-lib/                       pure libraries, no side effects on Get
-  paths.wl                 repo-relative data/ figures/ (COMB_ROOT override only)
-  ecgrav.wl                loader (was load_ecgrav.wl) + subkernel loader
-  io.wl                    exportWxfAtomic, manifest (sha256, ECGrav ver, seed, git sha)
-  stats.wl                 statsFor + 12-stat schema (split out of pure_simplicial_compute)
-  enumerate.wl             cheap + McKay (BLISS primitives inside); auto-pick by cell
-  sampler_is.wl            q=10 IS (from pure_simplicial_compute) with chunking + merge
-  sampler_mh.wl            unchanged algorithm
-  compare.wl               L1 / ESS / histogram helpers shared by all comparisons
-pipeline/                  one script per stage, idempotent, skip-if-manifest-matches
-  00_check.wl              Wolfram version, ECGrav pin, smoke tests
-  10_truth.wl              → data/truth/p{p}q{q}.wxf   (writes final name directly)
-  20_is_q10.wl             → data/is/p{p}q10_{stats}.wxf (chunks merged in-stage)
-  30_mh.wl                 → data/mh/p{p}q{q}_{target}[_{tag}].wxf
-  40_ecgrav.wl             → data/ecgrav/p{p}q{q}_{sampler}_{target}.wxf
-  50_validate.wl           → results/*.csv  (ALL L1/ESS/3-way tables; figures + paper read these)
-  60_figures.wl            → manuscript/figures/*.pdf (names = what the .tex includes)
-run.wl                     orchestrator: wolframscript -file run.wl <stage|all> [--profile quick|paper] [--from-download]
-fetch_data.wl              download Zenodo DOI tarball(s), verify sha256 → data/
-tests/                     test_enumerate.wl (iso-count gates for all 9 cells), test_samplers.wl, run_tests.wl
-manuscript/                main.tex, bibliography.bib, figures/ (generated, gitignored), latexmk
-notebooks/                 fig2_reference.nb rewritten to call lib/ + write via paths.wl (optional, interactive)
-ECGrav/ECGrav-<pin>/       ONLY the pinned snapshot (older ones in git history / tags)
-tools/dev/                 sync_worktree_data, monitors, Claude hooks (not on the reproduction path)
+  cells.wl                   cells, N, seeds, targets, IS batches, MH chains and warm starts, per profile
+CombResearch/                the algorithms, laid out like an ECGrav paclet so pieces can be upstreamed
+  PacletInfo.wl
+  Kernel/CombResearch.wl     public symbols with ::usage, as in ECGrav.wl
+  Kernel/Subpackages/
+    Enumeration.wl           cheap + McKay exact enumeration (BLISS keys inside)   ← upstream candidate
+    Statistics.wl            the 12 per-complex statistics (statsFor)               ← upstream candidate
+    MHSampler.wl             MH for the vertex/facet/unlabeled targets              ← candidate, discuss vs ECGrav MCMC
+    ISSampler.wl             importance sampling + reweighting
+    Compare.wl               L1, ESS, histogram helpers
+  Tests/*.wlt                VerificationTest files, ECGrav style
+pipeline/                    research workflow, stays in this repo
+  common/ paths.wl  names.wl  io.wl  config.wl  ecgrav.wl
+  10_truth.wl  20_is_q10.wl  30_mh.wl  40_ecgrav.wl  50_validate.wl  60_figures.wl
+tests/                       pipeline smoke tests + truth-grid regression (also run on ECGrav updates)
+reference/                   .tex, Fig 2 notebooks, papers; reference only (the manuscript lives on Overleaf)
+tools/dev/                   sync_worktree_data, monitors, .ps1 launchers, ECGrav update helper
 ```
+
+ECGrav is **not vendored**. A single clone of upstream ECGrav at
+`<output root>/ECGrav-upstream` is gitignored, shared by all worktrees like
+`data/`, and updated to upstream main by `run.wl`'s check stage.
+`COMB_ECGRAV_DIR` points at any other ECGrav checkout instead, for example
+our own fork branch while preparing a pull request to ECGrav.
 
 ## Flow
 
-Three small views of the same design.
-
-### A. What the researcher runs
+### A. What a run does
 
 ```mermaid
 flowchart TB
@@ -53,55 +55,57 @@ flowchart TB
   classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
 
   USER(["git clone, then<br/>wolframscript -file run.wl all"]):::ext
-  CELLS["config/cells.wl<br/>cells, N, seeds, profiles"]:::cfg
-  PIN["config/ecgrav.wl<br/>ECGrav pin"]:::cfg
-  RUN["run.wl<br/>skips stages whose manifest matches"]:::stage
-  FETCH["fetch_data.wl<br/>--from-download, sha256 check"]:::stage
-  ZEN[("Zenodo DOI archive")]:::ext
-  S0["00_check.wl + tests/"]:::stage
-  S14["10_truth, 20_is_q10,<br/>30_mh, 40_ecgrav"]:::stage
-  S5["50_validate.wl"]:::stage
-  S6["60_figures.wl"]:::stage
-  PDF["manuscript/main.pdf"]:::data
+  UP[("github.com/kassabetre/ECGrav<br/>main")]:::ext
+  CFG["config/cells.wl<br/>profile quick or paper"]:::cfg
+  RUN["run.wl"]:::stage
+  CHK["check stage<br/>pull latest ECGrav, record commit"]:::stage
+  REG["truth-grid regression<br/>only when the ECGrav commit changed"]:::stage
+  S14["truth, is, mh, ecgrav stages"]:::stage
+  S5["validate stage"]:::stage
+  S6["figures stage"]:::stage
+  OVL(["upload figures to Overleaf<br/>(by hand)"]):::ext
 
   USER --> RUN
-  CELLS & PIN --> RUN
-  RUN --> S0
-  S0 -- "regenerate" --> S14
-  S0 -- "--from-download" --> FETCH
-  ZEN -.-> FETCH
-  S14 & FETCH --> S5 --> S6 --> PDF
+  CFG --> RUN
+  RUN --> CHK
+  UP -.-> CHK
+  CHK -- "new commit" --> REG
+  CHK --> S14
+  REG --> S14
+  S14 --> S5 --> S6 -.-> OVL
 ```
 
-### B. Which library each stage uses
+### B. Package and pipeline
 
 ```mermaid
 flowchart LR
+  classDef ecg fill:#fff4e0,stroke:#b9770e,color:#1d2228
   classDef lib fill:#e8f0fe,stroke:#4a6fa5,color:#1d2228
   classDef stage fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
 
-  LE["lib/ecgrav.wl"]:::lib
-  LEN["lib/enumerate.wl<br/>cheap or McKay, auto"]:::lib
-  LIS["lib/sampler_is.wl"]:::lib
-  LMH["lib/sampler_mh.wl"]:::lib
-  LS["lib/stats.wl"]:::lib
-  LIO["lib/io.wl + lib/paths.wl<br/>atomic WXF, manifest"]:::lib
-  LC["lib/compare.wl<br/>L1, ESS, histograms"]:::lib
+  ECG["ECGrav<br/>latest upstream"]:::ecg
+  EN["Enumeration.wl"]:::lib
+  ST["Statistics.wl"]:::lib
+  MH["MHSampler.wl"]:::lib
+  IS["ISSampler.wl"]:::lib
+  CP["Compare.wl"]:::lib
+  COM["pipeline/common<br/>paths, names, io, config"]:::stage
 
-  S1["10_truth"]:::stage
-  S2["20_is_q10"]:::stage
-  S3["30_mh"]:::stage
-  S4["40_ecgrav"]:::stage
-  S5["50_validate"]:::stage
-  S6["60_figures"]:::stage
+  T["10_truth"]:::stage
+  I["20_is_q10"]:::stage
+  M["30_mh"]:::stage
+  E["40_ecgrav"]:::stage
+  V["50_validate"]:::stage
+  F["60_figures"]:::stage
 
-  LEN --> S1
-  LIS --> S2
-  LMH --> S3
-  LE --> S1 & S2 & S3 & S4
-  LS --> S1 & S2 & S3 & S4
-  LIO --> S1 & S2 & S3 & S4 & S5 & S6
-  LC --> S5
+  ECG --> EN & MH & IS
+  ECG --> E
+  EN & ST --> T
+  IS & ST --> I
+  MH & ST --> M
+  CP --> V
+  COM --> T & I & M & E & V & F
+  EN & ST & MH -. "future pull requests" .-> ECG
 ```
 
 ### C. Where the data goes
@@ -116,65 +120,45 @@ flowchart LR
   S2["20_is_q10"]:::stage
   S3["30_mh"]:::stage
   S4["40_ecgrav"]:::stage
-  DT[("data/truth/")]:::data
-  DI[("data/is/")]:::data
-  DM[("data/mh/")]:::data
-  DE[("data/ecgrav/")]:::data
-  MAN[("data/manifest.json")]:::data
+  D[("data/*.wxf<br/>each with a .manifest sidecar:<br/>ECGrav commit, seed, settings")]:::data
   S5["50_validate"]:::stage
-  RES[("results/*.csv")]:::out
+  RES[("results/*.csv<br/>L1, ESS, counts, pre-binned histograms")]:::out
   S6["60_figures"]:::stage
-  FIG[("manuscript/figures/")]:::out
-  PDF["main.pdf"]:::out
+  FIG[("figures/*.pdf")]:::out
 
-  S1 -.-> DT
-  S2 -.-> DI
-  S3 -.-> DM
-  S4 -.-> DE
-  S1 & S2 & S3 & S4 -.-> MAN
-  DT & DI & DM & DE -.-> S5 -.-> RES
-  DT & DI & DM & DE & RES -.-> S6 -.-> FIG --> PDF
-  RES -. "tables" .-> PDF
+  S1 & S2 & S3 & S4 -.-> D
+  D -.-> S5 -.-> RES
+  RES -.-> S6 -.-> FIG
 ```
 
-## Three ways to use it
+## Ways to use it
 
-| Goal | Command | Time |
+| Goal | Command | Cost |
 |---|---|---|
-| Rebuild figures and tables from published data | `wolframscript -file run.wl all --from-download` | minutes |
-| Check the code on a laptop | `wolframscript -file run.wl all --profile quick` | about 10 min |
-| Full reproduction | `wolframscript -file run.wl all --profile paper` | days; stages resumable |
+| Check that everything works | `wolframscript -file run.wl all --profile quick` | about 10–20 min on a laptop |
+| Reproduce the paper's data and figures | `wolframscript -file run.wl all --profile paper` | days; every stage resumes |
+| Redo one piece (us, day to day) | `wolframscript -file run.wl mh --cells "4,5"` or a plain `src` script with `COMB_*` env | as today |
+| Re-check after Betre updates ECGrav | `wolframscript -file run.wl check` | pulls, then runs the regression if the commit changed |
 
 ## Current → ideal mapping
 
 | Current file(s) | Ideal home | Action |
 |---|---|---|
-| `src/comb_paths.wl`, `comb_paths.ps1` | `lib/paths.wl` | drop the worktree/git logic from the public path; repo-relative default |
-| `src/load_ecgrav.wl`, `install_ecgrav_global.wl` | `lib/ecgrav.wl` + `config/ecgrav.wl` | one pin; record version in every manifest; the global install becomes optional (notebooks only) |
-| `ECGrav/ECGrav-1.0.0`, `-1.17.0`, `BuildingAndInstallingPaclets.nb` | git tag / history | keep only the pin. **Validate 1.18 first, or pin 1.17, which made the data** |
-| `streaming_enumerator{,_bliss,_mckay}.wl` | `lib/enumerate.wl` | auto-pick McKay for p=4 q≥5; BLISS stays as an internal primitive |
-| `enumerate_truth.wl` | `pipeline/10_truth.wl` | write the final `truth/p{p}q{q}.wxf` directly (no manual rename); gates for all 9 cells; fix the hardcoded `ecGravVersion="1.0.0"` |
-| `test_streaming*.wl` | `tests/test_enumerate.wl` | merge |
-| `pure_simplicial_compute.wl` | `lib/sampler_is.wl` + `lib/stats.wl` + `lib/io.wl` | split; other scripts stop Block-Getting it just to borrow `statsFor`/`exportWxfAtomic` |
-| `run_p{2,3,4}.wl`, `run_parallel.ps1`, `pure_simplicial_compute_overnight.wl`, `concat_samples.wl` | `pipeline/20_is_q10.wl` | p list from config, parallel through LaunchKernels, merge built in |
-| `migrate_csv_to_wxf.wl`, `precompute_is_histogram.wl`, `run_q10_mh_pilot.ps1`, `probe_betre_mx.wl`, `pure_simplicial_figures.nb`, legacy `*_samples.csv`, Betre `.mx` | delete (history keeps them) | superseded or one-off |
-| `run_mh_chains.wl` + 3 `.ps1` launchers | `pipeline/30_mh.wl` | chains, seeds and warm starts declared in `cells.wl`; covers all 9 truth cells plus q=10 |
-| `run_ecgrav_samplers.wl`, `run_ecgrav_campaign.ps1`, `validate_counts_vs_truth.wl` | `pipeline/40_ecgrav.wl` (+ count check in 50) | — |
-| `validate_mh_vs_truth`, `compare_samplers_efficiency`, `precompute_is_histograms_q10`, `run_is_at_truth_cells`, `compare_3way`, `compare_is_mh_q10`, `compare_q10_warm_vs_prod` | `pipeline/50_validate.wl` + `lib/compare.wl` | one results table; outputs are actually read (by figures and the paper) |
-| `render_*.wl` (8), `src/reference/*.nb` | `pipeline/60_figures.wl` (+ optional `notebooks/`) | filenames match the `\includegraphics` names; Fig 2 moves from notebooks into the script |
-| `docs/Pure Clique Complexes.tex` | `manuscript/main.tex` + `bibliography.bib` | fix the Betti2 and num1V copy errors the inventory found |
-| `monitor_*.ps1`, `sync_worktree_data.ps1`, `.claude/settings.json` | `tools/dev/` | not on the reproduction path |
-| `archive/`, tracked `logs/`, `docs/handoff/*.jsonl` | removed from the tree (tag `pre-cleanup`) | logs gitignored |
+| `ECGrav/ECGrav-*` snapshots, `BuildingAndInstallingPaclets.nb`, `install_ecgrav_global.wl` | shared upstream clone + `pipeline/common/ecgrav.wl` | stop vendoring; the global install becomes an optional helper for notebooks; old snapshots stay in git history |
+| `src/load_ecgrav.wl` | `pipeline/common/ecgrav.wl` | load from the shared clone or `COMB_ECGRAV_DIR`; record the commit; keep `combLoadECGravOnKernels` |
+| `src/comb_paths.wl`, `comb_paths.ps1` | `pipeline/common/paths.wl` (+ `.ps1` twin) | keep the git-common-dir logic, add a repo-marker guard, add `$CombResultsDir` |
+| `streaming_enumerator{,_bliss,_mckay}.wl` | `CombResearch/Kernel/Subpackages/Enumeration.wl` | one public `EnumerateUnlabeledPureComplexes[p, q]`-style function, auto-picking cheap or McKay |
+| `statsFor` in `pure_simplicial_compute.wl` | `Statistics.wl` | public, documented |
+| `sampler_mh.wl` | `MHSampler.wl` | public; compare with ECGrav's `RandomPureSimplicialComplexMCMC` before proposing upstream |
+| IS code in `pure_simplicial_compute.wl`, `run_p{2,3,4}.wl`, `concat_samples.wl`, `run_parallel.ps1` | `ISSampler.wl` + `pipeline/20_is_q10.wl` | batches from the config; merge built in |
+| `enumerate_truth.wl`, `test_streaming*.wl` | `pipeline/10_truth.wl`, `CombResearch/Tests/Enumeration.wlt` | writes the final `_truth.wxf` directly (no manual rename) |
+| `run_mh_chains.wl` + MH `.ps1` launchers | `pipeline/30_mh.wl` (+ launchers in `tools/dev/`) | chains and warm starts declared in the config |
+| `run_ecgrav_samplers.wl`, `run_ecgrav_campaign.ps1`, `validate_counts_vs_truth.wl` | `pipeline/40_ecgrav.wl`, `tests/` | the count check joins the ECGrav regression |
+| `validate_*`, `compare_*`, `precompute_is_histograms_q10`, `run_is_at_truth_cells` | `pipeline/50_validate.wl` + `Compare.wl` | one results table that figures read |
+| `render_*.wl` (8), Fig 2 notebooks | `pipeline/60_figures.wl` | Fig 2 becomes a script; the notebooks move to `reference/` |
+| `docs/Pure Clique Complexes.tex`, `archive/related_pdfs` | `reference/` | reference only |
+| `migrate_csv_to_wxf`, `precompute_is_histogram`, `run_q10_mh_pilot.ps1`, `probe_betre_mx`, `pure_simplicial_figures.nb`, `pure_simplicial_compute_overnight`, `archive/` | deleted (git history keeps them) | — |
+| `monitor_*.ps1`, `sync_worktree_data.ps1`, `.claude/settings.json` hook | `tools/dev/` | not needed for reproduction |
+| tracked `logs/`, Betre `.mx` files | untracked (stay in history; no rewrite) | — |
 
-## Suggested order of work
-
-1. Decide the ECGrav pin: validate 1.18 against the truth grid, or pin 1.17.
-2. Publish the small, high-value data now (truth, ecgexact, MH, IS
-   histograms) and write `fetch_data.wl`. This gives cloners a usable repo
-   immediately.
-3. Make `config/cells.wl` and `run.wl` wrap the **existing** scripts. This
-   adds the single entry point without moving code yet.
-4. Split the libs (`stats`, `io`, `sampler_is`) and fold the scripts into
-   the pipeline stages one at a time, checking each against `results/`.
-5. Make the figure names match the manuscript, then delete the dead files
-   and tag the old tree.
+See `implementation-plan.md` for the phased plan.

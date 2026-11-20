@@ -48,6 +48,30 @@ def md_to_html(md):
             h = "<div class='tw'><table><thead><tr>" + "".join(f"<th>{inline(c)}</th>" for c in rows[0]) + "</tr></thead><tbody>"
             h += "".join("<tr>" + "".join(f"<td>{inline(c)}</td>" for c in r) + "</tr>" for r in rows[1:])
             out.append(h + "</tbody></table></div>")
+        elif re.match(r"\s*- ", l):
+            # bullet block, nested by indent (2 spaces per level)
+            items = []  # (level, text)
+            while i < len(lines) and lines[i].strip():
+                m = re.match(r"(\s*)- (.*)", lines[i])
+                if m:
+                    items.append([len(m.group(1)) // 2, m.group(2)])
+                else:
+                    items[-1][1] += " " + lines[i].strip()
+                i += 1
+            h, depth = "", -1
+            for lvl, txt in items:
+                while depth < lvl:
+                    h += "<ul>"
+                    depth += 1
+                while depth > lvl:
+                    h += "</li></ul>"
+                    depth -= 1
+                if h.endswith("<ul>"):
+                    h += f"<li>{inline(txt)}"
+                else:
+                    h += f"</li><li>{inline(txt)}"
+            h += "</li></ul>" * (depth + 1)
+            out.append(h)
         elif re.match(r"\d+\. ", l):
             items = []
             while i < len(lines) and lines[i].strip():
@@ -82,7 +106,8 @@ h1{font:600 2rem/1.15 var(--display);margin:0 0 8px;text-wrap:balance}
 h2{font:600 1.5rem/1.2 var(--display);margin:48px 0 8px;padding-top:16px;border-top:2px solid var(--line);text-wrap:balance}
 h3{font:600 1.15rem/1.25 var(--display);margin:32px 0 8px}
 h4{font:600 1rem/1.3 var(--body);margin:24px 0 6px}
-p,ol{margin:0 0 10px;max-width:72ch}
+p,ol,ul{margin:0 0 10px;max-width:72ch}
+ul ul{margin:4px 0 0}
 .eyebrow{font:500 .75rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
 code,pre.layout{font-family:var(--mono);font-size:.85em}
 code{background:var(--panel);padding:1px 4px;border-radius:3px}
@@ -99,6 +124,7 @@ th{font-weight:600;color:var(--muted)}
 def build():
     cur = (HERE / "current.md").read_text(encoding="utf-8")
     ide = (HERE / "ideal.md").read_text(encoding="utf-8")
+    plan = (HERE / "implementation-plan.md").read_text(encoding="utf-8")
     page = f"""<title>CombResearch Pipeline Map</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600&display=swap">
@@ -107,9 +133,10 @@ def build():
 <div class="eyebrow">Repo map · commit b4d4b20 · 2026-11-20</div>
 <h1>CombResearch Pipeline Map</h1>
 <p>How every tracked file connects today, then a target layout that lets another researcher clone the repo and rebuild the data and figures. The per-file inventory is in <code>docs/architecture/inventory.md</code>.</p>
-<nav><a href="#today">Today</a><a href="#target">Target</a></nav>
+<nav><a href="#today">Today</a><a href="#target">Target</a><a href="#plan">Implementation plan</a></nav>
 <section id="today">{md_to_html(cur)}</section>
 <section id="target">{md_to_html(ide)}</section>
+<section id="plan">{md_to_html(plan)}</section>
 </main>"""
     (HERE / "architecture.html").write_text(page, encoding="utf-8")
     print("wrote architecture.html,", page.count('class="mermaid"'), "diagrams")

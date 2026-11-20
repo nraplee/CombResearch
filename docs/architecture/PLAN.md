@@ -33,6 +33,15 @@ Revision: the single giant charts were unreadable, so `current.md` is now an
 overview plus 7 per-stage diagrams and `ideal.md` has 3 small views.
 Rebuild the page with `python build_page.py` after editing either .md.
 
+## Implementation plan (2026-11-20)
+`implementation-plan.md`, revised after two adversarial reviews
+(dev-workflow, reproducibility; workflow `wf_6d76ef14-923`). The plan is on
+the page under "Implementation plan". Next: the user answers the open
+questions at the end of the plan; then Phase 0 on the Ryzen.
+Revised the same day for the new direction: latest upstream ECGrav (no pin),
+upstream to ECGrav eventually, no data publishing, LaTeX on Overleaf, no
+history rewrite.
+
 ## Inventory workflow run
 Run ID `wf_2614a8d1-ef8` (same Claude session only). Results journal:
 `C:\Users\darth\.claude\projects\C--CombResearch--claude-worktrees-ecstatic-wiles-75960d\c49935f3-ce2d-46b6-97b1-bd3b76f5d854\subagents\workflows\wf_2614a8d1-ef8\journal.jsonl`
@@ -43,3 +52,8 @@ Read this file, check which of the outputs above exist, continue from the
 first missing one. Workflow inventory groups: (A) core libs + enumeration,
 (B) IS compute + Figure 2 render, (C) MH chains + q=10, (D) ECGrav campaign +
 3-way, (E) non-src (ECGrav, archive, docs, root, figures layout).
+
+## Status 2026-11-20 (end)
+Decisions recorded and the ECGrav history review finished; see the last two
+sections of `implementation-plan.md`. Regenerate ecgmcmc, then ecgexact;
+truth, q=10 IS and MH stay. Next real work: Phase 0 of the plan.
