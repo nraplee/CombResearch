@@ -1,0 +1,35 @@
+﻿sampleSize    = 0
+pList         = {}
+nnFixed       = (none, variable n)
+outputDir     = C:\CombResearch\.claude\worktrees\crazy-dhawan-f7fd60\data
+useParallel   = False
+runTag        = (none)
+runSeedOffset = 0
+-----------------------------------------
+Done.
+scriptDir         = C:\CombResearch\.claude\worktrees\crazy-dhawan-f7fd60\src\
+outputDir         = C:\CombResearch\data
+resolvedCells     = {{3, 10}}
+resolvedTargets   = {unlabeled}
+numIter / burnIn  = 1000000 / 50000
+thin / seed       = 20 / 67890
+kernel            = global
+tag               = "_seed67890_warm14"
+initNumV          = 14
+forceRecompute    = True
+samplerVersion    = sampler_mh.wl@8d10379
+
+=====================================
+(p, q) = (3, 10)  target = unlabeled  -->  p3q10_mh_unlabeled_seed67890_warm14.wxf
+MH chain: p=3 q=10 nMax=30 target=unlabeled kernel=global numIter=1000000 burnIn=50000 thin=20 init=warm@numV=14 initNumV(actual)=11
+  burn-in done: 50000 steps, accept rate 0.185
+  sampling done: 1000000 steps in 5808.3 s
+    accept rate    : 0.186
+    ╬ö numV counts  : <|1 -> 331123, 3 -> 137513, 2 -> 358685, 0 -> 137874, -1 -> 30450, -2 -> 4101, -3 -> 254|>
+    trace length   : 50000
+  computing 50000 stats rows ...
+    stats time : 463.17s
+  wrote p3q10_mh_unlabeled_seed67890_warm14.wxf  (1905. KB)
+
+=====================================
+Done.
