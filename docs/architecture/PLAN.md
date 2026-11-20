@@ -27,8 +27,11 @@ and figures on their own machine.
 Steps 1–3 done: inventory.md + inventory_raw.json, current.md, ideal.md
 (Mermaid, render on GitHub). HTML page `architecture.html` published at
 https://claude.ai/artifact/2iHVGoZGk87tj14Nfo3VrQ (private). Mermaid syntax
-was hand-checked; it was not machine-rendered locally. Not committed yet;
-waiting for the user to ask.
+was hand-checked; it was not machine-rendered locally.
+
+Revision: the single giant charts were unreadable, so `current.md` is now an
+overview plus 7 per-stage diagrams and `ideal.md` has 3 small views.
+Rebuild the page with `python build_page.py` after editing either .md.
 
 ## Inventory workflow run
 Run ID `wf_2614a8d1-ef8` (same Claude session only). Results journal:

@@ -1,25 +1,5 @@
 # Current Agent Task
 
-## Repo architecture map (2026-11-20, docs only)
-
-Done:
-- `docs/architecture/inventory.md` (+ `inventory_raw.json`): one record per
-  tracked file (purpose, loads/reads/writes, env knobs, status, issues), with
-  a critic cross-check of the data handoffs.
-- `docs/architecture/current.md`: Mermaid file-flow diagram of the repo today.
-- `docs/architecture/ideal.md`: target layout for one-command reproduction
-  (config/, lib/, pipeline/, run.wl, fetch_data.wl, published data),
-  current→ideal file mapping, suggested order of work.
-- `docs/architecture/architecture.html`: both diagrams on one page (private
-  artifact). `PLAN.md` holds the resume notes.
-
-Checked: Mermaid syntax by hand only (not machine-rendered). No code changed,
-no outputs written under data/, figures/ or logs/.
-
-Next (from ideal.md): decide the ECGrav pin (validate 1.18 or pin 1.17), then
-publish the small data (truth, ecgexact, MH, IS histograms) and add
-`fetch_data.wl`, then wrap the existing scripts in `config/cells.wl` + `run.wl`.
-
 ## Worktree and Codex cleanup (2026-11-20, Ryzen PC, after #14)
 
 Done:

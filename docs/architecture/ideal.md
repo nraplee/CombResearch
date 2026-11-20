@@ -41,73 +41,92 @@ tools/dev/                 sync_worktree_data, monitors, Claude hooks (not on th
 
 ## Flow
 
+Three small views of the same design.
+
+### A. What the researcher runs
+
 ```mermaid
 flowchart TB
-  classDef cfg fill:#fff4e0,stroke:#b9770e
-  classDef lib fill:#e8f0fe,stroke:#4a6fa5
-  classDef stage fill:#e9f7ef,stroke:#2e7d4f
-  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3
-  classDef out fill:#fdf0f6,stroke:#a33d6e
-  classDef ext fill:#ffffff,stroke:#333,stroke-width:2px
+  classDef ext fill:#ffffff,stroke:#333,stroke-width:2px,color:#1d2228
+  classDef cfg fill:#fff4e0,stroke:#b9770e,color:#1d2228
+  classDef stage fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
 
-  USER(["researcher: git clone, then wolframscript -file run.wl all --from-download"]):::ext
-  ZEN[("Zenodo DOI: truth (3 MB), ecgexact (107 MB),<br/>mh, IS merged stats/histograms, manifest.json")]:::ext
+  USER(["git clone, then<br/>wolframscript -file run.wl all"]):::ext
+  CELLS["config/cells.wl<br/>cells, N, seeds, profiles"]:::cfg
+  PIN["config/ecgrav.wl<br/>ECGrav pin"]:::cfg
+  RUN["run.wl<br/>skips stages whose manifest matches"]:::stage
+  FETCH["fetch_data.wl<br/>--from-download, sha256 check"]:::stage
+  ZEN[("Zenodo DOI archive")]:::ext
+  S0["00_check.wl + tests/"]:::stage
+  S14["10_truth, 20_is_q10,<br/>30_mh, 40_ecgrav"]:::stage
+  S5["50_validate.wl"]:::stage
+  S6["60_figures.wl"]:::stage
+  PDF["manuscript/main.pdf"]:::data
 
-  subgraph CFG["config/"]
-    CELLS["cells.wl<br/>cells, N, seeds, profiles"]:::cfg
-    PIN["ecgrav.wl<br/>pin + expected version"]:::cfg
-  end
-
-  subgraph LIB["lib/"]
-    LP["paths.wl"]:::lib
-    LE["ecgrav.wl"]:::lib
-    LIO["io.wl<br/>atomic WXF + manifest"]:::lib
-    LS["stats.wl"]:::lib
-    LEN["enumerate.wl<br/>cheap / McKay auto"]:::lib
-    LIS["sampler_is.wl"]:::lib
-    LMH["sampler_mh.wl"]:::lib
-    LC["compare.wl"]:::lib
-  end
-  ECG["ECGrav/ECGrav-{pin}/"]:::lib
-  PIN --> LE
-  ECG --> LE
-
-  RUN["run.wl<br/>stage graph, skip-if-manifest-matches,<br/>LaunchKernels (cross-platform)"]:::stage
-  FETCH["fetch_data.wl<br/>sha256 verify"]:::stage
   USER --> RUN
-  RUN -- "--from-download" --> FETCH
+  CELLS & PIN --> RUN
+  RUN --> S0
+  S0 -- "regenerate" --> S14
+  S0 -- "--from-download" --> FETCH
   ZEN -.-> FETCH
+  S14 & FETCH --> S5 --> S6 --> PDF
+```
 
-  subgraph PIPE["pipeline/"]
-    S0["00_check.wl"]:::stage
-    S1["10_truth.wl"]:::stage
-    S2["20_is_q10.wl"]:::stage
-    S3["30_mh.wl"]:::stage
-    S4["40_ecgrav.wl"]:::stage
-    S5["50_validate.wl"]:::stage
-    S6["60_figures.wl"]:::stage
-  end
-  RUN --> S0 --> S1 & S2 & S3 & S4
-  S1 & S2 & S3 & S4 --> S5 --> S6
-  CELLS --> RUN
+### B. Which library each stage uses
 
-  LE & LEN & LS & LIO --> S1
-  LE & LIS & LS & LIO --> S2
-  LE & LMH & LS & LIO --> S3
-  LE & LS & LIO --> S4
-  LC & LIO --> S5
-  LP --> LIO
+```mermaid
+flowchart LR
+  classDef lib fill:#e8f0fe,stroke:#4a6fa5,color:#1d2228
+  classDef stage fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
 
+  LE["lib/ecgrav.wl"]:::lib
+  LEN["lib/enumerate.wl<br/>cheap or McKay, auto"]:::lib
+  LIS["lib/sampler_is.wl"]:::lib
+  LMH["lib/sampler_mh.wl"]:::lib
+  LS["lib/stats.wl"]:::lib
+  LIO["lib/io.wl + lib/paths.wl<br/>atomic WXF, manifest"]:::lib
+  LC["lib/compare.wl<br/>L1, ESS, histograms"]:::lib
+
+  S1["10_truth"]:::stage
+  S2["20_is_q10"]:::stage
+  S3["30_mh"]:::stage
+  S4["40_ecgrav"]:::stage
+  S5["50_validate"]:::stage
+  S6["60_figures"]:::stage
+
+  LEN --> S1
+  LIS --> S2
+  LMH --> S3
+  LE --> S1 & S2 & S3 & S4
+  LS --> S1 & S2 & S3 & S4
+  LIO --> S1 & S2 & S3 & S4 & S5 & S6
+  LC --> S5
+```
+
+### C. Where the data goes
+
+```mermaid
+flowchart LR
+  classDef stage fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+  classDef out fill:#fdf0f6,stroke:#a33d6e,color:#1d2228
+
+  S1["10_truth"]:::stage
+  S2["20_is_q10"]:::stage
+  S3["30_mh"]:::stage
+  S4["40_ecgrav"]:::stage
   DT[("data/truth/")]:::data
   DI[("data/is/")]:::data
   DM[("data/mh/")]:::data
   DE[("data/ecgrav/")]:::data
-  MAN[("data/manifest.json<br/>sha256 · seed · ECGrav ver · git sha · runtime")]:::data
-  RES[("results/*.csv<br/>L1, ESS, 3-way, counts")]:::out
-  FIG[("manuscript/figures/*.pdf")]:::out
-  PDF["manuscript/main.pdf (latexmk)"]:::out
+  MAN[("data/manifest.json")]:::data
+  S5["50_validate"]:::stage
+  RES[("results/*.csv")]:::out
+  S6["60_figures"]:::stage
+  FIG[("manuscript/figures/")]:::out
+  PDF["main.pdf"]:::out
 
-  FETCH -.-> DT & DI & DM & DE & MAN
   S1 -.-> DT
   S2 -.-> DI
   S3 -.-> DM
@@ -115,13 +134,7 @@ flowchart TB
   S1 & S2 & S3 & S4 -.-> MAN
   DT & DI & DM & DE -.-> S5 -.-> RES
   DT & DI & DM & DE & RES -.-> S6 -.-> FIG --> PDF
-  RES -. "\input tables" .-> PDF
-
-  subgraph TEST["tests/ (CI: profile quick, ~5 min)"]
-    T1["test_enumerate.wl<br/>iso-count gates, 9 cells"]:::stage
-    T2["test_samplers.wl<br/>L1 vs truth on (2,4),(3,4)"]:::stage
-  end
-  S0 --> T1 & T2
+  RES -. "tables" .-> PDF
 ```
 
 ## Three ways to use it
