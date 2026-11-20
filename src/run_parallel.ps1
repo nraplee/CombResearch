@@ -3,7 +3,7 @@
 # Each process uses its own ParallelMap (sub-kernels) for the per-sample
 # stats step, and writes data and logs to the standard layout.
 #
-# Usage from C:\CombResearch\:
+# Usage from the repo root:
 #   powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
 # Optional: pass a sample size override (default 500000) as $env:N
 #   $env:N = 100000; powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1

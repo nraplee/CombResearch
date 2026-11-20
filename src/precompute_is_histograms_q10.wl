@@ -12,8 +12,8 @@
      <|"p"->p, "q"->10, "target"->t, "sourceN"->n, "ESS"->ess,
        "fracHist"-> <|numV -> frac, ...|>|>
 
-   Reads from C:/CombResearch/data/ since the .wxf data live in the main
-   checkout, not the worktree.
+   Reads and writes $CombDataDir (the main checkout data/, see
+   comb_paths.wl), also when run from a worktree.
 *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];

@@ -188,6 +188,8 @@ statMarginalL1[truth_Association, target_String, rows_List, j_Integer,
   sb = N[Counts[sv] / Length[sv]];
   compareBins[tb, sb]["l1"]];
 
+missingInputs = {};
+
 validateCell[p_, q_, target_String] := Module[
   {tFile, mFile, truth, mh, truthBars, mhBars, cmp, l1Pass,
    nRows, iidP, cls = Missing["NoClassIdx"], unmatched = Missing[],
@@ -196,9 +198,11 @@ validateCell[p_, q_, target_String] := Module[
   mFile = mhFile[p, q, target];
   If[!FileExistsQ[tFile],
     Print["  *** skip: no truth WXF at ", FileNameTake[tFile], " ***"];
+    AppendTo[missingInputs, tFile];
     Return[$Failed]];
   If[!FileExistsQ[mFile],
     Print["  *** skip: no MH WXF at ", FileNameTake[mFile], " ***"];
+    AppendTo[missingInputs, mFile];
     Return[$Failed]];
   truth = Import[tFile, "WXF"];
   mh = Import[mFile, "WXF"];
@@ -275,7 +279,15 @@ Print[""];
 Print["Total: ", Length[allResults], "  Failures: ", failCount];
 If[failCount > 0, Print["At least one cell×target exceeded L1 threshold ",
   threshold, ". Investigate."]];
+If[missingInputs =!= {},
+  Print["*** ", Length[missingInputs], " input file(s) missing in ", dataDir,
+    "; those cell x target combinations were NOT validated:"];
+  Scan[Print["      ", FileNameTake[#]] &, DeleteDuplicates[missingInputs]];
+  Print["    Truth: wolframscript -file src/enumerate_truth.wl (COMB_TRUTH_CELLS)"];
+  Print["    Samples: src/run_mh_chains.wl (source mh) or src/run_ecgrav_samplers.wl (COMB_ECG_SAMPLER)"]];
 
-Export[FileNameJoin[{dataDir, "validation_" <> source <> "_summary.wxf"}],
-  <|"source" -> source, "threshold" -> threshold, "results" -> allResults,
-    "createdAt" -> DateString[]|>, "WXF"];
+(* Nothing validated (all inputs missing): keep any existing summary. *)
+If[allResults =!= {},
+  Export[FileNameJoin[{dataDir, "validation_" <> source <> "_summary.wxf"}],
+    <|"source" -> source, "threshold" -> threshold, "results" -> allResults,
+      "createdAt" -> DateString[]|>, "WXF"]];

@@ -36,6 +36,16 @@ Done:
   SessionEnd; `.gitignore` now ignores `.claude/*` except `settings.json`.
 - `AGENTS.md`: "Generated outputs" section, coding rule, and a git rule that
   commits/PRs must list outputs written to the main checkout.
+- `src/pure_simplicial_figures.nb` loads `comb_paths.wl` when it sits in
+  `src/` (falls back to `../data/`, then the notebook folder for the
+  zip-alongside-CSVs layout).
+- Other machines / fresh clones: `comb_paths` creates missing
+  `data/`, `figures/`, `logs/`, and handles git < 2.31 (relative
+  `--git-common-dir`). `validate_counts_vs_truth.wl` and
+  `validate_mh_vs_truth.wl` now end with a list of missing input files and
+  the command that generates them, instead of a summary that looked like a
+  pass; `validate_mh_vs_truth.wl` no longer overwrites its summary WXF when
+  nothing was validated.
 
 Checked 2026-11-20 on the Ryzen, running from the worktree:
 - `comb_paths.wl` resolves to `C:\CombResearch` (sees a main-only probe
