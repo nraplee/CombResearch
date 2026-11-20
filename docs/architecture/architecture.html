@@ -1,0 +1,425 @@
+<title>CombResearch Pipeline Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>
+/* Layout: one reading column; each diagram is its own card at full column width */
+:root{--bg:#fbfbf8;--fg:#1d2228;--muted:#5d6670;--line:#dde0e3;--panel:#f1f3f2;--accent:#2f6f5e;--diagram:#ffffff;
+--display:'Fraunces',Georgia,serif;--body:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15191c;--fg:#e4e7e9;--muted:#9aa3ab;--line:#2c3338;--panel:#1d2327;--accent:#7cc4ad;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15191c;--fg:#e4e7e9;--muted:#9aa3ab;--line:#2c3338;--panel:#1d2327;--accent:#7cc4ad;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:1000px;margin:0 auto}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;font:500 .8rem var(--mono);margin:12px 0 8px}
+nav a{color:var(--accent)}
+h1{font:600 2rem/1.15 var(--display);margin:0 0 8px;text-wrap:balance}
+h2{font:600 1.5rem/1.2 var(--display);margin:48px 0 8px;padding-top:16px;border-top:2px solid var(--line);text-wrap:balance}
+h3{font:600 1.15rem/1.25 var(--display);margin:32px 0 8px}
+h4{font:600 1rem/1.3 var(--body);margin:24px 0 6px}
+p,ol,ul{margin:0 0 10px;max-width:72ch}
+ul ul{margin:4px 0 0}
+.eyebrow{font:500 .75rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+code,pre.layout{font-family:var(--mono);font-size:.85em}
+code{background:var(--panel);padding:1px 4px;border-radius:3px}
+.diagram{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--diagram);padding:12px;margin:8px 0 16px}
+.diagram pre{margin:0}
+pre.layout{overflow-x:auto;background:var(--panel);padding:14px;border-radius:6px;line-height:1.45}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;vertical-align:top;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted)}
+</style>
+<main>
+<div class="eyebrow">Repo map · commit b4d4b20 · 2026-11-20</div>
+<h1>CombResearch Pipeline Map</h1>
+<p>How every tracked file connects today, then a target layout that lets another researcher clone the repo and rebuild the data and figures. The per-file inventory is in <code>docs/architecture/inventory.md</code>.</p>
+<nav><a href="#today">Today</a><a href="#target">Target</a><a href="#plan">Implementation plan</a></nav>
+<section id="today"><h2>Current architecture (as of 2026-11-20, commit b4d4b20)</h2>
+<p>How the repo works today, at the file level. Built from <code>inventory.md</code>, which has one record per tracked file. There is one overview, then one small diagram per stage. Data and log nodes are grouped by filename family; all of them live in the main checkout via <code>src/comb_paths.wl</code> / <code>src/comb_paths.ps1</code>.</p>
+<p>Legend: solid arrow = <code>Get</code> / dot-source / launches. Dashed arrow = reads or writes a data or figure family. Red = broken, orphaned or manual step. Grey = superseded or dead. Every <code>.wl</code> that touches outputs also Gets <code>src/comb_paths.wl</code>; those edges are left out after diagram 1 to keep the views readable.</p>
+<h3>0. Overview</h3>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef stage fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+  classDef bad fill:#fde8e8,stroke:#c0392b,color:#7b1c1c
+  classDef fig fill:#fdf0f6,stroke:#a33d6e,color:#1d2228
+
+  S1[&quot;1 Setup&lt;br/&gt;ECGrav loader, paths&quot;]:::stage
+  S2[&quot;2 Truth enumeration&quot;]:::stage
+  S3[&quot;3 q=10 IS sampling&quot;]:::stage
+  S4[&quot;4 MH chains&quot;]:::stage
+  S5[&quot;5 ECGrav campaign&quot;]:::stage
+  S6[&quot;6 Validation and comparison&quot;]:::stage
+  S7[&quot;7 Rendering&quot;]:::stage
+  NB[&quot;Fig 2 notebooks&lt;br/&gt;src/reference&quot;]:::bad
+  TEX[&quot;manuscript .tex&quot;]:::bad
+
+  DT[(&quot;truth WXF&quot;)]:::data
+  DIS[(&quot;IS raw + merged&lt;br/&gt;~8.7 GB&quot;)]:::data
+  DMH[(&quot;MH WXF&quot;)]:::data
+  DEG[(&quot;ECGrav sample WXF&quot;)]:::data
+  DSUM[(&quot;summary WXF&lt;br/&gt;never read&quot;)]:::bad
+  FIG[[&quot;figures/&quot;]]:::fig
+
+  S1 --&gt; S2 &amp; S3 &amp; S4 &amp; S5
+  S2 -.-&gt; DT
+  S3 -.-&gt; DIS
+  S4 -.-&gt; DMH
+  S5 -.-&gt; DEG
+  DT &amp; DIS &amp; DMH &amp; DEG -.-&gt; S6 -.-&gt; DSUM
+  DT &amp; DIS &amp; DMH -.-&gt; S7 -.-&gt; FIG
+  FIG -. &quot;manual copy&quot; .-&gt; TEX
+  NB -. &quot;manual&quot; .-&gt; TEX</pre></div>
+<h3>1. Setup and plumbing</h3>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef lib fill:#e8f0fe,stroke:#4a6fa5,color:#1d2228
+  classDef entry fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef ps fill:#fff4e0,stroke:#b9770e,color:#1d2228
+  classDef dead fill:#eeeeee,stroke:#aaa,color:#555
+  classDef bad fill:#fde8e8,stroke:#c0392b,color:#7b1c1c
+
+  E18[&quot;ECGrav-1.18.0-474b5c2&lt;br/&gt;default pin, not validated&quot;]:::bad
+  E17[&quot;ECGrav-1.17.0&lt;br/&gt;made all Phase 5a data&quot;]:::lib
+  E10[&quot;ECGrav-1.0.0&quot;]:::dead
+  BIP[&quot;BuildingAndInstallingPaclets.nb&quot;]:::dead
+  LOAD[&quot;src/load_ecgrav.wl&lt;br/&gt;COMB_ECGRAV_VERSION&quot;]:::lib
+  INST[&quot;src/install_ecgrav_global.wl&quot;]:::entry
+  GLOB[&quot;global paclet store&quot;]:::bad
+  PATHS[&quot;src/comb_paths.wl&quot;]:::lib
+  PPS[&quot;src/comb_paths.ps1&quot;]:::lib
+  SYNC[&quot;src/sync_worktree_data.ps1&quot;]:::ps
+  HOOK[&quot;.claude/settings.json hooks&quot;]:::ps
+  ALL[&quot;every src .wl script&quot;]:::entry
+  ALLPS[&quot;every src .ps1 launcher&quot;]:::ps
+
+  E18 &amp; E17 &amp; E10 --&gt; LOAD --&gt; ALL
+  E18 --&gt; INST --&gt; GLOB
+  PATHS --&gt; ALL
+  PPS --&gt; ALLPS
+  HOOK --&gt; SYNC --&gt; PPS</pre></div>
+<h3>2. Truth enumeration</h3>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef lib fill:#e8f0fe,stroke:#4a6fa5,color:#1d2228
+  classDef entry fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+  classDef bad fill:#fde8e8,stroke:#c0392b,color:#7b1c1c
+
+  ENC[&quot;streaming_enumerator.wl&lt;br/&gt;cheap key&quot;]:::lib
+  ENB[&quot;streaming_enumerator_bliss.wl&quot;]:::lib
+  ENM[&quot;streaming_enumerator_mckay.wl&quot;]:::lib
+  PSC[&quot;pure_simplicial_compute.wl&lt;br/&gt;borrowed for statsFor&quot;]:::lib
+  ET[&quot;enumerate_truth.wl&lt;br/&gt;COMB_TRUTH_*&quot;]:::entry
+  T1[&quot;test_streaming.wl&quot;]:::entry
+  T2[&quot;test_streaming_bliss.wl&quot;]:::entry
+  T3[&quot;test_streaming_mckay.wl&quot;]:::entry
+  DT[(&quot;p{p}q{q}_truth.wxf&quot;)]:::data
+  DTA[(&quot;p{p}q{q}_truth_mckay.wxf&lt;br/&gt;_truth_bliss.wxf&quot;)]:::bad
+
+  ENB --&gt; ENM
+  ENC &amp; ENB &amp; ENM --&gt; ET
+  PSC --&gt; ET
+  ENC --&gt; T1
+  ENC &amp; ENB --&gt; T2
+  ENC &amp; ENB &amp; ENM --&gt; T3
+  ET -. &quot;cheap&quot; .-&gt; DT
+  ET -. &quot;bliss, mckay&quot; .-&gt; DTA
+  DTA -. &quot;MANUAL rename&quot; .-&gt; DT</pre></div>
+<h3>3. q=10 importance sampling</h3>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef lib fill:#e8f0fe,stroke:#4a6fa5,color:#1d2228
+  classDef entry fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef ps fill:#fff4e0,stroke:#b9770e,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+  classDef dead fill:#eeeeee,stroke:#aaa,color:#555
+  classDef bad fill:#fde8e8,stroke:#c0392b,color:#7b1c1c
+
+  PSC[&quot;pure_simplicial_compute.wl&quot;]:::lib
+  RP[&quot;run_p2.wl, run_p3.wl, run_p4.wl&quot;]:::entry
+  RPAR[&quot;run_parallel.ps1&lt;br/&gt;COMB_PLIST, RUNTAG&quot;]:::ps
+  PSO[&quot;pure_simplicial_compute_overnight.wl&quot;]:::dead
+  MIG[&quot;migrate_csv_to_wxf.wl&quot;]:::dead
+  CAT[&quot;concat_samples.wl&quot;]:::entry
+  CSV[(&quot;*_samples.csv&lt;br/&gt;legacy, no writer&quot;)]:::bad
+  RAW[(&quot;p{p}q10_n{N}_tag_stats.wxf&lt;br/&gt;and _complexes.wxf&quot;)]:::data
+  MS[(&quot;p{p}q10_merged_stats.wxf&quot;)]:::data
+  MC[(&quot;merged_complexes.wxf&lt;br/&gt;never read&quot;)]:::dead
+  LOG[(&quot;logs/compute_p*.log&quot;)]:::data
+
+  PSC --&gt; RP &amp; PSO
+  RPAR --&gt; RP
+  RPAR -.-&gt; LOG
+  RP &amp; PSO -.-&gt; RAW
+  CSV -.-&gt; MIG -.-&gt; RAW
+  RAW -.-&gt; CAT
+  CAT -.-&gt; MS
+  CAT -.-&gt; MC</pre></div>
+<h3>4. MH chains</h3>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef lib fill:#e8f0fe,stroke:#4a6fa5,color:#1d2228
+  classDef entry fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef ps fill:#fff4e0,stroke:#b9770e,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+  classDef dead fill:#eeeeee,stroke:#aaa,color:#555
+
+  SMH[&quot;sampler_mh.wl&quot;]:::lib
+  PSC[&quot;pure_simplicial_compute.wl&lt;br/&gt;exportWxfAtomic&quot;]:::lib
+  RMH[&quot;run_mh_chains.wl&lt;br/&gt;COMB_MH_*&quot;]:::entry
+  L45[&quot;run_p4q5_mh_parallel.ps1&quot;]:::ps
+  LQP[&quot;run_q10_mh_pilot.ps1&quot;]:::dead
+  LQ[&quot;run_q10_mh_parallel.ps1&quot;]:::ps
+  LQO[&quot;run_q10_mh_overnight.ps1&quot;]:::ps
+  MON[&quot;monitor_mh.ps1&quot;]:::ps
+  DT[(&quot;p3q5_truth.wxf&lt;br/&gt;gate only&quot;)]:::data
+  DMH[(&quot;p{p}q{q}_mh_{target}.wxf&quot;)]:::data
+  DMW[(&quot;q10 seed67890_warm*.wxf&quot;)]:::data
+  LOG[(&quot;logs/mh_*.log&quot;)]:::data
+
+  SMH &amp; PSC --&gt; RMH
+  L45 &amp; LQP &amp; LQ &amp; LQO --&gt; RMH
+  DT -.-&gt; RMH
+  RMH -.-&gt; DMH
+  LQO -.-&gt; DMW
+  L45 &amp; LQP &amp; LQ &amp; LQO -.-&gt; LOG
+  LOG -.-&gt; MON</pre></div>
+<h3>5. ECGrav sampler campaign</h3>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef lib fill:#e8f0fe,stroke:#4a6fa5,color:#1d2228
+  classDef entry fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef ps fill:#fff4e0,stroke:#b9770e,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+
+  LOAD[&quot;load_ecgrav.wl&quot;]:::lib
+  ENB[&quot;streaming_enumerator_bliss.wl&quot;]:::lib
+  PSC[&quot;pure_simplicial_compute.wl&quot;]:::lib
+  RES[&quot;run_ecgrav_samplers.wl&lt;br/&gt;COMB_ECG_*&quot;]:::entry
+  REC[&quot;run_ecgrav_campaign.ps1&quot;]:::ps
+  MON[&quot;monitor_ecgrav.ps1&quot;]:::ps
+  VCT[&quot;validate_counts_vs_truth.wl&lt;br/&gt;prints only&quot;]:::entry
+  DT[(&quot;p{p}q{q}_truth.wxf&quot;)]:::data
+  DEG[(&quot;p{p}q{q}_ecg{sampler}_{target}.wxf&quot;)]:::data
+  LOG[(&quot;logs/ecg*.log&quot;)]:::data
+
+  LOAD &amp; ENB &amp; PSC --&gt; RES
+  REC --&gt; RES
+  DT -.-&gt; RES -.-&gt; DEG
+  REC -.-&gt; LOG -.-&gt; MON
+  LOAD --&gt; VCT
+  DT -.-&gt; VCT</pre></div>
+<h3>6. Validation and comparison</h3>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef entry fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+  classDef dead fill:#eeeeee,stroke:#aaa,color:#555
+  classDef bad fill:#fde8e8,stroke:#c0392b,color:#7b1c1c
+
+  DT[(&quot;truth&quot;)]:::data
+  DMH[(&quot;MH&quot;)]:::data
+  DMW[(&quot;MH warm&quot;)]:::data
+  DEG[(&quot;ECGrav samples&quot;)]:::data
+  MS[(&quot;q10 merged_stats&quot;)]:::data
+  VMH[&quot;validate_mh_vs_truth.wl&quot;]:::entry
+  CSE[&quot;compare_samplers_efficiency.wl&quot;]:::entry
+  PIH[&quot;precompute_is_histograms_q10.wl&quot;]:::entry
+  PIH1[&quot;precompute_is_histogram.wl&quot;]:::dead
+  RIT[&quot;run_is_at_truth_cells.wl&lt;br/&gt;own IS loop, q=5&quot;]:::entry
+  H10[(&quot;p{p}q10_is_{t}_numv_hist.wxf&quot;)]:::data
+  H5[(&quot;p{3,4}q5_is_{t}_numv_hist.wxf&quot;)]:::data
+  C3[&quot;compare_3way.wl&quot;]:::entry
+  CQ[&quot;compare_is_mh_q10.wl&quot;]:::entry
+  CW[&quot;compare_q10_warm_vs_prod.wl&quot;]:::entry
+  SUM[(&quot;*_summary.wxf&lt;br/&gt;never read by code&quot;)]:::bad
+
+  DT &amp; DMH &amp; DEG -.-&gt; VMH
+  DT &amp; DMH &amp; DEG &amp; MS -.-&gt; CSE
+  MS -.-&gt; PIH -.-&gt; H10
+  MS -.-&gt; PIH1 -.-&gt; H10
+  RIT -.-&gt; H5
+  DT &amp; DMH &amp; H5 -.-&gt; C3
+  H10 &amp; DMH -.-&gt; CQ
+  H10 &amp; DMH &amp; DMW -.-&gt; CW
+  VMH &amp; CSE &amp; C3 &amp; CQ &amp; CW -.-&gt; SUM</pre></div>
+<h3>7. Rendering and manuscript</h3>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef entry fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+  classDef fig fill:#fdf0f6,stroke:#a33d6e,color:#1d2228
+  classDef dead fill:#eeeeee,stroke:#aaa,color:#555
+  classDef bad fill:#fde8e8,stroke:#c0392b,color:#7b1c1c
+
+  MS[(&quot;q10 merged_stats&quot;)]:::data
+  DT[(&quot;truth + MH&quot;)]:::data
+  H[(&quot;IS histograms + MH warm&quot;)]:::data
+  CSV[(&quot;legacy *_samples.csv&quot;)]:::bad
+  RAF[&quot;render_all_figures.wl&quot;]:::entry
+  RTO[&quot;render_truth_overlay.wl&quot;]:::entry
+  R3[&quot;render_3way.wl&quot;]:::entry
+  RQ[&quot;render_q10_is_vs_mh.wl&lt;br/&gt;render_q10_warm_vs_prod.wl&quot;]:::entry
+  RDX[&quot;render_ecgrav_compare.wl&lt;br/&gt;render_sampler_progress.wl&lt;br/&gt;render_uniformity_check.wl&quot;]:::bad
+  PSF[&quot;pure_simplicial_figures.nb&quot;]:::dead
+  NB1[&quot;histograms_handoff_v2.nb&lt;br/&gt;needs global paclet&quot;]:::bad
+  NB2[&quot;histograms_paper_figures.nb&lt;br/&gt;needs NB1 kernel state&quot;]:::bad
+  FMP[[&quot;manuscript_panels, stacked_previews, combined&quot;]]:::fig
+  FIM[[&quot;figures/is_vs_mh&quot;]]:::fig
+  FSD[[&quot;figures/sampler_diagnostics&quot;]]:::fig
+  FCW[[&quot;p3q3 PDFs in notebook cwd&quot;]]:::bad
+  TEX[&quot;Pure Clique Complexes.tex&lt;br/&gt;Images/ and .bib missing&quot;]:::bad
+
+  MS -.-&gt; RAF -.-&gt; FMP
+  DT -.-&gt; RTO -.-&gt; FMP
+  DT &amp; H -.-&gt; R3 -.-&gt; FIM
+  H -.-&gt; RQ -.-&gt; FIM
+  CSV -.-&gt; RDX -.-&gt; FSD
+  CSV -.-&gt; PSF
+  NB1 --&gt; NB2 -.-&gt; FCW
+  FMP -. &quot;manual copy and rename&quot; .-&gt; TEX
+  FCW -. &quot;manual&quot; .-&gt; TEX</pre></div>
+<p><code>render_ecgrav_compare</code>, <code>render_sampler_progress</code> and <code>render_uniformity_check</code> are red because they <code>Get[&quot;src/sampler_mh.wl&quot;]</code> by a path relative to the current folder, so they fail unless run from the repo root.</p>
+<h3>What a cloner hits today</h3>
+<ol><li><strong>No data.</strong> About 9 GB lives only on the Ryzen PC; the GitHub clone has none of it except the 104 MB Mac-only <code>.mx</code> files. Everything has to be regenerated, which takes days (q=10 IS) plus 17 h for (4,5) truth.</li><li><strong>No single entry point.</strong> About 15 scripts run in an order kept in <code>AGENTS.md</code> and people&#x27;s heads. Configuration is about 30 <code>COMB_*</code> environment variables. Parallel runs need Windows PowerShell.</li><li><strong>Manual steps in the chain.</strong> McKay truth must be renamed by hand from <code>_truth_mckay.wxf</code> to <code>_truth.wxf</code>. The <code>.tex</code> needs figures copied by hand into an <code>Images/</code> folder that does not exist, and their names do not match what the renderers write. The Fig 2 notebooks write to their own cwd and need the global paclet.</li><li><strong>Two worlds.</strong> Fig 2 comes from interactive notebooks; the rest comes from scripts. The ECGrav pin (1.18) differs from the version that made the data (1.17), and the WXF files do not record which version made them.</li><li><strong>Clutter.</strong> Superseded or one-off files sit beside production ones: <code>run_q10_mh_pilot</code>, <code>precompute_is_histogram</code>, <code>migrate_csv_to_wxf</code>, <code>pure_simplicial_compute_overnight</code>, <code>probe_betre_mx</code>, <code>pure_simplicial_figures.nb</code>, three diagnostic renders, <code>archive/</code>, the tracked logs, and dev-only worktree sync tooling.</li><li><strong>Dead outputs.</strong> Every <code>*_summary.wxf</code> and <code>merged_complexes</code> is written and never read; L1 tables are transcribed into the docs by hand.</li></ol>
+<p>See <code>inventory.md</code> for every per-file issue, plus the critic&#x27;s cross-checks.</p></section>
+<section id="target"><h2>Ideal architecture</h2>
+<p>Revised 2026-11-20 for the project direction:</p>
+<ul><li>always run on the <strong>latest upstream ECGrav</strong> (Dr. Betre&#x27;s main branch);</li><li>the algorithms here should eventually be <strong>merged into ECGrav</strong>;</li><li><strong>data is not published</strong>, so a reproducer regenerates it;</li><li>LaTeX lives on <strong>Overleaf</strong>, and local <code>.tex</code> files are reference only.</li></ul>
+<p>The goal: an outside researcher clones the repo, installs Wolfram 15+, and regenerates the data and figures with one command. We keep working the way we do now: worktrees, one shared data store, long parallel runs on the Ryzen.</p>
+<h3>Target layout</h3>
+<pre class="layout">README.md                    quickstart
+run.wl                       orchestrator: wolframscript -file run.wl &lt;stage|all&gt; [--profile quick|paper] [--cells ...]
+config/
+  cells.wl                   cells, N, seeds, targets, IS batches, MH chains and warm starts, per profile
+CombResearch/                the algorithms, laid out like an ECGrav paclet so pieces can be upstreamed
+  PacletInfo.wl
+  Kernel/CombResearch.wl     public symbols with ::usage, as in ECGrav.wl
+  Kernel/Subpackages/
+    Enumeration.wl           cheap + McKay exact enumeration (BLISS keys inside)   ← upstream candidate
+    Statistics.wl            the 12 per-complex statistics (statsFor)               ← upstream candidate
+    MHSampler.wl             MH for the vertex/facet/unlabeled targets              ← candidate, discuss vs ECGrav MCMC
+    ISSampler.wl             importance sampling + reweighting
+    Compare.wl               L1, ESS, histogram helpers
+  Tests/*.wlt                VerificationTest files, ECGrav style
+pipeline/                    research workflow, stays in this repo
+  common/ paths.wl  names.wl  io.wl  config.wl  ecgrav.wl
+  10_truth.wl  20_is_q10.wl  30_mh.wl  40_ecgrav.wl  50_validate.wl  60_figures.wl
+tests/                       pipeline smoke tests + truth-grid regression (also run on ECGrav updates)
+reference/                   .tex, Fig 2 notebooks, papers; reference only (the manuscript lives on Overleaf)
+tools/dev/                   sync_worktree_data, monitors, .ps1 launchers, ECGrav update helper</pre>
+<p>ECGrav is <strong>not vendored</strong>. A single clone of upstream ECGrav at <code>&lt;output root&gt;/ECGrav-upstream</code> is gitignored, shared by all worktrees like <code>data/</code>, and updated to upstream main by <code>run.wl</code>&#x27;s check stage. <code>COMB_ECGRAV_DIR</code> points at any other ECGrav checkout instead, for example our own fork branch while preparing a pull request to ECGrav.</p>
+<h3>Flow</h3>
+<h4>A. What a run does</h4>
+<div class="diagram"><pre class="mermaid">flowchart TB
+  classDef ext fill:#ffffff,stroke:#333,stroke-width:2px,color:#1d2228
+  classDef cfg fill:#fff4e0,stroke:#b9770e,color:#1d2228
+  classDef stage fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+
+  USER([&quot;git clone, then&lt;br/&gt;wolframscript -file run.wl all&quot;]):::ext
+  UP[(&quot;github.com/kassabetre/ECGrav&lt;br/&gt;main&quot;)]:::ext
+  CFG[&quot;config/cells.wl&lt;br/&gt;profile quick or paper&quot;]:::cfg
+  RUN[&quot;run.wl&quot;]:::stage
+  CHK[&quot;check stage&lt;br/&gt;pull latest ECGrav, record commit&quot;]:::stage
+  REG[&quot;truth-grid regression&lt;br/&gt;only when the ECGrav commit changed&quot;]:::stage
+  S14[&quot;truth, is, mh, ecgrav stages&quot;]:::stage
+  S5[&quot;validate stage&quot;]:::stage
+  S6[&quot;figures stage&quot;]:::stage
+  OVL([&quot;upload figures to Overleaf&lt;br/&gt;(by hand)&quot;]):::ext
+
+  USER --&gt; RUN
+  CFG --&gt; RUN
+  RUN --&gt; CHK
+  UP -.-&gt; CHK
+  CHK -- &quot;new commit&quot; --&gt; REG
+  CHK --&gt; S14
+  REG --&gt; S14
+  S14 --&gt; S5 --&gt; S6 -.-&gt; OVL</pre></div>
+<h4>B. Package and pipeline</h4>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef ecg fill:#fff4e0,stroke:#b9770e,color:#1d2228
+  classDef lib fill:#e8f0fe,stroke:#4a6fa5,color:#1d2228
+  classDef stage fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+
+  ECG[&quot;ECGrav&lt;br/&gt;latest upstream&quot;]:::ecg
+  EN[&quot;Enumeration.wl&quot;]:::lib
+  ST[&quot;Statistics.wl&quot;]:::lib
+  MH[&quot;MHSampler.wl&quot;]:::lib
+  IS[&quot;ISSampler.wl&quot;]:::lib
+  CP[&quot;Compare.wl&quot;]:::lib
+  COM[&quot;pipeline/common&lt;br/&gt;paths, names, io, config&quot;]:::stage
+
+  T[&quot;10_truth&quot;]:::stage
+  I[&quot;20_is_q10&quot;]:::stage
+  M[&quot;30_mh&quot;]:::stage
+  E[&quot;40_ecgrav&quot;]:::stage
+  V[&quot;50_validate&quot;]:::stage
+  F[&quot;60_figures&quot;]:::stage
+
+  ECG --&gt; EN &amp; MH &amp; IS
+  ECG --&gt; E
+  EN &amp; ST --&gt; T
+  IS &amp; ST --&gt; I
+  MH &amp; ST --&gt; M
+  CP --&gt; V
+  COM --&gt; T &amp; I &amp; M &amp; E &amp; V &amp; F
+  EN &amp; ST &amp; MH -. &quot;future pull requests&quot; .-&gt; ECG</pre></div>
+<h4>C. Where the data goes</h4>
+<div class="diagram"><pre class="mermaid">flowchart LR
+  classDef stage fill:#e9f7ef,stroke:#2e7d4f,color:#1d2228
+  classDef data fill:#f4f4f4,stroke:#777,stroke-dasharray:3 3,color:#1d2228
+  classDef out fill:#fdf0f6,stroke:#a33d6e,color:#1d2228
+
+  S1[&quot;10_truth&quot;]:::stage
+  S2[&quot;20_is_q10&quot;]:::stage
+  S3[&quot;30_mh&quot;]:::stage
+  S4[&quot;40_ecgrav&quot;]:::stage
+  D[(&quot;data/*.wxf&lt;br/&gt;each with a .manifest sidecar:&lt;br/&gt;ECGrav commit, seed, settings&quot;)]:::data
+  S5[&quot;50_validate&quot;]:::stage
+  RES[(&quot;results/*.csv&lt;br/&gt;L1, ESS, counts, pre-binned histograms&quot;)]:::out
+  S6[&quot;60_figures&quot;]:::stage
+  FIG[(&quot;figures/*.pdf&quot;)]:::out
+
+  S1 &amp; S2 &amp; S3 &amp; S4 -.-&gt; D
+  D -.-&gt; S5 -.-&gt; RES
+  RES -.-&gt; S6 -.-&gt; FIG</pre></div>
+<h3>Ways to use it</h3>
+<div class='tw'><table><thead><tr><th>Goal</th><th>Command</th><th>Cost</th></tr></thead><tbody><tr><td>Check that everything works</td><td><code>wolframscript -file run.wl all --profile quick</code></td><td>about 10–20 min on a laptop</td></tr><tr><td>Reproduce the paper&#x27;s data and figures</td><td><code>wolframscript -file run.wl all --profile paper</code></td><td>days; every stage resumes</td></tr><tr><td>Redo one piece (us, day to day)</td><td><code>wolframscript -file run.wl mh --cells &quot;4,5&quot;</code> or a plain <code>src</code> script with <code>COMB_*</code> env</td><td>as today</td></tr><tr><td>Re-check after Betre updates ECGrav</td><td><code>wolframscript -file run.wl check</code></td><td>pulls, then runs the regression if the commit changed</td></tr></tbody></table></div>
+<h3>Current → ideal mapping</h3>
+<div class='tw'><table><thead><tr><th>Current file(s)</th><th>Ideal home</th><th>Action</th></tr></thead><tbody><tr><td><code>ECGrav/ECGrav-*</code> snapshots, <code>BuildingAndInstallingPaclets.nb</code>, <code>install_ecgrav_global.wl</code></td><td>shared upstream clone + <code>pipeline/common/ecgrav.wl</code></td><td>stop vendoring; the global install becomes an optional helper for notebooks; old snapshots stay in git history</td></tr><tr><td><code>src/load_ecgrav.wl</code></td><td><code>pipeline/common/ecgrav.wl</code></td><td>load from the shared clone or <code>COMB_ECGRAV_DIR</code>; record the commit; keep <code>combLoadECGravOnKernels</code></td></tr><tr><td><code>src/comb_paths.wl</code>, <code>comb_paths.ps1</code></td><td><code>pipeline/common/paths.wl</code> (+ <code>.ps1</code> twin)</td><td>keep the git-common-dir logic, add a repo-marker guard, add <code>$CombResultsDir</code></td></tr><tr><td><code>streaming_enumerator{,_bliss,_mckay}.wl</code></td><td><code>CombResearch/Kernel/Subpackages/Enumeration.wl</code></td><td>one public <code>EnumerateUnlabeledPureComplexes[p, q]</code>-style function, auto-picking cheap or McKay</td></tr><tr><td><code>statsFor</code> in <code>pure_simplicial_compute.wl</code></td><td><code>Statistics.wl</code></td><td>public, documented</td></tr><tr><td><code>sampler_mh.wl</code></td><td><code>MHSampler.wl</code></td><td>public; compare with ECGrav&#x27;s <code>RandomPureSimplicialComplexMCMC</code> before proposing upstream</td></tr><tr><td>IS code in <code>pure_simplicial_compute.wl</code>, <code>run_p{2,3,4}.wl</code>, <code>concat_samples.wl</code>, <code>run_parallel.ps1</code></td><td><code>ISSampler.wl</code> + <code>pipeline/20_is_q10.wl</code></td><td>batches from the config; merge built in</td></tr><tr><td><code>enumerate_truth.wl</code>, <code>test_streaming*.wl</code></td><td><code>pipeline/10_truth.wl</code>, <code>CombResearch/Tests/Enumeration.wlt</code></td><td>writes the final <code>_truth.wxf</code> directly (no manual rename)</td></tr><tr><td><code>run_mh_chains.wl</code> + MH <code>.ps1</code> launchers</td><td><code>pipeline/30_mh.wl</code> (+ launchers in <code>tools/dev/</code>)</td><td>chains and warm starts declared in the config</td></tr><tr><td><code>run_ecgrav_samplers.wl</code>, <code>run_ecgrav_campaign.ps1</code>, <code>validate_counts_vs_truth.wl</code></td><td><code>pipeline/40_ecgrav.wl</code>, <code>tests/</code></td><td>the count check joins the ECGrav regression</td></tr><tr><td><code>validate_*</code>, <code>compare_*</code>, <code>precompute_is_histograms_q10</code>, <code>run_is_at_truth_cells</code></td><td><code>pipeline/50_validate.wl</code> + <code>Compare.wl</code></td><td>one results table that figures read</td></tr><tr><td><code>render_*.wl</code> (8), Fig 2 notebooks</td><td><code>pipeline/60_figures.wl</code></td><td>Fig 2 becomes a script; the notebooks move to <code>reference/</code></td></tr><tr><td><code>docs/Pure Clique Complexes.tex</code>, <code>archive/related_pdfs</code></td><td><code>reference/</code></td><td>reference only</td></tr><tr><td><code>migrate_csv_to_wxf</code>, <code>precompute_is_histogram</code>, <code>run_q10_mh_pilot.ps1</code>, <code>probe_betre_mx</code>, <code>pure_simplicial_figures.nb</code>, <code>pure_simplicial_compute_overnight</code>, <code>archive/</code></td><td>deleted (git history keeps them)</td><td>—</td></tr><tr><td><code>monitor_*.ps1</code>, <code>sync_worktree_data.ps1</code>, <code>.claude/settings.json</code> hook</td><td><code>tools/dev/</code></td><td>not needed for reproduction</td></tr><tr><td>tracked <code>logs/</code>, Betre <code>.mx</code> files</td><td>untracked (stay in history; no rewrite)</td><td>—</td></tr></tbody></table></div>
+<p>See <code>implementation-plan.md</code> for the phased plan.</p></section>
+<section id="plan"><h2>Implementation plan: from the current repo to the ideal flow</h2>
+<p>Revised 2026-11-20. It keeps the developer guarantees found by two adversarial reviews of the first draft (file:line evidence below comes from them) and follows the project direction:</p>
+<ul><li>always run on the latest upstream ECGrav;</li><li>eventually merge our algorithms into ECGrav;</li><li>no data publishing;</li><li>LaTeX on Overleaf;</li><li>no git history rewrites;</li><li>licensing left to Dr. Betre.</li></ul>
+<p>Companion to <code>current.md</code> and <code>ideal.md</code>.</p>
+<h3>Two users, one codebase</h3>
+<div class='tw'><table><thead><tr><th></th><th>Outside researcher (clone or zip)</th><th>Us (Ryzen PC + laptop, Claude Code worktrees)</th></tr></thead><tbody><tr><td>Gets data by</td><td>regenerating: <code>run.wl all --profile quick</code> or <code>paper</code></td><td>the shared store in <code>C:\CombResearch\data</code></td></tr><tr><td>Gets ECGrav by</td><td><code>run.wl check</code> cloning upstream main</td><td>the same shared clone, or <code>COMB_ECGRAV_DIR</code> pointing at a fork branch we&#x27;re preparing for Betre</td></tr><tr><td>Configures with</td><td>named profiles in <code>config/cells.wl</code></td><td>today&#x27;s per-script defaults and <code>COMB_*</code> env knobs, plus profiles when named</td></tr><tr><td>Outputs go to</td><td><code>&lt;clone&gt;/data</code>, <code>figures</code>, <code>results</code></td><td>the main checkout, from any worktree</td></tr><tr><td>Platform</td><td>any OS with Wolfram 15+</td><td>Windows; <code>.ps1</code> launchers and monitors stay</td></tr></tbody></table></div>
+<h3>Developer guarantees (hold after every phase)</h3>
+<ol><li><strong>One output root, decided in one place.</strong> - <code>comb_paths.wl</code> / <code>.ps1</code> keep the git-common-dir logic, which lets worktrees share outputs. A plain clone resolves to itself (checked: <code>git -C src rev-parse --git-common-dir</code> gives <code>../.git</code>). - A repo-marker guard handles a zip unpacked inside another repo: the git root is accepted only if it contains <code>src/comb_paths.wl</code>, otherwise the code checkout is used. <code>COMB_ROOT</code> still overrides. - <code>$CombResultsDir</code> is added, and <code>results</code> joins the sync script&#x27;s folder list.</li><li><strong>Existing data stays valid and is never rerun by accident.</strong> - No phase renames or moves existing WXFs. One naming helper produces today&#x27;s flat names. - An output with no manifest counts as up to date and is rerun only with <code>--force</code>. <code>--force</code> covers only the stage and cells named on the command line, never <code>all</code>. - Outputs made with an older ECGrav commit are <strong>reported as stale</strong>, not rerun automatically.</li><li><strong>Bare scripts behave exactly as today.</strong> - With no <code>--profile</code> and no <code>COMB_PROFILE</code>, settings resolve to each script&#x27;s current defaults. For example, <code>enumerate_truth.wl</code> keeps its 5 cells and the cheap pipeline, so it never OOMs on (4,5). - Order: CLI flag, then <code>COMB_*</code> env, then named profile, then script default. <code>run.wl</code> prints each setting with its source and warns when a leftover env var overrides a named profile. - Every existing <code>COMB_*</code> knob keeps its name. <code>AGENTS.md</code> maps <code>--cells</code> to each stage&#x27;s own knob (<code>COMB_TRUTH_CELLS</code>, <code>COMB_MH_CELLS</code>, <code>COMB_ECG_CELLS</code>, <code>COMB_VAL_CELLS</code>, <code>COMB_IS_CELLS</code>, and p-only <code>COMB_CMP_PS</code>).</li><li><strong>Old entry points keep working until their replacement is proven.</strong> A folded script becomes a shim that <code>Get</code>s the new code *in the same kernel*. That preserves the <code>*Override</code> protocol: <code>run_p3.wl:4-10</code> sets <code>pListOverride</code> and <code>sampleSizeOverride</code> before <code>Get</code>ting <code>pure_simplicial_compute.wl</code>. Shims go only in Phase 5.</li><li><strong>Long runs stay parallel and monitorable.</strong> - <code>run.wl</code> fans out one process per target (MH, ECGrav) or per p (IS). - It keeps the launchers&#x27; log names: <code>mh_p{p}q{q}_{target}.log</code>, <code>ecg{sampler}_{target}.log</code>, <code>compute_p{p}[_{tag}].log</code>, plus <code>.err</code>. - <code>monitor_mh.ps1</code> and <code>monitor_ecgrav.ps1</code> must work unchanged.</li><li><strong>ECGrav updates never surprise a run.</strong> - ECGrav is pulled only at the start of a <code>run.wl</code> invocation, never during one. Running kernels keep the code they loaded. - Every output records the ECGrav commit it was made with. - The validate stage warns when its inputs mix ECGrav commits (for example IS batches made before and after an update).</li><li><strong>One branch and one PR per step, from <code>main</code>.</strong> Checks run in a scratch root (Phase 0), never against the shared store.</li></ol>
+<h3>Phase 0: safety net</h3>
+<ul><li><strong>Provenance table.</strong> For each data family in the store, record the ECGrav version, <code>$Version</code>, seed, runTag, N and chunk size that made it, from the logs and <code>docs/agent-task.md</code>. Known so far:<ul><li>q=10 IS: ECGrav 1.0.0 (<code>pure_simplicial_compute.wl:23</code>).</li><li>truth: labelled <code>&quot;1.0.0&quot;</code> by a hardcoded string (<code>enumerate_truth.wl:98</code>).</li><li>ecgexact and ecgmcmc: 1.17.0.</li><li>MH chains: unrecorded.</li><li>The merged q=10 IS is batches <code>n500000</code>, <code>batch2</code> and <code>batch3</code>, with seeds from <code>Hash[runTag]</code> (<code>pure_simplicial_compute.wl:37-38</code>).</li></ul></li></ul>
+<p>The table also gives the regeneration to-do list under the latest ECGrav. - <strong>Golden reference, in two parts.</strong> It is stored as code in <code>tests/golden/</code>, read from <code>$CombCodeRoot</code>, never written through <code>$CombRoot</code>. - <code>golden/derived</code>: values computed from the existing WXFs. These are L1 tables, numV marginals, iso counts, stat-column sums, and a hash of the binned data behind each figure panel. Refactors must reproduce them <strong>exactly</strong> from the same inputs. p-values are left out, because <code>validate_mh_vs_truth.wl:153</code> draws with no seed. - <code>golden/quick</code>: produced by the quick profile. Later runs must match truth exactly. Samplers must stay within tolerance (L1 vs truth &lt; 0.05), not equal earlier values, since ECGrav keeps changing. - <strong>Scratch check root.</strong> <code>tools/dev/make_check_root.wl &lt;dir&gt; &lt;families&gt;</code> hard-links the needed WXFs from the store into a scratch <code>COMB_ROOT</code>. Checks read real inputs and write only to scratch. - Tag <code>pre-restructure</code> on <code>main</code>.</p>
+<h3>Phase 1: track the latest upstream ECGrav</h3>
+<p>This phase replaces the pin.</p>
+<ul><li><strong>Shared clone.</strong> <code>tools/dev/update_ecgrav.wl</code>, later called by <code>run.wl check</code>, keeps one clone of <code>github.com/kassabetre/ECGrav</code> at <code>$CombRoot/ECGrav-upstream</code>. That folder is gitignored and shared by all worktrees like <code>data/</code>. The script fetches and fast-forwards to <code>origin/main</code>, and records the commit.</li><li><strong><code>load_ecgrav.wl</code></strong> loads <code>Kernel/ECGrav.wl</code> from, in order: 1. <code>COMB_ECGRAV_DIR</code>, any ECGrav checkout, for example our fork branch; 2. the shared clone.<ul><li>It sets <code>$CombECGravCommit</code>, keeps <code>combLoadECGravOnKernels[]</code>, and keeps the <code>installed</code> mode.</li><li>It drops the <code>COMB_ECGRAV_VERSION</code> snapshot values.</li></ul></li><li><strong>Symbol check.</strong> After loading, assert that the 14 ECGrav symbols we use exist. They are listed in one place in the loader:<ul><li><code>RandomVertexLabeled…</code>, <code>RandomUniformUnlabeled…</code>, <code>RandomUniformFacetLabeled…</code> and <code>RandomFacetLabeledPureSimplicialComplex</code>;</li><li><code>RandomPureSimplicialComplexMCMC</code> and its <code>Sweep</code> variant;</li><li><code>Num{Un,Facet,Vertex}LabeledPureComplexes</code>;</li><li>the automorphism-order functions;</li><li><code>IsomorphicSimplicialComplexQ</code> and <code>ChooseNonIsomorphic…</code>.</li></ul></li></ul>
+<p>An upstream rename then fails with one clear message instead of mid-run. - <strong>ECGrav regression</strong> (<code>tests/ecgrav_regression.wl</code>). It runs when the commit differs from the last one that passed, which is recorded in <code>$CombResultsDir</code>: - the counters against truth on all 9 cells; - the exact samplers at small N against truth; - an MH smoke test.</p>
+<p>This makes &quot;re-validate whenever ECGrav changes&quot; automatic. - <strong>Remove the vendored snapshots</strong> <code>ECGrav/ECGrav-*</code> and <code>BuildingAndInstallingPaclets.nb</code>. They stay in git history. <code>install_ecgrav_global.wl</code> installs from the shared clone, for notebook use only. - <strong>Update <code>AGENTS.md</code>:</strong> the &quot;pinned snapshot&quot; rules become &quot;latest upstream, loaded via <code>load_ecgrav.wl</code>&quot;. Remove the snapshot-update procedure and the global-install step from the Ryzen checklist. - Check: the regression passes on today&#x27;s upstream main, and the three smoke tests pass.</p>
+<h3>Phase 2: shared libraries and config, no behaviour change</h3>
+<div class='tw'><table><thead><tr><th>New file</th><th>Contents</th><th>Replaces</th></tr></thead><tbody><tr><td><code>src/lib_io.wl</code></td><td><code>exportWxfAtomic</code>; a <strong>sidecar manifest</strong> per output, <code>&lt;file&gt;.manifest.wl</code>, written atomically</td><td>helper inside <code>pure_simplicial_compute.wl</code></td></tr><tr><td><code>src/lib_names.wl</code></td><td><code>combFile[...]</code> for every data family and log, producing <strong>today&#x27;s</strong> names</td><td>path builders in about 20 scripts</td></tr><tr><td><code>src/lib_stats.wl</code></td><td><code>statsFor</code> and the 12-column schema</td><td>helper inside <code>pure_simplicial_compute.wl</code></td></tr><tr><td><code>src/lib_config.wl</code></td><td><code>combSetting</code>, using the precedence in guarantee 3</td><td><code>Environment[&quot;COMB_*&quot;]</code> parsing in 19 scripts</td></tr><tr><td><code>config/cells.wl</code></td><td>profiles <code>quick</code> and <code>paper</code>: cells, N, seeds, targets, the IS batch list <code>{runTag, N, chunk}</code> per p, the warm-chain list <code>{p, target, seed, initNumV, numIter, thin, tag}</code>, and the (4,5) per-target MH settings</td><td>settings that today live only in <code>.ps1</code> launchers</td></tr></tbody></table></div>
+<ul><li><strong>One manifest per output, never one shared file.</strong> Up to 4 processes and other worktrees write at once. Each manifest records sha256, ECGrav commit, <code>$Version</code>, <code>$SystemID</code>, kernel count, seed, profile, settings, git sha (or a <code>VERSION</code> file when there is no git), and wall time.</li><li><code>tools/dev/backfill_manifest.wl --dry-run</code> writes manifests for existing WXFs from embedded metadata and the provenance table.</li><li>Point <code>enumerate_truth.wl</code>, <code>run_mh_chains.wl</code> and <code>run_ecgrav_samplers.wl</code> at <code>lib_stats</code> / <code>lib_io</code> directly. They stop <code>Block</code>-Getting <code>pure_simplicial_compute.wl</code>.</li><li>Fixes:<ul><li>the hardcoded <code>ecGravVersion = &quot;1.0.0&quot;</code>;</li><li>the 3 renders that <code>Get[&quot;src/sampler_mh.wl&quot;]</code> relative to the current folder;</li><li>the <code>comb_paths</code> guard.</li></ul></li><li>Checks:<ul><li><code>test_streaming*.wl</code>;</li><li><code>run_p3.wl</code> with <code>COMB_N</code> small;</li><li><code>golden/derived</code> in a scratch root.</li></ul></li></ul>
+<h3>Phase 3: <code>run.wl</code>, one entry point over today&#x27;s <code>.wl</code> scripts</h3>
+<pre class="layout">wolframscript -file run.wl &lt;check|truth|is|mh|ecgrav|validate|figures|all&gt; [--profile quick|paper] [--cells &quot;3,5;4,5&quot;] [--force] [--dry-run]</pre>
+<ul><li><strong><code>check</code>:</strong> update ECGrav, run the regression if the commit changed, run the smoke tests, and report stale outputs.</li><li><strong>Other stages:</strong> set <code>COMB_*</code> env and launch the existing <code>.wl</code> drivers directly, never a <code>.ps1</code>, so it runs on any OS. They fan out per target or per p with the launchers&#x27; log names. The skip rule follows guarantee 2.</li><li><strong><code>--dry-run</code>:</strong> prints the stages, cells, reasons, and every setting with its source.</li><li><strong>New <code>src/render_fig2.wl</code>:</strong> Fig 2 (q=3) through <code>load_ecgrav.wl</code>, with outputs through <code>comb_paths</code>. The reference notebooks are untouched.</li><li>Checks:<ul><li>the monitors work on a <code>run.wl</code> MH run;</li><li>the quick profile in a scratch root meets <code>golden/quick</code>;</li><li><code>render_fig2.wl</code> reproduces the notebook&#x27;s numbers.</li></ul></li></ul>
+<h3>Phase 4: build the <code>CombResearch</code> package and the pipeline stages</h3>
+<p>The algorithms move into a package laid out like ECGrav: <code>PacletInfo.wl</code>, <code>Kernel/CombResearch.wl</code>, and <code>Kernel/Subpackages/*.wl</code>. Each public symbol gets <code>::usage</code>, and tests go in <code>.wlt</code> <code>VerificationTest</code> files. This keeps upstreaming a copy-and-adapt job. Workflow code goes into <code>pipeline/</code> stages. One PR per row, each checked against <code>golden/derived</code>, with in-kernel shims left behind.</p>
+<div class='tw'><table><thead><tr><th>Package piece</th><th>Pipeline stage</th><th>From</th><th>Notes</th></tr></thead><tbody><tr><td><code>Enumeration.wl</code></td><td><code>10_truth.wl</code></td><td>3 enumerators, <code>enumerate_truth.wl</code>, <code>test_streaming*.wl</code></td><td>picks cheap or McKay per cell; writes the final <code>_truth.wxf</code> (no manual rename); gates for all 9 cells</td></tr><tr><td><code>Statistics.wl</code></td><td>(all)</td><td><code>statsFor</code></td><td>—</td></tr><tr><td><code>ISSampler.wl</code></td><td><code>20_is_q10.wl</code></td><td><code>pure_simplicial_compute.wl</code>, <code>run_p{2,3,4}.wl</code>, <code>concat_samples.wl</code></td><td>batches from the config; merge built in; chunk resume unchanged; <code>*Override</code> variables map to settings</td></tr><tr><td><code>MHSampler.wl</code></td><td><code>30_mh.wl</code></td><td><code>sampler_mh.wl</code>, <code>run_mh_chains.wl</code></td><td>chains and warm starts from the config; adds the missing (2,7), (3,6), (4,4) chains</td></tr><tr><td>—</td><td><code>40_ecgrav.wl</code></td><td><code>run_ecgrav_samplers.wl</code></td><td>—</td></tr><tr><td><code>Compare.wl</code></td><td><code>50_validate.wl</code></td><td><code>validate_*</code>, <code>compare_*</code>, <code>precompute_is_histograms_q10</code>, <code>run_is_at_truth_cells</code></td><td>writes <code>results/*.csv</code>; pre-bins the 10 q=10 statistics × 3 weights so figures don&#x27;t read the 2.8 GB merged stats</td></tr><tr><td>—</td><td><code>60_figures.wl</code></td><td>8 <code>render_*.wl</code>, <code>render_fig2.wl</code></td><td>reads <code>results/</code>; <code>render_sampler_progress</code> stops reading the legacy CSV</td></tr></tbody></table></div>
+<p>The <code>.ps1</code> launchers become thin callers of <code>run.wl</code> with the same log names.</p>
+<h3>Phase 5: reorganise and delete</h3>
+<ul><li><strong>One mechanical <code>git mv</code> PR</strong> into <code>CombResearch/</code>, <code>pipeline/</code>, <code>tests/</code>, <code>reference/</code>, <code>tools/dev/</code>. It updates:<ul><li>every <code>Get</code> path;</li><li><code>.ps1</code> code-root discovery: walk up to the folder that holds <code>run.wl</code>. Today <code>run_p4q5_mh_parallel.ps1:27</code>, <code>run_parallel.ps1:48</code> and <code>comb_paths.ps1:20</code> rely on <code>$PSScriptRoot</code>;</li><li>the sync hook path;</li><li><code>AGENTS.md</code>.</li></ul></li></ul>
+<p>Check: each launcher with <code>-DryRun</code> or tiny N, and the hook command. - <strong>Delete:</strong> shims, superseded scripts, <code>archive/</code>. Git history and the <code>pre-restructure</code> tag keep them. - <strong>Untrack:</strong> <code>logs/</code> and the Betre <code>.mx</code> files. They stay in history; no rewrite. - <strong>Move into <code>reference/</code>:</strong> the <code>.tex</code>, the Fig 2 notebooks and the related PDFs. - <strong>Hook:</strong> the committed <code>.claude/settings.json</code> hook runs <code>powershell.exe</code>. Make it skip quietly when that isn&#x27;t available, so Claude Code users on macOS or Linux don&#x27;t see failures.</p>
+<h3>Phase 6: upstream to ECGrav (with Dr. Betre)</h3>
+<ul><li>Agree with Betre which pieces he wants:<ul><li><code>Enumeration</code> (exact unlabeled enumeration with McKay) and <code>Statistics</code> are the clearest gaps.</li><li><code>MHSampler</code> overlaps ECGrav&#x27;s <code>RandomPureSimplicialComplexMCMC</code>, so compare first.</li></ul></li><li>For each piece: 1. Adapt it to ECGrav naming, options and usage-message style on a fork branch. 2. Develop against it with <code>COMB_ECGRAV_DIR</code>. 3. Bring its <code>.wlt</code> tests along. 4. Open the PR.</li><li>After a merge, our package drops that piece and calls the ECGrav version. The ECGrav regression and <code>golden/derived</code> confirm identical results.</li></ul>
+<h3>Phase 7: prove it from outside</h3>
+<ul><li><code>README.md</code> quickstart.</li><li>On the laptop, with no env vars set, in a new folder:<ul><li><code>git clone</code> and <code>run.wl all --profile quick</code>;</li><li>the same from a <strong>GitHub zip</strong> unpacked inside an unrelated git repo;</li><li>the same with git missing from PATH. ECGrav then needs a manual clone, and the check stage says so.</li></ul></li><li>Optional: CI on <code>--profile quick</code>. It needs a Wolfram Engine licence in CI.</li></ul>
+<h3>Decisions (2026-11-20)</h3>
+<ol><li><strong>ECGrav tracking:</strong> one shared, gitignored upstream clone in the main checkout, for now. No submodule.</li><li><strong>No escape hatch.</strong> There are no deadlines, so runs use upstream main only. Drop the temporary <code>COMB_ECGRAV_DIR</code>-at-an-old-commit idea. <code>COMB_ECGRAV_DIR</code> stays only for pointing at a fork branch while preparing code for ECGrav.</li><li><strong>Upstreaming:</strong> the user will ask Dr. Betre which pieces he wants and in what form (PRs or files). Phase 6 waits on that.</li></ol>
+<h3>Which existing data to regenerate under the latest ECGrav</h3>
+<p>Upstream main today is <code>474b5c2</code> (2026-11-11), the same commit as the vendored <code>ECGrav-1.18.0-474b5c2</code>, so &quot;latest&quot; is what the scripts already load. The review went through ECGrav&#x27;s CHANGELOG and the commit history from v1.0.0 to main, for the 14 ECGrav functions our code calls, and checked two things against the stored data.</p>
+<div class='tw'><table><thead><tr><th>Data family</th><th>Made with</th><th>ECGrav functions it depends on</th><th>What changed upstream since</th><th>Checked</th><th>Regenerate?</th></tr></thead><tbody><tr><td>truth, 9 cells</td><td>older ECGrav (stored label <code>&quot;1.0.0&quot;</code> is hardcoded)</td><td><code>IsomorphicSimplicialComplexQ</code>, <code>ChooseNonIsomorphicSimplicialComplexes</code>, <code>PureComplex{,Facet}AutomorphismGroupOrder</code></td><td>aut-order code rewritten for speed (61b0916, 4abc0df); old code was correct when it finished but could hit <code>GroupElements::nomem</code> on very symmetric complexes. Mixed-facet-size overcount fix (2adc441) cannot affect pure complexes</td><td><strong>Latest ECGrav reproduces the stored aut and autF for all 10,882 classes across the 9 cells, zero mismatches.</strong> Iso counts already matched the 1.17 counters (Phase 5a), and the counters&#x27; values are unchanged since</td><td><strong>No</strong></td></tr><tr><td>q=10 IS (<code>p{2,3,4}q10_*</code>), April 2026</td><td>ECGrav ≤ v1.1.0</td><td><code>RandomVertexLabeledPureSimplicialComplex</code>, the two aut orders</td><td>Parallel-branch fix (8367114) is for code added after v1.1.0. The commit records chi-square tests showing the generator was always uniform. Speedups change seeded draws, not the distribution</td><td><strong>All 26M rows have positive numeric aut, autF and weights</strong> (no <code>$Aborted</code>). Oddity: some p=4 <code>aut</code> values are stored as Real, not Integer</td><td><strong>No</strong> (correct as is; look at the Real values)</td></tr><tr><td>MH chains</td><td>unrecorded (various, ≤ 1.17)</td><td>the two aut orders; <code>RandomVertexLabeled…</code> only for the chain start</td><td>as above</td><td>aut values verified via truth; chains validate against truth on all 27 cell × target pairs</td><td><strong>No</strong></td></tr><tr><td>ecgmcmc</td><td>1.17.0</td><td><code>RandomPureSimplicialComplexMCMC</code></td><td><strong>Behaviour change:</strong> the equilibration replica no longer starts from M disjoint facets, a trap under unlabeled weighting (87f2d5d). ESS now reported</td><td>L1 vs truth passed at 1.17, but samples come from the old start rule</td><td><strong>Yes, first</strong> (small cells, hours)</td></tr><tr><td>ecgexact</td><td>1.17.0</td><td><code>RandomUniform{Unlabeled,FacetLabeled}PureSimplicialComplex</code>, <code>RandomVertexLabeled…</code>, counters</td><td>speedups only; changelog states the distribution is unchanged (474b5c2, 22f1a37)</td><td>—</td><td><strong>Yes, second</strong>, for consistent provenance only</td></tr><tr><td>ecglegacyfacet</td><td>1.17.0</td><td><code>RandomFacetLabeledPureSimplicialComplex</code> (negative control)</td><td>none relevant</td><td>—</td><td>Only if the negative-control comparison is still wanted</td></tr></tbody></table></div>
+<p><strong>Order:</strong> ecgmcmc → ecgexact → (optional) ecglegacyfacet. Truth, q=10 IS and MH stay as they are. Once Phase 2 adds manifests, backfill them with the provenance in this table, so the &quot;stale&quot; report shows their ECGrav version honestly instead of forcing reruns.</p>
+<p>Checks used (read-only, scripts kept in the session scratchpad): <code>check_truth_aut_vs_latest.wl</code> (truth aut and autF vs latest ECGrav) and <code>check_aut_numeric.wl</code> (q=10 merged stats scan). Worth turning both into <code>tests/</code> checks in Phase 1, so the ECGrav regression covers them.</p></section>
+</main>

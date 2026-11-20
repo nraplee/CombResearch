@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Canonical shared instructions for Codex and Claude Code in this repository. Keep this file concise, practical, and synchronized with the live handoff in `docs/agent-task.md`.
+Canonical shared instructions for coding agents in this repository. Keep this file concise and practical.
 
 ## Project Overview
 
@@ -38,7 +38,7 @@ Install/setup:
 Generated outputs (added 2026-11-20):
 
 - Every script takes `data/`, `figures/` and `logs/` from `src/comb_paths.wl` (`$CombDataDir`, `$CombFiguresDir`, `$CombLogsDir`) or, in PowerShell launchers, `src/comb_paths.ps1`. These resolve to the main checkout (the parent of `git rev-parse --git-common-dir`) even when the script runs from a worktree. Code still runs from the checkout the script lives in. `COMB_ROOT` overrides the output root.
-- Safety net: `src/sync_worktree_data.ps1` copies untracked/ignored files from every worktree's `data/`, `figures/`, `logs/` into the main checkout. It never overwrites or deletes; a file that differs from main's goes to `<dir>\_from_worktrees\<worktree>\` and is reported as a conflict. `-DryRun` previews. The committed `.claude/settings.json` runs it on Claude Code SessionStart and SessionEnd; Codex has no hook, so run it by hand after Codex runs.
+- Safety net: `src/sync_worktree_data.ps1` copies untracked/ignored files from every worktree's `data/`, `figures/`, `logs/` into the main checkout. It never overwrites or deletes; a file that differs from main's goes to `<dir>\_from_worktrees\<worktree>\` and is reported as a conflict. `-DryRun` previews. The committed `.claude/settings.json` runs it on Claude Code SessionStart and SessionEnd.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File src\sync_worktree_data.ps1 -DryRun
@@ -160,7 +160,6 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - The worktree may already contain user or agent changes. Do not revert changes you did not make.
 - Inspect `git status --short` and relevant diffs before modifying files, especially when resuming prior work.
 - Do not commit, push, branch, or clean generated files unless the user asks.
-- If asked to create a branch, use the `codex/` prefix by default unless the user requests another name.
 - Any commit or PR whose work wrote outputs must say so: list the files (or globs) written under the main checkout's `data/`, `figures/`, `logs/`, and say they are not in the commit. Figures and logs that should be tracked are committed from the main checkout.
 
 ## Handoff Protocol
@@ -169,6 +168,4 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - `CLAUDE.md` should import this file with `@AGENTS.md` and contain only Claude Code-specific notes.
 - `docs/agent-task.md` is the live handoff. Update it when the goal, status, decisions, likely files, or validation commands change.
 - At the start of a resumed session, read `docs/agent-task.md`, inspect git status/diff, then continue from the recorded state.
-- **Every commit that ships meaningful work MUST include corresponding updates to `docs/agent-task.md`** (status, decisions, files touched, next steps) and to `AGENTS.md` (commands list, coding rules, project overview) when applicable. Stage and commit the handoff updates in the same commit as the work they describe — never as a follow-up. A commit that updates code without refreshing the handoff is treated as incomplete by either agent.
-- At the end of substantial work, also re-confirm `docs/agent-task.md` reflects exactly what changed, what was checked, and what remains.
 
