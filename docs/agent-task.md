@@ -1,5 +1,38 @@
 # Current Agent Task
 
+## Worktree and Codex cleanup (2026-11-20, Ryzen PC, after #14)
+
+Done:
+- Codex worktree `C:\Users\darth\.codex\worktrees\a514\CombResearch`
+  (branch `codex-docs-code-cleanup`) audited, then removed with its branch:
+  - Its one commit (3f806a9) is patch-identical to PR #11 on main.
+  - Its 6 modified `logs/mh_p4q5_*` files were a failed relaunch (empty `.log`,
+    `.err` = WolframScript config-file error) that truncated the real logs;
+    main's tracked logs are the real 2026-05-15 production run.
+  - Its 3 `data/p4q5_mh_*.wxf` (2026-05-16) were broken runs: facet and
+    unlabeled have acceptRate 0 and a constant numV step over 200k
+    iterations (2 s wall); vertex has no sampler commit and L1 = 2.0 vs
+    truth (disjoint support). Main's p4q5 MH WXFs are the validated
+    2026-05-15 chains (sampler_mh.wl@7143104). The temporary copies in
+    `data/_from_worktrees/` and `logs/_from_worktrees/` were deleted.
+  - Codex app state in `~/.codex` (sessions, memories, config) was left
+    alone; its memory and goal stores hold nothing about this project.
+- Removed the merged Claude worktrees `crazy-dhawan-f7fd60` and
+  `determined-morse-e55578` (both clean; sync dry run: nothing missing in
+  main). An empty `determined-morse-e55578` folder may remain while a
+  process holds it; delete it later.
+- Deleted 8 stale local branches; each was in main or identical to the
+  head of its merged PR (#1, #7, #8, #10, #12, #13).
+- Committed the May Phase 4c outputs that were never tracked:
+  `figures/is_vs_mh/*` (7) and `logs/mh_q10_*.log` (18). Deleted
+  `data/q10_pilot_archive/p4q10_mh_unlabeled_smoke1k_DELETE_ME.wxf`.
+- `.gitignore`: `data/**/*.wxf`, `data/**/*.wxf.bak`, `data/**/*.csv`, so data
+  in subfolders (`data/q10_pilot_archive/`, backups) is ignored too.
+
+Not done: deleting the merged remote branches on GitHub
+(`claude/crazy-dhawan-f7fd60`, `claude/ecgrav-new-samplers-testing-b1ea3c`,
+`claude/github-pull-review-a3e9d6`).
+
 ## One shared output location (2026-11-20, Ryzen PC)
 
 **Goal:** all generated data/figures/logs live once, in the main checkout
