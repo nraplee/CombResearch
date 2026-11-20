@@ -11,18 +11,19 @@
      (ESS ~ 25). MH is the trusted side here.
 
    Reads:
-     C:/CombResearch/data/p{p}q10_is_{target}_numv_hist.wxf  (IS hists)
-     C:/CombResearch/data/p{p}q10_mh_{target}.wxf            (MH chains)
+     data/p{p}q10_is_{target}_numv_hist.wxf  (IS hists)
+     data/p{p}q10_mh_{target}.wxf            (MH chains)
 
    Writes:
-     C:/CombResearch/data/q10_is_vs_mh_summary.wxf  (table of L1s, ESS)
+     data/q10_is_vs_mh_summary.wxf  (table of L1s, ESS)
 
    Env:
      COMB_CMP_PS       = "2,3,4"                 (default)
      COMB_CMP_TARGETS  = "vertex,unlabeled,facet" (default)
 *)
 
-dataDir = "C:/CombResearch/data";
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 parseEnvList[s_String] := StringTrim /@ StringSplit[StringTrim[s], ","];
 

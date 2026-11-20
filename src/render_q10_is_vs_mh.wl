@@ -8,8 +8,9 @@
      figures/is_vs_mh/q10_is_vs_mh_grid.pdf
 *)
 
-dataDir = "C:/CombResearch/data";
-figDir  = "C:/CombResearch/figures/is_vs_mh";
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir = $CombDataDir;
+figDir  = FileNameJoin[{$CombFiguresDir, "is_vs_mh"}];
 If[!DirectoryQ[figDir], CreateDirectory[figDir]];
 
 isFile[p_, t_] := FileNameJoin[{dataDir,

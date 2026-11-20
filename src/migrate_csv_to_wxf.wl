@@ -10,7 +10,8 @@ qVal = 10;
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
-dataDir = FileNameJoin[{projectRoot, "data"}];
+Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 expectedHeaders = {"numV", "aut", "autF", "connected",
   "num1VConnComps", "num2VConnComps", "largestCompRatio",

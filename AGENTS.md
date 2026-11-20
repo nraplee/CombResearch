@@ -6,14 +6,14 @@ Canonical shared instructions for Codex and Claude Code in this repository. Keep
 
 TODO: Keep this paragraph current as the paper evolves.
 
-Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validate against truth for all 27 cell×target combinations at L1 < 0.05. McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Phase 5a (2026-09-26): ECGrav 1.17.0 validated against the truth grid. Its exact counters match our truth at every n on all 9 cells (confirming the (4,5) iso count 5,532), and its exact samplers (`RandomUniformUnlabeled…`, `RandomUniformFacetLabeled…`, `RandomVertexLabeled…`) pass all 27 cell×target combinations. `RandomPureSimplicialComplexMCMC` passes L1 but returns correlated samples for unlabeled. 2026-11-18: every script now loads one pinned ECGrav, upstream main @ 474b5c2 (`ECGrav/ECGrav-1.18.0-474b5c2/`); this pin is not yet re-validated against the truth grid. Next: on the Ryzen PC, follow the "Ryzen PC setup checklist" in `docs/agent-task.md` (global paclet install, then re-validate the pin), then q=10 with the exact samplers as reference, then manuscript integration.
+Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validate against truth for all 27 cell×target combinations at L1 < 0.05. McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Phase 5a (2026-09-26): ECGrav 1.17.0 validated against the truth grid. Its exact counters match our truth at every n on all 9 cells (confirming the (4,5) iso count 5,532), and its exact samplers (`RandomUniformUnlabeled…`, `RandomUniformFacetLabeled…`, `RandomVertexLabeled…`) pass all 27 cell×target combinations. `RandomPureSimplicialComplexMCMC` passes L1 but returns correlated samples for unlabeled. 2026-11-18: every script now loads one pinned ECGrav, upstream main @ 474b5c2 (`ECGrav/ECGrav-1.18.0-474b5c2/`); this pin is not yet re-validated against the truth grid. 2026-11-20: all generated outputs now live once in the main checkout (`src/comb_paths.wl`); worktrees no longer keep their own data. Next: on the Ryzen PC, follow the "Ryzen PC setup checklist" in `docs/agent-task.md` (global paclet install, then re-validate the pin), then q=10 with the exact samplers as reference, then manuscript integration.
 
 ## Repo Layout
 
 - `src/` - Wolfram `.wl` scripts for compute, rendering, enumeration, MH sampling, probes, and checks.
 - `src/reference/` - Figure 2 reference notebooks; do not edit unless explicitly asked.
 - `ECGrav/` - vendored ECGrav paclet sources/snapshots, not a separate app.
-- `data/` - generated CSV/WXF compute outputs; generally do not edit by hand.
+- `data/` - generated CSV/WXF compute outputs; generally do not edit by hand. One shared copy lives in the main checkout (`C:\CombResearch\data` on the Ryzen PC), never in a worktree; see "Generated outputs" below.
 - `figures/` - generated manuscript panels, previews, and review PDFs.
 - `docs/` - consolidated technical docs, manuscript draft, and live handoff.
 - `logs/` - generated run logs.
@@ -34,6 +34,15 @@ Install/setup:
 - Every script loads ECGrav through `src/load_ecgrav.wl`, which `Get`s a vendored snapshot; the globally installed paclet is never used. Default: `ECGrav/ECGrav-1.18.0-474b5c2/` (upstream github.com/kassabetre/ECGrav main @ 474b5c2, see its `SOURCE_COMMIT.txt`). `COMB_ECGRAV_VERSION=1.17.0` reproduces Phase 5a, `=1.0.0` Phase 4. The old `ECGrav-main` snapshot (actually upstream v1.1.0) is archived at `archive/ECGrav-v1.1.0-snapshot/`.
 - To update ECGrav: vendor `Kernel/`, `PacletInfo.wl`, `LICENSE` from upstream into `ECGrav/ECGrav-<version>-<shortsha>/` with a `SOURCE_COMMIT.txt`, change the default in `load_ecgrav.wl` and `install_ecgrav_global.wl`, rerun the global install, and re-validate before using it in figures.
 - Do not add or install dependencies without asking first.
+
+Generated outputs (added 2026-11-20):
+
+- Every script takes `data/`, `figures/` and `logs/` from `src/comb_paths.wl` (`$CombDataDir`, `$CombFiguresDir`, `$CombLogsDir`) or, in PowerShell launchers, `src/comb_paths.ps1`. These resolve to the main checkout (the parent of `git rev-parse --git-common-dir`) even when the script runs from a worktree. Code still runs from the checkout the script lives in. `COMB_ROOT` overrides the output root.
+- Safety net: `src/sync_worktree_data.ps1` copies untracked/ignored files from every worktree's `data/`, `figures/`, `logs/` into the main checkout. It never overwrites or deletes; a file that differs from main's goes to `<dir>\_from_worktrees\<worktree>\` and is reported as a conflict. `-DryRun` previews. The committed `.claude/settings.json` runs it on Claude Code SessionStart and SessionEnd; Codex has no hook, so run it by hand after Codex runs.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File src\sync_worktree_data.ps1 -DryRun
+```
 
 Main compute/render commands:
 
@@ -135,6 +144,7 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - Vertex MH WXFs copied from the `adoring-hoover-18d09b` worktree predate the vertex fix (L1 ~0.75). Rerun before use.
 - MH sampler vertex target uses `π_V(X) ∝ 1/C(N, numV(X))` (2026-05-14 fix). The earlier `π_V ∝ 1` was wrong by a `C(N, k)` factor and produced L1 = 0.85 vs truth at (3,5). Do NOT revert without re-deriving — see in-code comment at the vertex Switch branch of `mhStep` in `src/sampler_mh.wl`.
 - At p=4 the cheap pipeline (`streamingEnumeratePure`) OOMs at (4,5) even sequential. Use `streamingEnumeratePureMcKay` for p=4 q≥5. Cheap is still fine at (4,4) and below.
+- Read and write generated files only through `comb_paths.wl` / `comb_paths.ps1`. Never hardcode `C:/CombResearch/...`, never build output paths from the script's own checkout (`projectRoot`/`$PSScriptRoot`), and never use cwd-relative `"data/..."`. Large outputs must not be committed through git; they live only in the main checkout.
 - Keep changes narrowly scoped. Do not reformat unrelated files.
 - Do not add dependencies without asking first.
 
@@ -151,6 +161,7 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - Inspect `git status --short` and relevant diffs before modifying files, especially when resuming prior work.
 - Do not commit, push, branch, or clean generated files unless the user asks.
 - If asked to create a branch, use the `codex/` prefix by default unless the user requests another name.
+- Any commit or PR whose work wrote outputs must say so: list the files (or globs) written under the main checkout's `data/`, `figures/`, `logs/`, and say they are not in the commit. Figures and logs that should be tracked are committed from the main checkout.
 
 ## Handoff Protocol
 

@@ -23,4 +23,5 @@ Thumbs.db
 .idea/
 
 # --- Claude Code local state (per-machine, not for sharing) ---
-.claude/
+.claude/*
+!.claude/settings.json

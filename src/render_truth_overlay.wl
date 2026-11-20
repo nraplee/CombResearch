@@ -24,8 +24,9 @@
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
-dataDir             = FileNameJoin[{projectRoot, "data"}];
-figuresDir          = FileNameJoin[{projectRoot, "figures"}];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir             = $CombDataDir;
+figuresDir          = $CombFiguresDir;
 stackedPreviewsDir  = FileNameJoin[{figuresDir, "stacked_previews"}];
 manuscriptPanelsDir = FileNameJoin[{figuresDir, "manuscript_panels"}];
 combinedDir         = FileNameJoin[{figuresDir, "combined"}];

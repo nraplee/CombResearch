@@ -19,8 +19,9 @@
 # Stop early: Get-Process wolfram | Stop-Process
 
 $ErrorActionPreference = "Stop"
-$root    = Split-Path -Parent $PSScriptRoot
-$srcDir  = Join-Path $root "src"
+. (Join-Path $PSScriptRoot "comb_paths.ps1")
+$root    = $CombRoot   # outputs: main checkout (comb_paths.ps1)
+$srcDir  = $PSScriptRoot   # code: this checkout
 $logsDir = Join-Path $root "logs"
 if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-Null }
 

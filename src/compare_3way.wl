@@ -15,7 +15,8 @@
      COMB_3W_TARGETS = "vertex,unlabeled,facet" (default)
 *)
 
-dataDir = "C:/CombResearch/data";
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 parseEnvCells[s_String] := Module[{pairs},
   pairs = StringSplit[StringTrim[s], ";"];

@@ -37,11 +37,12 @@ runTag = If[ValueQ[runTagOverride], runTagOverride,
 runSeedOffset = If[runTag === "", 0,
   Mod[Hash[runTag, "MD5"], 10^7]];
 
-(* Output goes to projectRoot/data/  (projectRoot = parent of src/). *)
+(* Output goes to $CombDataDir (main checkout data/, see comb_paths.wl). *)
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
-outputDir = FileNameJoin[{projectRoot, "data"}];
+Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
 (* Optional ParallelMap over the per-sample stats step.

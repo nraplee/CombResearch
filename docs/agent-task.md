@@ -1,5 +1,88 @@
 # Current Agent Task
 
+## One shared output location (2026-11-20, Ryzen PC)
+
+**Goal:** all generated data/figures/logs live once, in the main checkout
+(`C:\CombResearch`), whichever worktree runs the script.
+
+Why: `data/*.wxf` is gitignored (~9 GB, too big for git), and about half the
+scripts built paths from their own checkout. On the Ryzen the truth grid and
+all 59 Phase 5a ECGrav sampler WXFs existed only in the
+`ecstatic-wiles-75960d` worktree; the main checkout had only 2 of 9 truth
+files.
+
+Done:
+- Main checkout fast-forwarded 955238d -> 83a4b60. Its staged figure renames
+  were identical to the ones already on main.
+- Copied the 123 data files from the `ecstatic-wiles-75960d` worktree into
+  `C:\CombResearch\data` (byte-verified). Main now has all 9 truth cells +
+  `p4q4_truth_mckay` and all Phase 5a `*_ecg*` WXFs. The older
+  `p3q5_mh_vertex.wxf` (May 17) is kept as `p3q5_mh_vertex.2026-05-17.wxf.bak`;
+  the Sep 25 one replaced it. Other Claude worktrees had nothing missing.
+- The Codex worktree's different May 16 `p4q5_mh_{facet,unlabeled,vertex}.wxf`
+  and its modified `mh_p4q5_*` logs are in
+  `C:\CombResearch\{data,logs}\_from_worktrees\CombResearch\`. Codex cleanup is
+  the next task.
+- New `src/comb_paths.wl` / `src/comb_paths.ps1`: output root = parent of
+  `git rev-parse --git-common-dir` (the main checkout), `COMB_ROOT` overrides.
+  All 24 scripts and 8 launchers that touch `data/`, `figures/` or `logs/`
+  now use `$CombDataDir` / `$CombFiguresDir` / `$CombLogsDir`. Hardcoded
+  `C:/CombResearch`, checkout-relative `projectRoot/data` and cwd-relative
+  `"data/..."` paths are gone. Launchers run code from `$PSScriptRoot`
+  (`run_q10_mh_overnight.ps1` no longer points at the crazy-dhawan worktree).
+- New `src/sync_worktree_data.ps1` (safety net, never overwrites or deletes;
+  differing files go to `<dir>\_from_worktrees\<worktree>\`). Runs from the
+  committed `.claude/settings.json` on Claude Code SessionStart and
+  SessionEnd; `.gitignore` now ignores `.claude/*` except `settings.json`.
+- `AGENTS.md`: "Generated outputs" section, coding rule, and a git rule that
+  commits/PRs must list outputs written to the main checkout.
+- `src/pure_simplicial_figures.nb` loads `comb_paths.wl` when it sits in
+  `src/` (falls back to `../data/`, then the notebook folder for the
+  zip-alongside-CSVs layout).
+- Other machines / fresh clones: `comb_paths` creates missing
+  `data/`, `figures/`, `logs/`, and handles git < 2.31 (relative
+  `--git-common-dir`). `validate_counts_vs_truth.wl` and
+  `validate_mh_vs_truth.wl` now end with a list of missing input files and
+  the command that generates them, instead of a summary that looked like a
+  pass; `validate_mh_vs_truth.wl` no longer overwrites its summary WXF when
+  nothing was validated.
+
+Checked 2026-11-20 on the Ryzen, running from the worktree:
+- `comb_paths.wl` resolves to `C:\CombResearch` (sees a main-only probe
+  file), is idempotent, and honors `COMB_ROOT`; `comb_paths.ps1` agrees.
+- All 25 edited `.wl` files parse; all 10 `src/*.ps1` files parse.
+- `sync_worktree_data.ps1 -DryRun` found exactly the 3 Codex conflicts and
+  119 files already in main; `-Quiet` (the hook command) is silent and exits 0.
+- `COMB_VAL_CELLS="2,4;3,4;4,4" validate_counts_vs_truth.wl`: all match on
+  ECGrav 1.18.0-474b5c2.
+- `COMB_VAL_CELLS="3,5" COMB_VAL_SOURCE=ecgexact validate_mh_vs_truth.wl`:
+  PASS, L1 0.005-0.006, reading the Phase 5a (1.17.0) samples from main. It
+  overwrote main's 27-cell `validation_ecgexact_summary.wxf`; restored from
+  the worktree's identical Sep 26 copy.
+- Fresh standalone clone of this branch with no data (only the 4 tracked
+  `.mx` files), where `comb_paths` resolves to the clone itself:
+  - With no truth, both validators now name the missing files and the
+    generating command, and write no summary WXF.
+  - `COMB_ROOT` set to an empty folder: `data/`, `figures/` and `logs/` are created.
+  - Generated from scratch: `enumerate_truth` (2,4),(3,4) (gate 66 ok),
+    `validate_counts` all match, `run_ecgrav_samplers` exact N=20000,
+    `validate_mh_vs_truth` ecgexact 6/6 PASS (L1 <= 0.017), `run_mh_chains`
+    (2,4), `render_truth_overlay` (60 panels, 33 previews into the clone's
+    `figures/`), `test_streaming_mckay` gates pass.
+  - MH (2,4) at a cut-down 20k iterations failed unlabeled (L1 0.060); rerun
+    at the default 200k it passes (L1 0.0167). It was chain length, not paths.
+- `pure_simplicial_figures.nb` setup cell, run as if opened from the
+  worktree, resolves `dataDir` to `C:\CombResearch\data`.
+- Not checked: the hook firing in a new session (needs a new session), the
+  q=10 render scripts end to end, and the laptop.
+
+Outputs written to the main checkout by this work (not in the commit): the
+data copies above, `data/_from_worktrees/`, `logs/_from_worktrees/`.
+
+Still untracked in the main checkout from May (Phase 4c runs): 7
+`figures/is_vs_mh/*`, 18 `logs/mh_q10_*.log`, `data/q10_pilot_archive/`
+(includes a `*_DELETE_ME.wxf` smoke file). Commit the figures/logs from main.
+
 ## ECGrav dist consolidation (2026-11-18)
 
 **Goal:** every script uses one ECGrav distribution.
@@ -90,7 +173,8 @@ Tick items off in this file and commit the results (handoff protocol).
    the global paclet from step 3.
 5. **Smoke test.** `wolframscript -file src\test_streaming_mckay.wl`. Expect
    `ECGrav loaded: 1.18.0-474b5c2` and all gates passing.
-6. **Truth files present.** `data\p{p}q{q}_truth.wxf` for all 9 cells:
+6. **Truth files present.** (2026-11-20: done; all 9 are in
+   `C:\CombResearch\data`.) `data\p{p}q{q}_truth.wxf` for all 9 cells:
    (2,4) (2,5) (2,6) (2,7) (3,4) (3,5) (3,6) (4,4) (4,5). `p4q5_truth.wxf`
    is a copy of `p4q5_truth_mckay.wxf`. If any is missing, stop: the
    (4,5) re-enumeration took 17 h.

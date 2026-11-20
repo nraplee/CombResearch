@@ -3,7 +3,7 @@
 # Each process uses its own ParallelMap (sub-kernels) for the per-sample
 # stats step, and writes data and logs to the standard layout.
 #
-# Usage from C:\CombResearch\:
+# Usage from the repo root:
 #   powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
 # Optional: pass a sample size override (default 500000) as $env:N
 #   $env:N = 100000; powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
@@ -13,8 +13,9 @@
 # COMB_N via `Environment["COMB_N"]` and falls back to 500000 if unset.
 
 $ErrorActionPreference = "Stop"
-$root    = Split-Path -Parent $PSScriptRoot   # parent of src/
-$srcDir  = Join-Path $root "src"
+. (Join-Path $PSScriptRoot "comb_paths.ps1")
+$root    = $CombRoot   # outputs: main checkout (comb_paths.ps1)
+$srcDir  = $PSScriptRoot   # code: this checkout
 $logsDir = Join-Path $root "logs"
 if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-Null }
 

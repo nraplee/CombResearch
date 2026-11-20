@@ -8,8 +8,9 @@
      figures/is_vs_mh/q10_warm_vs_prod.pdf
 *)
 
-dataDir = "C:/CombResearch/data";
-figDir  = "C:/CombResearch/figures/is_vs_mh";
+Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+dataDir = $CombDataDir;
+figDir  = FileNameJoin[{$CombFiguresDir, "is_vs_mh"}];
 If[!DirectoryQ[figDir], CreateDirectory[figDir]];
 
 cells = {{3, 10, "unlabeled", 14}, {3, 10, "facet", 14},

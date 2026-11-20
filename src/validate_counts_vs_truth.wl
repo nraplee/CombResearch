@@ -21,7 +21,8 @@
 scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
-dataDir = FileNameJoin[{projectRoot, "data"}];
+Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+dataDir = $CombDataDir;
 
 Get[FileNameJoin[{scriptDir, "load_ecgrav.wl"}]];
 
@@ -48,10 +49,13 @@ truthCountsByN[truth_Association] := Module[{q = truth["q"], cs},
       "F" -> Total[(q! / #["autF"]) & /@ #],
       "V" -> Total[(#["nV"]! / #["aut"]) & /@ #]|> &]];
 
+missingInputs = {};
+
 checkCell[p_, q_] := Module[{tf, truth, byN, ns, rows, allOK},
   tf = truthFile[p, q];
   If[!FileExistsQ[tf],
     Print["  *** skip: no truth at ", FileNameTake[tf], " ***"];
+    AppendTo[missingInputs, tf];
     Return[$Failed]];
   truth = Import[tf, "WXF"];
   byN = truthCountsByN[truth];
@@ -102,6 +106,10 @@ Do[
   {r, results}];
 Print["Total: ", Length[results], "  Mismatches: ",
   Count[results, r_ /; !r["ok"]]];
+If[missingInputs =!= {},
+  Print["*** ", Length[missingInputs], " cell(s) NOT CHECKED: missing in ", dataDir, ":"];
+  Scan[Print["      ", FileNameTake[#]] &, missingInputs];
+  Print["    Generate with: COMB_TRUTH_CELLS=\"p,q;...\" wolframscript -file src/enumerate_truth.wl"]];
 
 Print[""];
 Print["q=10 totals (no truth; reference only):"];
