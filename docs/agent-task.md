@@ -59,8 +59,22 @@ Checked 2026-11-20 on the Ryzen, running from the worktree:
   PASS, L1 0.005-0.006, reading the Phase 5a (1.17.0) samples from main. It
   overwrote main's 27-cell `validation_ecgexact_summary.wxf`; restored from
   the worktree's identical Sep 26 copy.
-- Not checked: the hook firing in a new session (needs a new session), and
-  any render script end to end.
+- Fresh standalone clone of this branch with no data (only the 4 tracked
+  `.mx` files), where `comb_paths` resolves to the clone itself:
+  - With no truth, both validators now name the missing files and the
+    generating command, and write no summary WXF.
+  - `COMB_ROOT` set to an empty folder: `data/`, `figures/` and `logs/` are created.
+  - Generated from scratch: `enumerate_truth` (2,4),(3,4) (gate 66 ok),
+    `validate_counts` all match, `run_ecgrav_samplers` exact N=20000,
+    `validate_mh_vs_truth` ecgexact 6/6 PASS (L1 <= 0.017), `run_mh_chains`
+    (2,4), `render_truth_overlay` (60 panels, 33 previews into the clone's
+    `figures/`), `test_streaming_mckay` gates pass.
+  - MH (2,4) at a cut-down 20k iterations failed unlabeled (L1 0.060); rerun
+    at the default 200k it passes (L1 0.0167). It was chain length, not paths.
+- `pure_simplicial_figures.nb` setup cell, run as if opened from the
+  worktree, resolves `dataDir` to `C:\CombResearch\data`.
+- Not checked: the hook firing in a new session (needs a new session), the
+  q=10 render scripts end to end, and the laptop.
 
 Outputs written to the main checkout by this work (not in the commit): the
 data copies above, `data/_from_worktrees/`, `logs/_from_worktrees/`.
