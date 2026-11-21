@@ -21,7 +21,7 @@ randomSeed = 123456;
    constants across samples (same numV ⇒ same denominators), so the
    ESS heavy-tail at q=10 disappears. Bars produced are CONDITIONAL
    probabilities π(· | numV = nnFixed), not the marginal.
-   The 3-arg form is absent from ECGrav 1.0.0 (COMB_ECGRAV_VERSION=1.0.0). *)
+   The 3-arg form is absent from ECGrav 1.0.0. *)
 nnFixed = If[ValueQ[nnFixedOverride], nnFixedOverride,
   With[{e = Environment["COMB_NN_FIXED"]},
     If[StringQ[e] && StringLength[e] > 0, ToExpression[e], None]]];

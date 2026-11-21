@@ -34,8 +34,8 @@
      COMB_ECG_SEED      default 24680
      COMB_ECG_TRACE_STEPS  mcmc trace length in MH proposals
                         (default 200000, matching run_mh_chains.wl numIter)
-     COMB_ECGRAV_VERSION  see load_ecgrav.wl (default 1.18.0-474b5c2;
-                          1.17.0 reproduces the Phase 5a campaign)
+     COMB_ECGRAV_DIR      see load_ecgrav.wl (default: shared upstream clone;
+                          Phase 5a ran ECGrav 1.17.0, upstream d15739c)
      COMB_FORCE=1       overwrite existing WXF
 *)
 

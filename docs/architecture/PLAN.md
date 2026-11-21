@@ -62,5 +62,10 @@ truth, q=10 IS and MH stay. Next real work: Phase 0 of the plan.
 Built and checked: provenance.md, tools/dev/make_check_root.wl, and
 tests/golden (golden/derived, 11 sections, all PASS). Provenance found the stale
 vertex MH chains and the missing MH cells, so the "MH stays" line above is
-corrected in implementation-plan.md. Left to do: the `pre-restructure` tag,
-then commit and PR.
+corrected in implementation-plan.md. Merged as PR #17; tag
+`pre-restructure` on 48968e1.
+
+## Phase 1 (2026-11-20)
+Shared upstream clone + update_ecgrav.wl, new load_ecgrav.wl with symbol
+check, tests/ecgrav_regression.wl (passed on 474b5c2), vendored snapshots
+removed. Next: Phase 2.

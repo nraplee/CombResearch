@@ -1,5 +1,27 @@
 # Current Agent Task
 
+## Phase 1: latest upstream ECGrav (2026-11-20, Ryzen, branch `claude/phase1-ecgrav-upstream`)
+
+- Shared clone `C:\CombResearch\ECGrav-upstream` (gitignored), made and
+  updated by `tools/dev/update_ecgrav.wl`; currently upstream main 474b5c2,
+  the same code as the old vendored 1.18.0 snapshot.
+- `src/load_ecgrav.wl` loads `COMB_ECGRAV_DIR` or the shared clone, sets
+  `$CombECGravCommit`/`$CombECGravVersion`, checks the 13 ECGrav functions
+  we call, and warns until the commit passes the regression.
+- `tests/ecgrav_regression.wl`: counters, aut/autF (all 10,882 classes) and
+  exact samplers (N=20k) vs the 9-cell truth grid, plus an MH smoke test at
+  (2,4). **Passed on 474b5c2** (exact L1 0.007-0.022; MH 0.014-0.045), so the
+  1.18 pin question is closed. The record is in `C:\CombResearch\results\`.
+- Vendored `ECGrav/` (1.0.0, 1.17.0, 1.18.0-474b5c2, BuildingAndInstalling
+  Paclets.nb) removed; they are in history at tag `pre-restructure`.
+  `COMB_ECGRAV_VERSION` is gone. `install_ecgrav_global.wl` installs the
+  shared clone, for notebooks only.
+- `$CombResultsDir` (`results/`) added to `comb_paths.wl`/`.ps1` and the
+  sync script.
+- The "Ryzen PC setup checklist" below is superseded wherever it talks about
+  vendored snapshots or re-validating the pin: run `update_ecgrav.wl`, then
+  the regression.
+
 ## Phase 0 safety net (2026-11-20, Ryzen, branch `claude/codebase-update-plan-fac1d9`)
 
 Done (uncommitted):
