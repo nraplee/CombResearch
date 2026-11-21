@@ -26,6 +26,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 dataDir             = $CombDataDir;
 figuresDir          = $CombFiguresDir;
 stackedPreviewsDir  = FileNameJoin[{figuresDir, "stacked_previews"}];
@@ -273,14 +274,7 @@ Print["dataDir           = ", dataDir];
 Print["reachableCells    = ", reachableCells];
 
 (* Optional cell restriction (for smoke test) *)
-parseEnvCells[s_String] := Module[{pairs},
-  pairs = StringSplit[StringTrim[s], ";"];
-  pairs = StringSplit[#, ","] & /@ pairs;
-  ToExpression /@ # & /@ pairs];
-cellRestrict = If[StringQ[Environment["COMB_TRUTH_CELLS"]] &&
-    StringLength[Environment["COMB_TRUTH_CELLS"]] > 0,
-  parseEnvCells[Environment["COMB_TRUTH_CELLS"]],
-  All];
+cellRestrict = combSetting["COMB_TRUTH_CELLS", All, "cells"];
 Print["cellRestrict      = ", cellRestrict];
 
 allCombinedPages = {};

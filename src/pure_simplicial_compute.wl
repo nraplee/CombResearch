@@ -7,6 +7,7 @@
    Independent of histograms_handoff_v2.nb / histograms_paper_figures.nb. *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 
 (* ===== Parameters ===== *)
 qVal = 10;
@@ -23,8 +24,7 @@ randomSeed = 123456;
    probabilities π(· | numV = nnFixed), not the marginal.
    The 3-arg form is absent from ECGrav 1.0.0. *)
 nnFixed = If[ValueQ[nnFixedOverride], nnFixedOverride,
-  With[{e = Environment["COMB_NN_FIXED"]},
-    If[StringQ[e] && StringLength[e] > 0, ToExpression[e], None]]];
+  combSetting["COMB_NN_FIXED", None, "expr"]];
 
 (* Optional run tag. When set (e.g. via env var COMB_RUNTAG="batch2") the output
    filename becomes p{p}q10_n{N}_{runTag}_samples.csv AND the per-chunk seed is
@@ -32,8 +32,7 @@ nnFixed = If[ValueQ[nnFixedOverride], nnFixedOverride,
    fully independent samples that can be concatenated with a prior run via
    concat_samples.wl, without colliding on seeds. *)
 runTag = If[ValueQ[runTagOverride], runTagOverride,
-  With[{envTag = Environment["COMB_RUNTAG"]},
-    If[StringQ[envTag] && StringLength[envTag] > 0, envTag, ""]]];
+  combSetting["COMB_RUNTAG", ""]];
 runSeedOffset = If[runTag === "", 0,
   Mod[Hash[runTag, "MD5"], 10^7]];
 

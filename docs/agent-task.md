@@ -1,5 +1,61 @@
 # Current Agent Task
 
+## Phase 2c: `lib_config.wl` + `config/cells.wl` (2026-11-20, Ryzen, branch `claude/phase-2c`)
+
+Last in Phase 2: per-output manifests + `tools/dev/backfill_manifest.wl`
+(2d). Then Phase 3 (`run.wl`), which reads the run plans below.
+
+- `src/lib_config.wl`: `combSetting[name, default, kind]` returns the
+  non-empty env var, else the value in the profile `COMB_PROFILE` names,
+  else the script default. With no `COMB_PROFILE` nothing changes
+  (guarantee 3). Kinds reproduce the old inline parsers: `string`, `expr`,
+  `cells`, `list`, `intList`, `flag` (`COMB_FORCE`), `notFalse`
+  (`COMB_TRUTH_PARALLEL`), `notZero` (`COMB_IS_PAR`). Every resolved setting
+  is recorded in `$CombSettings` with its source (`combPrintSettings[]`); an
+  env var overriding a profile value prints a warning. An unknown profile or
+  kind aborts.
+- `config/cells.wl`: profiles `paper` and `quick`. Each has flat
+  `"settings"` (knob -> value, for single-invocation scripts) and run plans
+  for `run.wl`: `truthRuns` (pipeline/parallel per cell group: cheap for
+  the 7 small cells, McKay sequential for (4,4) (4,5)), `isBatches`
+  (`{runTag, N, chunk}` per p; batch3 has no p=2), `mhChains` (incl. the
+  (4,5) and q=10 per-target fan-out and the 4 warm chains), `ecgravRuns`.
+  `paper` values come from the launchers and `provenance.md`. `quick` is a
+  few-minute (2,4)+(3,4) profile; its outputs share paper names, so only
+  in a fresh clone or scratch root.
+- Switched to `combSetting` (knob names unchanged): `compare_3way`,
+  `compare_is_mh_q10`, `compare_samplers_efficiency`, `enumerate_truth`,
+  `precompute_is_histograms_q10`, `pure_simplicial_compute` (`*Override`
+  still wins), `render_truth_overlay`, `run_ecgrav_samplers`,
+  `run_is_at_truth_cells`, `run_mh_chains`, `run_p{2,3,4}`,
+  `validate_counts_vs_truth`, `validate_mh_vs_truth`,
+  `tests/ecgrav_regression`. Left on raw `Environment`: `COMB_ROOT`,
+  `COMB_ECGRAV_DIR` (read before lib_config loads) and the `COMB_TEST_*`
+  knobs of `test_streaming*.wl`. The `.ps1` launchers are unchanged.
+- `tests/lib_config_test.wl` (new, read-only): 20 kind cases against copies
+  of the old parsers, unset/empty fall-through for every kind, precedence and
+  sources through child kernels with `COMB_PROFILE=quick`, unknown
+  profile/kind abort, and the shape of both profiles.
+- Checks run (all pass; scratch `COMB_ROOT` reused from 2b,
+  `COMB_ECGRAV_DIR` = shared clone; nothing written to the store):
+  - `tests/lib_config_test.wl`, `tests/lib_names_test.wl`; `SyntaxQ` on
+    all 19 changed `.wl` files.
+  - The 20 Phase 2b smoke steps rerun with no profile; the printed
+    settings in each log are identical to the 2b logs. The only differences
+    are the git sha in `samplerVersion`/`enumeratorVersion`, timings, two
+    steps that skip because their 2b output exists, and
+    `validate_mh_vs_truth` ecgexact failing (2,4), because the 2b
+    `run_ecgrav_samplers` step had replaced the scratch (2,4) ecgexact
+    files with N=400 samples (data, not code).
+  - `COMB_PROFILE=quick`: `validate_mh_vs_truth` resolves cells
+    `{{2,4},{3,4}}` from the profile; `run_ecgrav_samplers` with
+    `COMB_ECG_N`/`COMB_ECG_CELLS` set prints the override warnings and uses
+    the env values.
+- Not done here: the quick profile end to end (needs `run.wl`, Phase 3;
+  `golden/quick` waits for it). Validation under `quick` in a scratch root
+  that holds paper data fails as expected, since it reads whatever chains
+  are there.
+
 ## Phase 2b: `lib_names.wl` (2026-11-20, Ryzen, branch `claude/phase-2b-371047`)
 
 Next in Phase 2: `lib_config.wl` + `config/cells.wl`, then manifests +

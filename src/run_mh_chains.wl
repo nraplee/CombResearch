@@ -60,15 +60,14 @@ $smokeTestSkip = True;
 Get[FileNameJoin[{scriptDir, "sampler_mh.wl"}]];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_config.wl"}]];
 
 (* ===== statsFor + exportWxfAtomic (Phase 2 shared libraries) ===== *)
 Get[FileNameJoin[{scriptDir, "lib_stats.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_io.wl"}]];
 
 (* COMB_MH_OUTDIR overrides the shared data dir. *)
-outputDir = With[{e = Environment["COMB_MH_OUTDIR"]},
-  If[StringQ[e] && StringLength[e] > 0, e,
-    $CombDataDir]];
+outputDir = combSetting["COMB_MH_OUTDIR", $CombDataDir];
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
 (* ===== Defaults ===== *)
@@ -77,42 +76,18 @@ defaultTargets = {"unlabeled", "facet", "vertex"};
 statsHeaders = $CombStatsHeaders;
 
 (* ===== Env parsing ===== *)
-parseEnvCells[s_String] := Module[{pairs},
-  pairs = StringSplit[StringTrim[s], ";"];
-  pairs = StringSplit[#, ","] & /@ pairs;
-  ToExpression /@ # & /@ pairs];
+resolvedCells = combSetting["COMB_MH_CELLS", defaultCells, "cells"];
 
-parseEnvList[s_String] := StringTrim /@ StringSplit[StringTrim[s], ","];
+resolvedTargets = combSetting["COMB_MH_TARGETS", defaultTargets, "list"];
 
-parseIntEnv[name_, default_] := With[{e = Environment[name]},
-  If[StringQ[e] && StringLength[e] > 0,
-    ToExpression[e], default]];
-
-parseStringEnv[name_, default_] := With[{e = Environment[name]},
-  If[StringQ[e] && StringLength[e] > 0, e, default]];
-
-resolvedCells = Which[
-  StringQ[Environment["COMB_MH_CELLS"]] &&
-    StringLength[Environment["COMB_MH_CELLS"]] > 0,
-    parseEnvCells[Environment["COMB_MH_CELLS"]],
-  True, defaultCells];
-
-resolvedTargets = Which[
-  StringQ[Environment["COMB_MH_TARGETS"]] &&
-    StringLength[Environment["COMB_MH_TARGETS"]] > 0,
-    parseEnvList[Environment["COMB_MH_TARGETS"]],
-  True, defaultTargets];
-
-numIterVal  = parseIntEnv["COMB_MH_NUMITER", 200000];
-burnInVal   = parseIntEnv["COMB_MH_BURNIN",   20000];
-thinVal     = parseIntEnv["COMB_MH_THIN",         5];
-seedVal     = parseIntEnv["COMB_MH_SEED",     12345];
-kernelVal   = parseStringEnv["COMB_MH_KERNEL", "global"];
-tagVal      = parseStringEnv["COMB_MH_TAG",         ""];
-initNumVVal = With[{e = Environment["COMB_MH_INITNUMV"]},
-  If[StringQ[e] && StringLength[e] > 0, ToExpression[e], Automatic]];
-forceRecompute = With[{e = Environment["COMB_FORCE"]},
-  StringQ[e] && e === "1"];
+numIterVal  = combSetting["COMB_MH_NUMITER", 200000, "expr"];
+burnInVal   = combSetting["COMB_MH_BURNIN",   20000, "expr"];
+thinVal     = combSetting["COMB_MH_THIN",         5, "expr"];
+seedVal     = combSetting["COMB_MH_SEED",     12345, "expr"];
+kernelVal   = combSetting["COMB_MH_KERNEL", "global"];
+tagVal      = combSetting["COMB_MH_TAG",         ""];
+initNumVVal = combSetting["COMB_MH_INITNUMV", Automatic, "expr"];
+forceRecompute = combSetting["COMB_FORCE", False, "flag"];
 
 (* ===== Provenance ===== *)
 samplerVersion = Module[{res, sha},

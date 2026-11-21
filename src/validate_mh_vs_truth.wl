@@ -47,6 +47,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
 defaultCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},
@@ -54,24 +55,13 @@ defaultCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},
                 {4, 4}, {4, 5}};
 defaultTargets = {"unlabeled", "facet", "vertex"};
 
-parseEnvCells[s_String] := Module[{pairs},
-  pairs = StringSplit[StringTrim[s], ";"];
-  pairs = StringSplit[#, ","] & /@ pairs;
-  ToExpression /@ # & /@ pairs];
+resolvedCells = combSetting["COMB_VAL_CELLS", defaultCells, "cells"];
 
-parseEnvList[s_String] := StringTrim /@ StringSplit[StringTrim[s], ","];
+resolvedTargets = combSetting["COMB_VAL_TARGETS", defaultTargets, "list"];
 
-resolvedCells = With[{e = Environment["COMB_VAL_CELLS"]},
-  If[StringQ[e] && StringLength[e] > 0, parseEnvCells[e], defaultCells]];
+threshold = combSetting["COMB_VAL_THRESHOLD", 0.05, "expr"];
 
-resolvedTargets = With[{e = Environment["COMB_VAL_TARGETS"]},
-  If[StringQ[e] && StringLength[e] > 0, parseEnvList[e], defaultTargets]];
-
-threshold = With[{e = Environment["COMB_VAL_THRESHOLD"]},
-  If[StringQ[e] && StringLength[e] > 0, ToExpression[e], 0.05]];
-
-source = With[{e = Environment["COMB_VAL_SOURCE"]},
-  If[StringQ[e] && StringLength[e] > 0, e, "mh"]];
+source = combSetting["COMB_VAL_SOURCE", "mh"];
 
 Print["dataDir          = ", dataDir];
 Print["resolvedCells    = ", resolvedCells];

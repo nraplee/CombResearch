@@ -23,6 +23,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
 Get[FileNameJoin[{scriptDir, "load_ecgrav.wl"}]];
@@ -31,13 +32,7 @@ defaultCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},
                 {3, 4}, {3, 5}, {3, 6},
                 {4, 4}, {4, 5}};
 
-parseEnvCells[s_String] := Module[{pairs},
-  pairs = StringSplit[StringTrim[s], ";"];
-  pairs = StringSplit[#, ","] & /@ pairs;
-  ToExpression /@ # & /@ pairs];
-
-resolvedCells = With[{e = Environment["COMB_VAL_CELLS"]},
-  If[StringQ[e] && StringLength[e] > 0, parseEnvCells[e], defaultCells]];
+resolvedCells = combSetting["COMB_VAL_CELLS", defaultCells, "cells"];
 
 truthFile[p_, q_] := combFile["truth", p, q];
 

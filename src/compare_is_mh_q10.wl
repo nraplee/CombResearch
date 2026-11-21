@@ -24,17 +24,12 @@
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
-parseEnvList[s_String] := StringTrim /@ StringSplit[StringTrim[s], ","];
+resolvedPs = combSetting["COMB_CMP_PS", {2, 3, 4}, "intList"];
 
-resolvedPs = With[{e = Environment["COMB_CMP_PS"]},
-  If[StringQ[e] && StringLength[e] > 0,
-    ToExpression /@ parseEnvList[e], {2, 3, 4}]];
-
-resolvedTargets = With[{e = Environment["COMB_CMP_TARGETS"]},
-  If[StringQ[e] && StringLength[e] > 0, parseEnvList[e],
-    {"vertex", "unlabeled", "facet"}]];
+resolvedTargets = combSetting["COMB_CMP_TARGETS", {"vertex", "unlabeled", "facet"}, "list"];
 
 isFile[p_, t_] := combFile["isHist", p, 10, t];
 mhFile[p_, t_] := combFile["mh", p, 10, t];

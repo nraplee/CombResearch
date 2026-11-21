@@ -37,6 +37,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
 Get[FileNameJoin[{scriptDir, "load_ecgrav.wl"}]];
@@ -51,15 +52,8 @@ defaultTargets = {"unlabeled", "facet", "vertex"};
 piKey = <|"vertex" -> "piVertex", "facet" -> "piFacet",
           "unlabeled" -> "piUnlabeled"|>;
 
-parseEnvCells[s_String] := Module[{pairs},
-  pairs = StringSplit[StringTrim[s], ";"];
-  pairs = StringSplit[#, ","] & /@ pairs;
-  ToExpression /@ # & /@ pairs];
-parseEnvList[s_String] := StringTrim /@ StringSplit[StringTrim[s], ","];
-envOr[name_, default_, f_] := With[{e = Environment[name]},
-  If[StringQ[e] && StringLength[e] > 0, f[e], default]];
-resolvedCells   = envOr["COMB_EFF_CELLS", defaultCells, parseEnvCells];
-resolvedTargets = envOr["COMB_EFF_TARGETS", defaultTargets, parseEnvList];
+resolvedCells   = combSetting["COMB_EFF_CELLS", defaultCells, "cells"];
+resolvedTargets = combSetting["COMB_EFF_TARGETS", defaultTargets, "list"];
 
 loadIf[f_] := If[FileExistsQ[f], Import[f, "WXF"], Missing["NoFile"]];
 
