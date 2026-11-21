@@ -289,13 +289,13 @@ checked two things against the stored data.
 |---|---|---|---|---|---|
 | truth, 9 cells | older ECGrav (stored label `"1.0.0"` is hardcoded) | `IsomorphicSimplicialComplexQ`, `ChooseNonIsomorphicSimplicialComplexes`, `PureComplex{,Facet}AutomorphismGroupOrder` | aut-order code rewritten for speed (61b0916, 4abc0df); old code was correct when it finished but could hit `GroupElements::nomem` on very symmetric complexes. Mixed-facet-size overcount fix (2adc441) cannot affect pure complexes | **Latest ECGrav reproduces the stored aut and autF for all 10,882 classes across the 9 cells, zero mismatches.** Iso counts already matched the 1.17 counters (Phase 5a), and the counters' values are unchanged since | **No** |
 | q=10 IS (`p{2,3,4}q10_*`), April 2026 | ECGrav ≤ v1.1.0 | `RandomVertexLabeledPureSimplicialComplex`, the two aut orders | Parallel-branch fix (8367114) is for code added after v1.1.0. The commit records chi-square tests showing the generator was always uniform. Speedups change seeded draws, not the distribution | **All 26M rows have positive numeric aut, autF and weights** (no `$Aborted`). Oddity: some p=4 `aut` values are stored as Real, not Integer | **No** (correct as is; look at the Real values) |
-| MH chains | unrecorded (various, ≤ 1.17) | the two aut orders; `RandomVertexLabeled…` only for the chain start | as above | aut values verified via truth; chains validate against truth on all 27 cell × target pairs | **No** |
+| MH chains | unrecorded (various, ≤ 1.17) | the two aut orders; `RandomVertexLabeled…` only for the chain start | as above | aut values verified via truth. **Phase 0 (`provenance.md`) found:** the live vertex chains at (2,4), (2,5), (2,6), (3,4) and (3,5) are from before the fix (acceptRate 1.0). The good (3,5) chain is only the `.bak`. No MH exists at (2,7), (3,6) or (4,4) | **Yes for those:** rerun the 4 vertex chains, restore or rerun (3,5) vertex, and run the 3 missing cells. Keep the rest |
 | ecgmcmc | 1.17.0 | `RandomPureSimplicialComplexMCMC` | **Behaviour change:** the equilibration replica no longer starts from M disjoint facets, a trap under unlabeled weighting (87f2d5d). ESS now reported | L1 vs truth passed at 1.17, but samples come from the old start rule | **Yes, first** (small cells, hours) |
 | ecgexact | 1.17.0 | `RandomUniform{Unlabeled,FacetLabeled}PureSimplicialComplex`, `RandomVertexLabeled…`, counters | speedups only; changelog states the distribution is unchanged (474b5c2, 22f1a37) | — | **Yes, second**, for consistent provenance only |
 | ecglegacyfacet | 1.17.0 | `RandomFacetLabeledPureSimplicialComplex` (negative control) | none relevant | — | Only if the negative-control comparison is still wanted |
 
-**Order:** ecgmcmc → ecgexact → (optional) ecglegacyfacet. Truth, q=10 IS
-and MH stay as they are. Once Phase 2 adds manifests, backfill them with
+**Order:** ecgmcmc → ecgexact → (optional) ecglegacyfacet, plus the MH
+fixes above. Truth, q=10 IS and the other MH chains stay as they are. Once Phase 2 adds manifests, backfill them with
 the provenance in this table, so the "stale" report shows their ECGrav
 version honestly instead of forcing reruns.
 
