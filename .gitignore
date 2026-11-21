@@ -26,3 +26,7 @@ Thumbs.db
 # --- Claude Code local state (per-machine, not for sharing) ---
 .claude/*
 !.claude/settings.json
+
+# --- Shared upstream ECGrav clone (tools/dev/update_ecgrav.wl) and machine-local regression record ---
+/ECGrav-upstream/
+/results/ecgrav_regression_passed.wl

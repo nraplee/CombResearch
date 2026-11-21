@@ -22,7 +22,7 @@ param([switch]$DryRun, [switch]$Quiet)
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "comb_paths.ps1")
-$dirs = @("data", "figures", "logs")
+$dirs = @("data", "figures", "logs", "results")
 
 function Test-SameFile([string]$a, [string]$b) {
   $fa = Get-Item -LiteralPath $a; $fb = Get-Item -LiteralPath $b

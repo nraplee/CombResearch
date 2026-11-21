@@ -95,7 +95,7 @@ parallelMode = With[{e = Environment["COMB_TRUTH_PARALLEL"]},
     True]];
 
 (* ===== Provenance ===== *)
-ecGravVersion = "1.0.0";  (* vendored at ECGrav/ECGrav-1.0.0/ *)
+ecGravVersion = "1.0.0";  (* hardcoded label, not detected; Phase 2 replaces it with $CombECGravVersion *)
 enumeratorVersion = Module[{res, sha},
   res = Quiet @ RunProcess[{
     "git", "-C", projectRoot, "rev-parse", "--short", "HEAD"}];

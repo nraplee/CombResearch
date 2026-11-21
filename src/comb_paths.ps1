@@ -2,7 +2,7 @@
 # PowerShell twin of comb_paths.wl. Dot-source it from a launcher:
 #   . (Join-Path $PSScriptRoot "comb_paths.ps1")
 # Defines $CombRoot (main checkout, where data/figures/logs live),
-# $CombDataDir, $CombFiguresDir, $CombLogsDir. Run code from $PSScriptRoot,
+# $CombDataDir, $CombFiguresDir, $CombLogsDir, $CombResultsDir. Run code from $PSScriptRoot,
 # not $CombRoot\src, so a worktree runs its own scripts.
 # Env COMB_ROOT overrides the output root.
 
@@ -25,6 +25,7 @@ $CombRoot       = (Resolve-Path $CombRoot).Path
 $CombDataDir    = Join-Path $CombRoot "data"
 $CombFiguresDir = Join-Path $CombRoot "figures"
 $CombLogsDir    = Join-Path $CombRoot "logs"
-foreach ($d in @($CombDataDir, $CombFiguresDir, $CombLogsDir)) {
+$CombResultsDir = Join-Path $CombRoot "results"
+foreach ($d in @($CombDataDir, $CombFiguresDir, $CombLogsDir, $CombResultsDir)) {
   if (!(Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null }
 }

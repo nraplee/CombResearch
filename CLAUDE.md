@@ -6,13 +6,13 @@ Project instructions for Claude Code in this repository. Keep this file concise 
 
 TODO: Keep this paragraph current as the paper evolves.
 
-Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validate against truth for all 27 cell×target combinations at L1 < 0.05. McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Phase 5a (2026-09-26): ECGrav 1.17.0 validated against the truth grid. Its exact counters match our truth at every n on all 9 cells (confirming the (4,5) iso count 5,532), and its exact samplers (`RandomUniformUnlabeled…`, `RandomUniformFacetLabeled…`, `RandomVertexLabeled…`) pass all 27 cell×target combinations. `RandomPureSimplicialComplexMCMC` passes L1 but returns correlated samples for unlabeled. 2026-11-18: every script now loads one pinned ECGrav, upstream main @ 474b5c2 (`ECGrav/ECGrav-1.18.0-474b5c2/`); this pin is not yet re-validated against the truth grid. 2026-11-20: all generated outputs now live once in the main checkout (`src/comb_paths.wl`); worktrees no longer keep their own data. Next: on the Ryzen PC, follow the "Ryzen PC setup checklist" in `docs/agent-task.md` (global paclet install, then re-validate the pin), then q=10 with the exact samplers as reference, then manuscript integration.
+Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validated against truth for all 27 cell×target combinations at L1 < 0.05 in May 2026, but the stored chains no longer back this: five vertex chains predate the vertex fix and (2,7), (3,6), (4,4) have none (`docs/architecture/provenance.md`). McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Phase 5a (2026-09-26): ECGrav 1.17.0 validated against the truth grid. Its exact counters match our truth at every n on all 9 cells (confirming the (4,5) iso count 5,532), and its exact samplers (`RandomUniformUnlabeled…`, `RandomUniformFacetLabeled…`, `RandomVertexLabeled…`) pass all 27 cell×target combinations. `RandomPureSimplicialComplexMCMC` passes L1 but returns correlated samples for unlabeled. 2026-11-20 (Phase 1): every script loads the latest upstream ECGrav from one shared clone (`C:\CombResearch\ECGrav-upstream`, currently main @ 474b5c2); `tests/ecgrav_regression.wl` re-validates it against the truth grid. 2026-11-20: all generated outputs now live once in the main checkout (`src/comb_paths.wl`); worktrees no longer keep their own data. Next: Phase 2 of `docs/architecture/implementation-plan.md`, the MH data fixes from `provenance.md`, then q=10 with the exact samplers as reference, then manuscript integration.
 
 ## Repo Layout
 
 - `src/` - Wolfram `.wl` scripts for compute, rendering, enumeration, MH sampling, probes, and checks.
 - `src/reference/` - Figure 2 reference notebooks; do not edit unless explicitly asked.
-- `ECGrav/` - vendored ECGrav paclet sources/snapshots, not a separate app.
+- `ECGrav-upstream/` (main checkout only, gitignored) - shared clone of upstream ECGrav that every script loads. No ECGrav sources are vendored in git.
 - `data/` - generated CSV/WXF compute outputs; generally do not edit by hand. One shared copy lives in the main checkout (`C:\CombResearch\data` on the Ryzen PC), never in a worktree; see "Generated outputs" below.
 - `figures/` - generated manuscript panels, previews, and review PDFs.
 - `docs/` - consolidated technical docs, manuscript draft, and live handoff.
@@ -23,16 +23,16 @@ This is a single-project repo rooted at `C:\CombResearch`; there are no major in
 
 ## Commands
 
-Discovered package metadata: tracked `PacletInfo.wl` files under `ECGrav/`; no tracked `package.json`, `pyproject.toml`, `Cargo.toml`, Makefile, or similar build metadata was found.
+No tracked package or build metadata (`PacletInfo.wl`, `package.json`, `pyproject.toml`, Makefile, or similar); ECGrav comes from the shared upstream clone.
 
 Install/setup:
 
 - No dependency installation step is defined for this repo.
 - `wolframscript` must be on `PATH`.
-- Wolfram 15.0+ is required (the pinned ECGrav declares `WolframVersion -> "15.0+"`). Wolfram 15.0.1 is installed on both machines (i5 laptop and Ryzen 7 5800X PC; heavy runs go on the Ryzen).
-- Global paclet: `wolframscript -file src\install_ecgrav_global.wl` replaces any installed ECGrav with the pinned snapshot, so notebooks, `src/reference/` and the Wolfram MCP server (plain `Needs`) match the scripts. Rerun it on each machine whenever the pin changes. Done on the laptop 2026-11-18. The installed paclet reports version `1.18.0`; its `SOURCE_COMMIT.txt` gives the commit.
-- Every script loads ECGrav through `src/load_ecgrav.wl`, which `Get`s a vendored snapshot; the globally installed paclet is never used. Default: `ECGrav/ECGrav-1.18.0-474b5c2/` (upstream github.com/kassabetre/ECGrav main @ 474b5c2, see its `SOURCE_COMMIT.txt`). `COMB_ECGRAV_VERSION=1.17.0` reproduces Phase 5a, `=1.0.0` Phase 4. The old `ECGrav-main` snapshot (actually upstream v1.1.0) is archived at `archive/ECGrav-v1.1.0-snapshot/`.
-- To update ECGrav: vendor `Kernel/`, `PacletInfo.wl`, `LICENSE` from upstream into `ECGrav/ECGrav-<version>-<shortsha>/` with a `SOURCE_COMMIT.txt`, change the default in `load_ecgrav.wl` and `install_ecgrav_global.wl`, rerun the global install, and re-validate before using it in figures.
+- Wolfram 15.0+ is required (ECGrav declares `WolframVersion -> "15.0+"`). Wolfram 15.0.1 is installed on both machines (i5 laptop and Ryzen 7 5800X PC; heavy runs go on the Ryzen).
+- ECGrav: `wolframscript -file tools\dev\update_ecgrav.wl` clones github.com/kassabetre/ECGrav into `$CombRoot\ECGrav-upstream` on first use, then fast-forwards it to upstream main. Run it only between runs (running kernels keep the code they loaded), then run `wolframscript -file tests\ecgrav_regression.wl`: counters, aut/autF and exact samplers vs the truth grid, plus an MH smoke test (~10 min). A pass is recorded in `results\ecgrav_regression_passed.wl`; `load_ecgrav.wl` warns while the loaded commit has not passed.
+- Every script loads ECGrav through `src/load_ecgrav.wl`, which `Get`s `Kernel/ECGrav.wl` from the shared clone; the globally installed paclet is never used. `COMB_ECGRAV_DIR=<checkout>` loads another ECGrav checkout instead (e.g. a fork branch being prepared for upstream). The loader sets `$CombECGravVersion` (e.g. `1.18.0-474b5c2`) and `$CombECGravCommit`, and aborts if a function this repo calls (`$CombECGravSymbols`) is missing. Old vendored snapshots (1.0.0, 1.17.0, 1.18.0-474b5c2) are in git history before Phase 1 (tag `pre-restructure`).
+- Global paclet (notebooks, `src/reference/`, the Wolfram MCP server only): `wolframscript -file src\install_ecgrav_global.wl` installs the shared clone. Rerun it after `update_ecgrav.wl` moves the clone.
 - Do not add or install dependencies without asking first.
 
 Generated outputs (added 2026-11-20):
@@ -129,6 +129,8 @@ Checks/smoke tests:
 wolframscript -file src\test_streaming.wl
 wolframscript -file src\test_streaming_bliss.wl
 wolframscript -file src\test_streaming_mckay.wl    # validates McKay on (2,4)+(3,4)
+wolframscript -file tests\ecgrav_regression.wl     # ECGrav vs truth grid; after any ECGrav change
+wolframscript -file tests\golden\golden_derived.wl check   # refactors must reproduce golden/derived
 ```
 
 No lint or typecheck command is configured. Use targeted Wolfram scripts as checks. Avoid full overnight or large production runs unless the user asks.
@@ -140,7 +142,7 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - Do not edit generated files in `data/`, `figures/`, or `logs/` unless explicitly asked.
 - Do not edit Figure 2 reference notebooks in `src/reference/` unless explicitly asked.
 - Never use `RandomFacetLabeledPureSimplicialComplex` for the facet-labeled distribution (still non-uniform in 1.17.0; it is the harness negative control). Use `RandomUniformFacetLabeledPureSimplicialComplex` (validated 2026-09-26) or exact truth data.
-- Load ECGrav only through `src/load_ecgrav.wl` (`Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]]`); never a bare `Needs["ECGrav`"]`. After `LaunchKernels[]` use `combLoadECGravOnKernels[]`, not `ParallelEvaluate[Needs["ECGrav`"]]`, so subkernels run the same snapshot.
+- Load ECGrav only through `src/load_ecgrav.wl` (`Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]]`); never a bare `Needs["ECGrav`"]`. After `LaunchKernels[]` use `combLoadECGravOnKernels[]`, not `ParallelEvaluate[Needs["ECGrav`"]]`, so subkernels run the same checkout.
 - Vertex MH WXFs copied from the `adoring-hoover-18d09b` worktree predate the vertex fix (L1 ~0.75). Rerun before use.
 - MH sampler vertex target uses `π_V(X) ∝ 1/C(N, numV(X))` (2026-05-14 fix). The earlier `π_V ∝ 1` was wrong by a `C(N, k)` factor and produced L1 = 0.85 vs truth at (3,5). Do NOT revert without re-deriving — see in-code comment at the vertex Switch branch of `mhStep` in `src/sampler_mh.wl`.
 - At p=4 the cheap pipeline (`streamingEnumeratePure`) OOMs at (4,5) even sequential. Use `streamingEnumeratePureMcKay` for p=4 q≥5. Cheap is still fine at (4,4) and below.

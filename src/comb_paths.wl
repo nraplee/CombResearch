@@ -23,7 +23,8 @@
      $CombCodeRoot    checkout this file was loaded from (parent of src/)
      $CombDataDir     $CombRoot/data
      $CombFiguresDir  $CombRoot/figures
-     $CombLogsDir     $CombRoot/logs *)
+     $CombLogsDir     $CombRoot/logs
+     $CombResultsDir  $CombRoot/results (small result tables, regression records) *)
 
 If[!ValueQ[$CombRoot],
   Module[{here, env, common},
@@ -49,10 +50,11 @@ If[!ValueQ[$CombRoot],
     $CombDataDir = FileNameJoin[{$CombRoot, "data"}];
     $CombFiguresDir = FileNameJoin[{$CombRoot, "figures"}];
     $CombLogsDir = FileNameJoin[{$CombRoot, "logs"}];
+    $CombResultsDir = FileNameJoin[{$CombRoot, "results"}];
     (* A fresh clone or a new machine may lack these; scripts only create
        their own subfolders. *)
     Scan[If[!DirectoryQ[#], CreateDirectory[#]] &,
-      {$CombDataDir, $CombFiguresDir, $CombLogsDir}];
+      {$CombDataDir, $CombFiguresDir, $CombLogsDir, $CombResultsDir}];
     If[ExpandFileName[$CombCodeRoot] =!= $CombRoot,
       Print["comb_paths: code from ", ExpandFileName[$CombCodeRoot],
         "; outputs to ", $CombRoot]]]];
