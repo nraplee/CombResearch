@@ -220,6 +220,9 @@ work.
 - `validate` with `cells`/`targets` skips the jobs that write a global
   summary (a partial run would overwrite it). The q=10 histogram step moved
   to `is`. The q=10 merge (`concat_samples.wl`) stays manual until Phase 4.
+- `validate` warns when one kind of input mixes ECGrav commits (guarantee
+  6, read from the manifests), within a family only: MH and ECGrav samples
+  differ by design, and truth is exact.
 - `golden/quick` (`tests/golden/golden_quick.wl`): truth exact; sampler
   tolerances per sampler for the quick budget (exact 0.05, MCMC 0.10, MH 0.15);
   see `tests/golden/README.md`.

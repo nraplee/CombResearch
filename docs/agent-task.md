@@ -25,6 +25,11 @@ order in `docs/architecture/implementation-plan.md`), then Phase 4.
   - `check`: ECGrav update (unless `COMB_ECGRAV_DIR`), regression decided
     after the update, smoke tests, store report. `status`: store report
     (manifests, stale/backfilled/flagged files).
+  - `validate` warns when one kind of input (MH chains, ecgexact, ecgmcmc,
+    IS hists) mixes ECGrav commits, from the manifests (guarantee 6). Quiet
+    on today's store; Phase 3a's new MH chains will make it warn until the
+    old chains are rerun too. `CLAUDE.md` maps the cells, targets and
+    sampler words to each stage's knobs (guarantee 3).
 - `src/render_fig2.wl`: Figure 2 (p=3, q=3) as a script of the two
   reference notebooks (untouched). Data `data/p3q3_n10000_fig2.wxf`
   (manifest), panels `figures/fig2/`. Sample drawn before subkernels launch,

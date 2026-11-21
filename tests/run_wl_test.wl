@@ -175,6 +175,19 @@ check["partial: (2,4) hists untouched", FileDate[combFile["isHist", 2, 4, "verte
 check["partial: lock removed", FileExistsQ[FileNameJoin[{$CombLogsDir, "is_truth_cells.log.lock"}]], False];
 check["partial: manifest written", FileExistsQ[combFile["isHist", 3, 4, "vertex"] <> ".manifest.wl"], True];
 
+(* ----- validate warns when one kind of input mixes ECGrav commits ----- *)
+fakeManifest[f_, commit_] := Put[<|"backfilled" -> False, "ecgravCommit" -> commit|>, f <> ".manifest.wl"];
+Do[touch[combFile["mh", 2, 4, t]], {t, {"unlabeled", "facet"}}];
+fakeManifest[combFile["mh", 2, 4, "unlabeled"], "aaaaaaa0000000000000000000000000000000000"];
+fakeManifest[combFile["mh", 2, 4, "facet"], "aaaaaaa0000000000000000000000000000000000"];
+r = runwl[{"validate", "profile", "quick", "dryrun"}];
+hasNot["same commit: no mixed-commit warning", r["out"], "WARNING inputs mix ECGrav commits: mh"];
+fakeManifest[combFile["mh", 2, 4, "facet"], "bbbbbbb1111111111111111111111111111111111"];
+r = runwl[{"validate", "profile", "quick", "dryrun"}];
+has["two commits within the MH chains: warned", r["out"],
+  RegularExpression["WARNING inputs mix ECGrav commits: mh: (aaaaaaa \\(1\\), bbbbbbb \\(1\\)|bbbbbbb \\(1\\), aaaaaaa \\(1\\))"]];
+hasNot["...not for other families", r["out"], "WARNING inputs mix ECGrav commits: ecgexact"];
+
 (* ----- check: regression decided at run time ----- *)
 r = runwl[{"check", "profile", "quick", "dryrun"}];
 has["dry run says the regression is decided after the update", r["out"], "decided after the update"];

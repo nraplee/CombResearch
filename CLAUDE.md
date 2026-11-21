@@ -54,6 +54,18 @@ wolframscript -file run.wl mh profile paper cells "2,4;3,5" targets vertex force
 wolframscript -file run.wl check                                    # update ECGrav, regression if needed, smoke tests, report
 ```
 
+What the `cells`, `targets` and `sampler` words set in each stage (guarantee 3: every knob keeps its name; with no word each job takes its plan's value):
+
+| Stage | `cells "p,q;..."` | `targets a,b` | `sampler x` |
+|---|---|---|---|
+| truth | `COMB_TRUTH_CELLS` (per truth run) | — | — |
+| is | q=10 batches: picks p by `p,10`; IS at truth cells: `COMB_IS_CELLS`; q=10 histograms not planned | — | — |
+| mh | one job per cell: `COMB_MH_CELLS` | `COMB_MH_TARGETS` (one job per target) | — |
+| ecgrav | `COMB_ECG_CELLS` (one job per target, all cells) | `COMB_ECG_TARGETS` | `COMB_ECG_SAMPLER` (exact, mcmc, legacyfacet) |
+| validate | counts: `COMB_VAL_CELLS`; every summary writer skipped (`COMB_VAL_*`, `COMB_EFF_*`, `COMB_3W_*`, p-only `COMB_CMP_PS` stay profile/default) | summary writers skipped | `COMB_VAL_SOURCE` (mh, exact→ecgexact, mcmc→ecgmcmc, legacyfacet); cross-sampler summaries not planned |
+| figures | nothing planned | — | — |
+| check | ignored (regression uses `COMB_REG_CELLS`) | ignored | — |
+
 The drivers, run directly:
 
 ```powershell

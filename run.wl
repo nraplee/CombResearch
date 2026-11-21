@@ -15,7 +15,8 @@
      mh        run_mh_chains.wl, one process per cell and target
      ecgrav    run_ecgrav_samplers.wl, one process per sampler and target
      validate  counts, MH/ECGrav validation, efficiency and comparison
-               summaries
+               summaries; warns when one kind of input (e.g. the MH chains)
+               mixes ECGrav commits (guarantee 6, from the manifests)
      figures   the render_*.wl scripts
      status    the stale report only (no runs)
      all       check, truth, is, mh, ecgrav, validate, figures
@@ -353,6 +354,23 @@ jobsFor["ecgrav"] := Flatten @ Map[Function[r, If[$cliSampler =!= All && r["samp
    The counts check writes nothing and always runs. *)
 samplerSource = <|"mh" -> "mh", "exact" -> "ecgexact", "mcmc" -> "ecgmcmc",
   "legacyfacet" -> "ecglegacyfacet"|>;
+(* Guarantee 6: a summary should not silently mix ECGrav commits within one
+   kind of input (e.g. MH chains made before and after an ECGrav update).
+   Each job lists its sampled inputs by family; printJob warns when a family
+   holds more than one commit. Different families may differ by design (the
+   efficiency summary compares samplers), and truth is left out: it is exact
+   and its aut/autF were re-verified on the latest ECGrav. *)
+commitLabel[f_] := With[{m = combManifest[f]}, Which[
+  MissingQ[m], "no manifest",
+  AssociationQ[m["backfilled"]], "backfilled " <> ToString[m["ecgravVersion"]],
+  StringQ[m["ecgravCommit"]], StringTake[m["ecgravCommit"], UpTo[7]] <>
+    If[StringEndsQ[m["ecgravCommit"], "-dirty"], "-dirty", ""],
+  True, None]];                (* outputs made without ECGrav *)
+mixedCommits[groups_Association] := Select[
+  Counts[DeleteCases[commitLabel /@ Select[#, FileExistsQ], None]] & /@ groups, Length[#] > 1 &];
+withInputs[j_, groups_] := Append[j, "commitGroups" -> groups];
+samplesOf[src_, cells_] := Flatten[Table[combFile["samples", c[[1]], c[[2]], src, t], {c, cells}, {t, targets3}]];
+
 jobsFor["validate"] := Module[{valCells, cells3w, ps, sources, out = {}, restricted, summaryJob},
   restricted = $cliCells =!= All || $cliTargets =!= All;
   summaryJob[j_] := If[restricted,
@@ -375,28 +393,37 @@ jobsFor["validate"] := Module[{valCells, cells3w, ps, sources, out = {}, restric
   AppendTo[out, job["counts vs truth", "src/validate_counts_vs_truth.wl",
     resolveKnobs[<||>, If[$cliCells === All, <||>, <|"COMB_VAL_CELLS" -> {valCells, "cli"}|>]], {},
     truthPath /@ valCells, "validate_counts"]];
-  Do[AppendTo[out, summaryJob @ job["validate " <> s, "src/validate_mh_vs_truth.wl",
+  Do[AppendTo[out, summaryJob @ withInputs[job["validate " <> s, "src/validate_mh_vs_truth.wl",
       resolveKnobs[<||>, <|"COMB_VAL_SOURCE" -> {s, "job split"}|>],
-      {combFile["validationSummary", s]}, truthPath /@ valCells, "validate_" <> s]],
+      {combFile["validationSummary", s]}, truthPath /@ valCells, "validate_" <> s],
+      <|s -> samplesOf[s, valCells]|>]],
     {s, sources}];
   If[$cliSampler === All,
     AppendTo[out, summaryJob @ job["sampler efficiency", "src/compare_samplers_efficiency.wl",
       resolveKnobs[<||>, <||>],
-      {combFile["summary", "sampler_efficiency"]}, truthPath /@ valCells, "compare_efficiency"]];
+      {combFile["summary", "sampler_efficiency"]}, truthPath /@ valCells, "compare_efficiency"] //
+      withInputs[#, AssociationMap[samplesOf[#, valCells] &, {"mh", "ecgexact", "ecgmcmc"}]] &];
     If[cells3w =!= {},
       AppendTo[out, summaryJob @ job["3-way IS/MH/truth " <> envString[cells3w], "src/compare_3way.wl",
         resolveKnobs[<||>, <||>],
         {combFile["summary", "is_mh_truth_3way"]},
         Flatten[Table[{truthPath[c], combFile["mh", c[[1]], c[[2]], t], combFile["isHist", c[[1]], c[[2]], t]},
-          {c, cells3w}, {t, targets3}]], "compare_3way"]]];
+          {c, cells3w}, {t, targets3}]], "compare_3way"] //
+        withInputs[#, <|"mh" -> samplesOf["mh", cells3w],
+          "isHist" -> Flatten[Table[combFile["isHist", c[[1]], c[[2]], t], {c, cells3w}, {t, targets3}]]|>] &]];
     AppendTo[out, summaryJob @ job["q=10 IS vs MH", "src/compare_is_mh_q10.wl", resolveKnobs[<||>, <||>],
       {combFile["summary", "q10_is_vs_mh"]},
       Flatten[Table[{combFile["isHist", p, 10, t], combFile["mh", p, 10, t]}, {p, ps}, {t, targets3}]],
-      "compare_is_mh_q10"]];
+      "compare_is_mh_q10"] // withInputs[#, <|
+        "isHist" -> Flatten[Table[combFile["isHist", p, 10, t], {p, ps}, {t, targets3}]],
+        "mh" -> Flatten[Table[combFile["mh", p, 10, t], {p, ps}, {t, targets3}]]|>] &];
     AppendTo[out, summaryJob @ job["q=10 warm vs prod", "src/compare_q10_warm_vs_prod.wl", resolveKnobs[<||>, <||>],
       {combFile["summary", "q10_warm_vs_prod"]},
       Flatten[Table[{combFile["mh", p, 10, t], combFile["mh", p, 10, t, combMHWarmTag[67890, If[p == 3, 14, 18]]]},
-        {p, {3, 4}}, {t, {"unlabeled", "facet"}}]], "compare_q10_warm_vs_prod"]]];
+        {p, {3, 4}}, {t, {"unlabeled", "facet"}}]], "compare_q10_warm_vs_prod"] //
+      withInputs[#, <|"mh" -> Flatten[Table[{combFile["mh", p, 10, t],
+        combFile["mh", p, 10, t, combMHWarmTag[67890, If[p == 3, 14, 18]]]},
+        {p, {3, 4}}, {t, {"unlabeled", "facet"}}]]|>] &]];
   out];
 
 fig[sub_, name_] := FileNameJoin[{$CombFiguresDir, sub, name}];
@@ -506,6 +533,10 @@ jobsFor["check"] := Module[{out = {}, commit},
 (* ----- running jobs ----- *)
 printJob[j_, {action_, reason_}] := (
   Print["  ", pad[action, 5], pad[j["label"], 44], reason];
+  If[KeyExistsQ[j, "commitGroups"],
+    KeyValueMap[Print["        WARNING inputs mix ECGrav commits: ", #1, ": ",
+      StringRiffle[KeyValueMap[Function[{c, n}, c <> " (" <> ToString[n] <> ")"], #2], ", "]] &,
+      mixedCommits[j["commitGroups"]]]];
   If[$dryrun,
     Print["        ", j["script"], "   log ", FileNameTake[j["log"]]];
     KeyValueMap[Print["        ", pad[#1, 22], "= ", pad[#2[[1]], 24],
