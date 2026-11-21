@@ -1,5 +1,64 @@
 # Current Agent Task
 
+## Phase 3: `run.wl`, golden/quick, `render_fig2.wl` (2026-11-21, Ryzen, branch `claude/phase-3`)
+
+Next: Phase 3a (regenerate the flagged data with `run.wl`; commands and
+order in `docs/architecture/implementation-plan.md`), then Phase 4.
+
+- `run.wl` (repo root): stages `check truth is mh ecgrav validate figures
+  status all`; words `profile cells targets sampler jobs force dryrun`
+  (plain words: wolframscript drops `-` arguments). Default profile `paper`.
+  Launches the existing drivers with `COMB_*` env; one process per
+  cell×target (MH), sampler×target (ECGrav), p×batch (q=10 IS); at most
+  `jobs N` (default 4); launcher log names, so `monitor_mh.ps1` and
+  `monitor_ecgrav.ps1` work unchanged (checked on a live run).
+  - Skip rule (guarantee 2): runs only when an output is missing; `force`
+    for one named stage, never `all`. Done = exit 0, no `$Aborted` in the
+    log, and every output it should write is newer than its start.
+  - Safety: per-job identity knobs always from run.wl, leftover
+    `COMB_FORCE`/`COMB_MH_OUTDIR`/identity env ignored (case-insensitive);
+    `<log>.lock` taken atomically, rechecked at start, released only by its
+    owner, released (and children killed) on abort; force refused for
+    finished q=10 batches; McKay output awaiting rename skipped; partial IS
+    cells held back; restricted validate skips global-summary writers;
+    malformed `cells`/`sampler`/`targets` words exit 2.
+  - `check`: ECGrav update (unless `COMB_ECGRAV_DIR`), regression decided
+    after the update, smoke tests, store report. `status`: store report
+    (manifests, stale/backfilled/flagged files).
+- `src/render_fig2.wl`: Figure 2 (p=3, q=3) as a script of the two
+  reference notebooks (untouched). Data `data/p3q3_n10000_fig2.wxf`
+  (manifest), panels `figures/fig2/`. Sample drawn before subkernels launch,
+  so the seed reproduces it (two runs identical). In `run.wl figures`.
+- Tests: `tests/run_wl_test.wl` (own temp root; ~5 min, two real runs),
+  `tests/golden/golden_quick.wl` + `tests/golden/quick/truth.wxf`,
+  `tests/fig2_check.wl`. `lib_names`: family `fig2`, MH log name with tag,
+  `"job"` log family. `pure_simplicial_compute.wl`: `COMB_CHUNK` knob
+  (unset = 25000, as before).
+- Plan doc: Phase 3 CLI in plain words, "as built" notes, Phase 3a (the
+  data fixes with commands and measured wall times).
+- Reviews: three adversarial workflow rounds over run.wl and the tests
+  (5 lenses, 3 refuters per finding). Round 1: 31 findings = 13 issues, all
+  fixed. Round 2: 9/13 fixes confirmed, 4 incomplete + 10 new, all fixed.
+  Round 3: 7/9 confirmed, the 2 partial ones (lock race with a McKay
+  rename; relative `COMB_ECGRAV_DIR`) and 2 new nits fixed.
+- Checks run (scratch roots, `COMB_ECGRAV_DIR` = shared clone; nothing
+  written to the store):
+  - `run.wl all profile quick` from an empty store, 4 times as the code
+    changed: all stages ok (~12 min); `golden_quick` PASS each time (truth
+    exact; exact 0.015-0.028, ecgmcmc 0.029-0.067, MH 0.025-0.106, IS
+    vertex 0.014-0.021); `fig2_check` PASS (class table and theory exact,
+    enumeration = formula; panels within ESS-based bounds).
+  - `run_wl_test`, `lib_names_test`, `lib_config_test`, `manifest_test`: PASS.
+  - `run.wl all dryrun` on the real store: plans only the 9 missing MH
+    chains ((2,7) (3,6) (4,4)), `validate mh` (never stored) and Figure 2.
+  - Final code: `run.wl all profile quick` from an empty store ok,
+    `golden_quick` and `fig2_check` PASS; a second `all` on the same store
+    started only the jobs that write no data file (check, counts), no data
+    job reran. Under `quick` the regression runs every `check`: its
+    restricted cells are never recorded as a pass (existing regression rule).
+- Not done: Phase 3a; the stale-report CSV in `results/`; `run.wl` cannot
+  change `COMB_NN_FIXED`/`COMB_FIG2_N` (run the driver directly for those).
+
 ## Phase 2 complete: exit checks (2026-11-21, Ryzen, main @ `459924d`)
 
 The plan's Phase 2 checks, rerun after 2a-2d plus the `.gitignore` fix

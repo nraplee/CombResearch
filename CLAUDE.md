@@ -6,12 +6,12 @@ Project instructions for Claude Code in this repository. Keep this file concise 
 
 TODO: Keep this paragraph current as the paper evolves.
 
-Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validated against truth for all 27 cell×target combinations at L1 < 0.05 in May 2026, but the stored chains no longer back this: five vertex chains predate the vertex fix and (2,7), (3,6), (4,4) have none (`docs/architecture/provenance.md`). McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Phase 5a (2026-09-26): ECGrav 1.17.0 validated against the truth grid. Its exact counters match our truth at every n on all 9 cells (confirming the (4,5) iso count 5,532), and its exact samplers (`RandomUniformUnlabeled…`, `RandomUniformFacetLabeled…`, `RandomVertexLabeled…`) pass all 27 cell×target combinations. `RandomPureSimplicialComplexMCMC` passes L1 but returns correlated samples for unlabeled. 2026-11-20 (Phase 1): every script loads the latest upstream ECGrav from one shared clone (`C:\CombResearch\ECGrav-upstream`, currently main @ 474b5c2); `tests/ecgrav_regression.wl` re-validates it against the truth grid. 2026-11-20: all generated outputs now live once in the main checkout (`src/comb_paths.wl`); worktrees no longer keep their own data. 2026-11-20 (Phase 2a): shared `src/lib_stats.wl` and `src/lib_io.wl`. 2026-11-20 (Phase 2b): `src/lib_names.wl` builds every data and log file name. 2026-11-20 (Phase 2c): `src/lib_config.wl` resolves every `COMB_*` setting; profiles `quick` and `paper` in `config/cells.wl`. 2026-11-21 (Phase 2d): every data output gets a `<file>.manifest.wl` sidecar; `tools/dev/backfill_manifest.wl` backfills the store from `provenance.md`. Next: Phase 3 (`run.wl`) of `docs/architecture/implementation-plan.md`, the MH data fixes from `provenance.md`, then q=10 with the exact samplers as reference, then manuscript integration.
+Current summary: Wolfram Mathematica research project for probability distributions of pure simplicial complexes. Figure 2 at q=3 is complete. Truth grid is now 9 cells `{(2,4), (2,5), (2,6), (2,7), (3,4), (3,5), (3,6), (4,4), (4,5)}`. MH chains validated against truth for all 27 cell×target combinations at L1 < 0.05 in May 2026, but the stored chains no longer back this: five vertex chains predate the vertex fix and (2,7), (3,6), (4,4) have none (`docs/architecture/provenance.md`). McKay canonical-augmentation enumeration (`src/streaming_enumerator_mckay.wl`) is the production path at p=4; the cheap pipeline OOMs at (4,5) even sequentially. Phase 5a (2026-09-26): ECGrav 1.17.0 validated against the truth grid. Its exact counters match our truth at every n on all 9 cells (confirming the (4,5) iso count 5,532), and its exact samplers (`RandomUniformUnlabeled…`, `RandomUniformFacetLabeled…`, `RandomVertexLabeled…`) pass all 27 cell×target combinations. `RandomPureSimplicialComplexMCMC` passes L1 but returns correlated samples for unlabeled. 2026-11-20 (Phase 1): every script loads the latest upstream ECGrav from one shared clone (`C:\CombResearch\ECGrav-upstream`, currently main @ 474b5c2); `tests/ecgrav_regression.wl` re-validates it against the truth grid. 2026-11-20: all generated outputs now live once in the main checkout (`src/comb_paths.wl`); worktrees no longer keep their own data. 2026-11-20 (Phase 2a): shared `src/lib_stats.wl` and `src/lib_io.wl`. 2026-11-20 (Phase 2b): `src/lib_names.wl` builds every data and log file name. 2026-11-20 (Phase 2c): `src/lib_config.wl` resolves every `COMB_*` setting; profiles `quick` and `paper` in `config/cells.wl`. 2026-11-21 (Phase 2d): every data output gets a `<file>.manifest.wl` sidecar; `tools/dev/backfill_manifest.wl` backfills the store from `provenance.md`. 2026-11-21 (Phase 3): `run.wl` is the single entry point (stages, profiles, skip rule, per-job fan-out, store report); Figure 2 is a script, `src/render_fig2.wl`, checked against the reference notebooks by `tests/fig2_check.wl`; `tests/golden/golden_quick.wl` checks a quick-profile store. Next: Phase 3a of `docs/architecture/implementation-plan.md` (regenerate the flagged MH/ECGrav data with `run.wl`), then q=10 with the exact samplers as reference, then manuscript integration.
 
 ## Repo Layout
 
 - `src/` - Wolfram `.wl` scripts for compute, rendering, enumeration, MH sampling, probes, and checks.
-- `src/reference/` - Figure 2 reference notebooks; do not edit unless explicitly asked.
+- `src/reference/` - Figure 2 reference notebooks; do not edit unless explicitly asked. `src/render_fig2.wl` is the script version (outputs `data/p3q3_n10000_fig2.wxf`, `figures/fig2/`).
 - `ECGrav-upstream/` (main checkout only, gitignored) - shared clone of upstream ECGrav that every script loads. No ECGrav sources are vendored in git.
 - `data/` - generated CSV/WXF compute outputs; generally do not edit by hand. One shared copy lives in the main checkout (`C:\CombResearch\data` on the Ryzen PC), never in a worktree; see "Generated outputs" below.
 - `figures/` - generated manuscript panels, previews, and review PDFs.
@@ -44,7 +44,17 @@ Generated outputs (added 2026-11-20):
 powershell -ExecutionPolicy Bypass -File src\sync_worktree_data.ps1 -DryRun
 ```
 
-Main compute/render commands:
+One entry point, `run.wl` (Phase 3). It launches the drivers below with `COMB_*` env from the profile, one process per cell×target (MH), per sampler×target (ECGrav) or per p×batch (q=10 IS), at most `jobs N` at once (default 4), with the launchers' log names (so `monitor_mh.ps1`/`monitor_ecgrav.ps1` work). A job runs only when an output is missing; `force` reruns one named stage (never `all`). Options are plain words. Default profile: `paper`. Per-job identity knobs (cells, targets, sampler, tag, N, ...) always come from run.wl; a leftover `COMB_FORCE`/identity env var is ignored with a warning, other leftovers win over the profile. Each running job holds `logs\<log>.lock`; a run.wl killed mid-job leaves its locks, which then block that job until deleted by hand.
+
+```powershell
+wolframscript -file run.wl status                                   # store report: manifests, stale/flagged files
+wolframscript -file run.wl all dryrun                               # every planned job, run/skip reason, settings + sources
+wolframscript -file run.wl mh cells "2,7;3,6" targets facet dryrun
+wolframscript -file run.wl mh profile paper cells "2,4;3,5" targets vertex force
+wolframscript -file run.wl check                                    # update ECGrav, regression if needed, smoke tests, report
+```
+
+The drivers, run directly:
 
 ```powershell
 wolframscript -file src\pure_simplicial_compute.wl
@@ -135,6 +145,11 @@ wolframscript -file tests\lib_config_test.wl       # combSetting kinds, preceden
 wolframscript -file tests\manifest_test.wl         # manifests + backfill, in its own temp COMB_ROOT
 wolframscript -file tools\dev\backfill_manifest.wl # dry run: provenance row/status per store file; "write" to write
 wolframscript -file tests\golden\golden_derived.wl check   # refactors must reproduce golden/derived
+wolframscript -file tests\run_wl_test.wl           # run.wl planning/safety rules, own temp COMB_ROOT (~5 min)
+wolframscript -file tests\fig2_check.wl            # render_fig2.wl output vs the reference notebooks' saved numbers
+# golden/quick: a quick-profile store in a scratch root, then its check
+$env:COMB_ROOT = "C:\scratch\quick"; $env:COMB_ECGRAV_DIR = "C:\CombResearch\ECGrav-upstream"; wolframscript -file run.wl all profile quick
+wolframscript -file tests\golden\golden_quick.wl
 ```
 
 No lint or typecheck command is configured. Use targeted Wolfram scripts as checks. Avoid full overnight or large production runs unless the user asks.

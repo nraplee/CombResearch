@@ -81,7 +81,8 @@ If[useParallel,
 
 headers = $CombISHeaders;
 
-chunkSize = If[ValueQ[chunkSizeOverride], chunkSizeOverride, 25000];
+chunkSize = If[ValueQ[chunkSizeOverride], chunkSizeOverride,
+  combSetting["COMB_CHUNK", 25000, "expr"]];
 numChunks = Ceiling[sampleSize / chunkSize];
 chunkSizeFor[k_] := If[k == numChunks,
   sampleSize - (numChunks - 1) * chunkSize, chunkSize];

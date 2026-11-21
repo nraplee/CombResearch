@@ -177,8 +177,12 @@ This phase replaces the pin.
 ## Phase 3: `run.wl`, one entry point over today's `.wl` scripts
 
 ```
-wolframscript -file run.wl <check|truth|is|mh|ecgrav|validate|figures|all> [--profile quick|paper] [--cells "3,5;4,5"] [--force] [--dry-run]
+wolframscript -file run.wl <check|truth|is|mh|ecgrav|validate|figures|all> [profile quick|paper] [cells "3,5;4,5"] [targets vertex,facet] [force] [dryrun]
 ```
+
+Options are plain words: wolframscript drops every script argument from the
+first one that starts with `-` (found in Phase 2d), so `--profile` cannot
+work.
 
 - **`check`:** update ECGrav, run the regression if the commit changed,
   run the smoke tests, and report stale outputs.
@@ -186,7 +190,7 @@ wolframscript -file run.wl <check|truth|is|mh|ecgrav|validate|figures|all> [--pr
   directly, never a `.ps1`, so it runs on any OS. They fan out per target
   or per p with the launchers' log names. The skip rule follows
   guarantee 2.
-- **`--dry-run`:** prints the stages, cells, reasons, and every setting
+- **`dryrun`:** prints the stages, cells, reasons, and every setting
   with its source.
 - **New `src/render_fig2.wl`:** Fig 2 (q=3) through `load_ecgrav.wl`, with
   outputs through `comb_paths`. The reference notebooks are untouched.
@@ -194,6 +198,81 @@ wolframscript -file run.wl <check|truth|is|mh|ecgrav|validate|figures|all> [--pr
   - the monitors work on a `run.wl` MH run;
   - the quick profile in a scratch root meets `golden/quick`;
   - `render_fig2.wl` reproduces the notebook's numbers.
+
+**As built (2026-11-21).** Differences from the text above:
+
+- No `profile` word means `COMB_PROFILE`, else `paper`, so every stage has a
+  run plan. Bare driver scripts are unchanged (guarantee 3 is about them).
+- Fan-out: MH one process per cell×target, ECGrav per sampler×target, q=10 IS
+  per p×batch, at most `jobs N` (default 4) at once. Extra stage `status`
+  prints the store report only.
+- Skip rule as guarantee 2, plus: a job also counts as done only if every
+  output it should write is newer than its start (wolframscript exits 0
+  after `Abort[]`); `force` is refused for a finished q=10 batch (the driver
+  cannot rerun it); a McKay truth output waiting for its rename is skipped
+  with a hint; a cell with only some IS-at-truth-cell hists is held back.
+- Per-job identity knobs (cells, targets, sampler, tag, runTag, N, ...)
+  always come from `run.wl`: a leftover env var cannot change them, and a
+  leftover `COMB_FORCE` never reaches a job. Names are compared
+  case-insensitively (Windows).
+- Each running job holds `<log>.lock`, taken atomically and checked again
+  right before start, so two `run.wl` processes do not run the same job.
+- `validate` with `cells`/`targets` skips the jobs that write a global
+  summary (a partial run would overwrite it). The q=10 histogram step moved
+  to `is`. The q=10 merge (`concat_samples.wl`) stays manual until Phase 4.
+- `golden/quick` (`tests/golden/golden_quick.wl`): truth exact; sampler
+  tolerances per sampler for the quick budget (exact 0.05, MCMC 0.10, MH 0.15);
+  see `tests/golden/README.md`.
+- `render_fig2.wl`: exact parts (class table, theory, enumeration) match the
+  notebook exactly; the seeded draw cannot, because ECGrav's sampler changed,
+  so the panels are checked against theory and against the notebook's saved
+  bars with ESS-based tolerances (`tests/fig2_check.wl`). The draw happens
+  before subkernels launch, so a seed reproduces it.
+- Three adversarial review rounds (workflows, 3 refuters per finding):
+  13 issues, then 4 incomplete fixes and 10 new, then 2 partial fixes and 2
+  nits, all fixed; `tests/run_wl_test.wl` covers them.
+
+## Phase 3a: regenerate the flagged data (first real `run.wl` runs)
+
+The store's backfilled manifests flag what is wrong or missing
+(`provenance.md`, "Problems found"). Fixing it is the first production use
+of `run.wl`, with the `paper` profile's settings (`config/cells.wl`): MH
+200k / 20k burn-in / thin 5, seed 12345; ECGrav exact N=100k, MCMC N=20k,
+seed 24680. Each rerun writes a real manifest over the backfilled one.
+
+| # | Data | Command (on the Ryzen) | Why | Wall time |
+|---|---|---|---|---|
+| 1 | MH vertex (2,4) (2,5) (2,6) (3,4) (3,5) | `run.wl mh profile paper cells "2,4;2,5;2,6;3,4;3,5" targets vertex force` | `knownBad`: pre-fix (acceptRate 1.0) | about 2 min in all (a post-fix 200k vertex chain takes 0.3-0.4 min) |
+| 2 | MH (2,7) (3,6) (4,4), all 3 targets | `run.wl mh profile paper cells "2,7;3,6;4,4"` | missing (lost with a worktree) | about 40 min per cell fanned out per target (facet 30-40 min, unlabeled 10-12, vertex < 1); about 2.5 h one cell at a time |
+| 3 | ecgmcmc, all 9 cells, then ecgexact | `run.wl ecgrav profile paper` (mcmc run, then exact) | made with ECGrav 1.17.0; MCMC start rule changed upstream (87f2d5d) | MCMC about 1.75 h, exact about 35 min, 3 targets in parallel; unlabeled dominates both. Latest ECGrav has speedups, so likely less |
+| 3b | ecglegacyfacet (2,4) (3,4) (optional) | `run.wl ecgrav profile paper` (legacyfacet run) | only if the negative-control comparison is still wanted | about 1 min |
+| 4 | MH (2,4) unlabeled, facet at 200k (optional) | `run.wl mh profile paper cells "2,4" targets unlabeled,facet force` | `smoke`: 30k chains today | about 30 min (facet), 11 min (unlabeled) |
+
+Wall times are from the stored outputs' own `wallSeconds` (backfilled
+manifests, `embedded`), Ryzen, ECGrav 1.0.0/1.17.0.
+
+- **(3,5) vertex:** rerun it with the rest instead of restoring
+  `p3q5_mh_vertex.2026-05-17.wxf.bak`. That chain was made with uncommitted
+  code and would keep a backfilled manifest. Keep the `.bak` as a
+  cross-check: the rerun's numV marginal should be within L1 0.05 of it.
+- **Order:** 1 and 2, then 3. MH and ECGrav runs are separate processes and
+  may overlap on the Ryzen (8C/16T, 32 GB). Run 4 and 3b only if wanted.
+- **Then, as part of this phase:**
+  - `run.wl validate` for sources `mh`, `ecgmcmc` and `ecgexact` on all 9
+    cells × 3 targets, L1 < 0.05. This restores "validated on all 27 cell ×
+    target pairs" with stored data behind it.
+  - Rerun the derived summaries that read the replaced inputs:
+    `validation_*`, `sampler_efficiency_summary` (its status becomes `ok`),
+    and `is_mh_truth_3way_summary`.
+  - Re-baseline the golden/derived sections whose inputs changed, on
+    purpose (`COMB_FORCE=1 ... golden_derived.wl write <section>`), and say
+    so in the PR.
+  - Update `provenance.md` (M1, M3, the missing cells, E1–E3 superseded) and
+    `CLAUDE.md` (drop the rule about pre-fix vertex WXFs; correct the
+    validation claim in the summary).
+- **Check:** `backfill_manifest.wl` (dry run) shows no `knownBad` or
+  `smoke` row left among live files, except the q=10 pilot chains (M6, M7),
+  which stay as they are.
 
 ## Phase 4: build the `CombResearch` package and the pipeline stages
 
@@ -294,10 +373,11 @@ checked two things against the stored data.
 | ecgexact | 1.17.0 | `RandomUniform{Unlabeled,FacetLabeled}PureSimplicialComplex`, `RandomVertexLabeled…`, counters | speedups only; changelog states the distribution is unchanged (474b5c2, 22f1a37) | — | **Yes, second**, for consistent provenance only |
 | ecglegacyfacet | 1.17.0 | `RandomFacetLabeledPureSimplicialComplex` (negative control) | none relevant | — | Only if the negative-control comparison is still wanted |
 
-**Order:** ecgmcmc → ecgexact → (optional) ecglegacyfacet, plus the MH
-fixes above. Truth, q=10 IS and the other MH chains stay as they are. Once Phase 2 adds manifests, backfill them with
-the provenance in this table, so the "stale" report shows their ECGrav
-version honestly instead of forcing reruns.
+**These reruns are Phase 3a** (commands, order and follow-up there).
+Truth, q=10 IS and the other MH chains stay as they are. The store's
+manifests were backfilled with this provenance in Phase 2d (2026-11-21), so
+the stale report shows their ECGrav version honestly instead of forcing
+reruns.
 
 Checks used (read-only, scripts kept in the session scratchpad):
 `check_truth_aut_vs_latest.wl` (truth aut and autF vs latest ECGrav) and
