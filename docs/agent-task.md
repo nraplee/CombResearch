@@ -1,5 +1,29 @@
 # Current Agent Task
 
+## Phase 0 safety net (2026-11-20, Ryzen, branch `claude/codebase-update-plan-fac1d9`)
+
+Done (uncommitted):
+- `docs/architecture/provenance.md`: how every data family was made (script,
+  commit, date, ECGrav, seed, N), plus the problems found and the corrected
+  regeneration list.
+- `tools/dev/make_check_root.wl`: scratch `COMB_ROOT` for checks. It copies
+  files up to 300 MB and hard-links larger ones. Family `golden` = every
+  input of the golden reference.
+- `tests/golden/`: golden/derived, 11 sections (truth, samplecols, ishists,
+  validate, compare, efficiency, overlay, q10_p2/p3/p4, progress_csv), frozen
+  in `tests/golden/derived/*.wxf`. The README explains how to use it.
+  golden/quick waits for the quick profile (Phase 2/3).
+
+Data findings (not fixed; need a decision):
+- The live `p2q{4,5,6}` and `p3q{4,5}` `_mh_vertex.wxf` predate the vertex
+  fix (acceptRate 1.0).
+- The good (3,5) chain is only `p3q5_mh_vertex.2026-05-17.wxf.bak`.
+- No MH exists at (2,7), (3,6) or (4,4); it was lost with worktree
+  optimistic-fermi.
+- `is_mh_truth_3way_summary` no longer reproduces at (3,5) vertex.
+
+Not done: the `pre-restructure` tag on `main`, and the commit/PR.
+
 ## Worktree and Codex cleanup (2026-11-20, Ryzen PC, after #14)
 
 Done:

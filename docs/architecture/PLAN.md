@@ -57,3 +57,10 @@ first missing one. Workflow inventory groups: (A) core libs + enumeration,
 Decisions recorded and the ECGrav history review finished; see the last two
 sections of `implementation-plan.md`. Regenerate ecgmcmc, then ecgexact;
 truth, q=10 IS and MH stay. Next real work: Phase 0 of the plan.
+
+## Phase 0 (2026-11-20)
+Built and checked: provenance.md, tools/dev/make_check_root.wl, and
+tests/golden (golden/derived, 11 sections, all PASS). Provenance found the stale
+vertex MH chains and the missing MH cells, so the "MH stays" line above is
+corrected in implementation-plan.md. Left to do: the `pre-restructure` tag,
+then commit and PR.
