@@ -27,8 +27,7 @@ Phase 2 is complete with this. Next: Phase 3 (`run.wl`).
   vertex chains, `smoke`, `negativeControl`, `usesKnownBad` =
   sampler_efficiency_summary, `external` = Betre .mx). Never replaces a
   real-run manifest. **Dry run on the store: all 147 files match a row;
-  nothing written.** Not yet run with `write` on the store: needs the
-  user's go-ahead (it adds 147 small files to `C:\CombResearch\data`).
+  nothing written.**
 - `make_check_root.wl` family `manifests`; `lib_names_test.wl` skips
   `*.manifest.wl` and `*.tmp`.
 - Finding: wolframscript drops every script argument from the first one
@@ -54,8 +53,18 @@ Phase 2 is complete with this. Next: Phase 3 (`run.wl`).
     10 bare-kernel exits did not reproduce it. Seen once, cause unknown.
   - `kernelCount` no longer calls `Kernels[]` unless the parallel package
     is loaded (it cost 1.4 s per script and loaded Parallel for nothing).
-- Not done: `backfill_manifest.wl write` on the real store (waiting for
-  the user's go-ahead).
+- **Store backfilled 2026-11-21** (after #23 merged, from `ee8ea86`, with
+  the user's go-ahead): `backfill_manifest.wl write` wrote 147 manifests to
+  `C:\CombResearch\data` (incl. 4 in `q10_pilot_archive/`). Verified: every
+  sha256 and size matches its file, no `.tmp` left. Status counts: ok 124,
+  smoke 11, knownBad 5 (the pre-fix vertex chains), external 4 (Betre
+  .mx), negativeControl 2, usesKnownBad 1. No existing file was changed.
+  `.gitignore` now ignores `data/**/*.manifest.wl`; before that the
+  manifests showed as untracked in the main checkout.
+- Data fixes still open (from `provenance.md`): rerun the 5 `knownBad`
+  vertex chains (or restore the (3,5) `.bak`), run MH at (2,7) (3,6)
+  (4,4), rerun ecgmcmc then ecgexact on latest ECGrav. A rerun replaces
+  the backfilled manifest with a real one.
 
 ## Phase 2c: `lib_config.wl` + `config/cells.wl` (2026-11-20, Ryzen, branch `claude/phase-2c`)
 

@@ -6,6 +6,7 @@ archive/superseded_data/*.csv
 data/**/*.wxf
 data/**/*.wxf.bak
 data/*_chunk_*.wxf
+data/**/*.manifest.wl
 archive/superseded_data/*.wxf
 
 # --- Compute checkpoint artifacts ---
