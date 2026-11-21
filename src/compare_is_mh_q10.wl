@@ -23,6 +23,7 @@
 *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 dataDir = $CombDataDir;
 
 parseEnvList[s_String] := StringTrim /@ StringSplit[StringTrim[s], ","];
@@ -35,10 +36,8 @@ resolvedTargets = With[{e = Environment["COMB_CMP_TARGETS"]},
   If[StringQ[e] && StringLength[e] > 0, parseEnvList[e],
     {"vertex", "unlabeled", "facet"}]];
 
-isFile[p_, t_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q10_is_" <> t <> "_numv_hist.wxf"}];
-mhFile[p_, t_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q10_mh_" <> t <> ".wxf"}];
+isFile[p_, t_] := combFile["isHist", p, 10, t];
+mhFile[p_, t_] := combFile["mh", p, 10, t];
 
 binMh[mh_Association] := Module[{vals},
   vals = Select[mh["rows"][[All, 1]], NumericQ];
@@ -138,7 +137,7 @@ Do[
     NumberForm[r["l1"], {6, 4}]],
   {r, allResults}];
 
-Export[FileNameJoin[{dataDir, "q10_is_vs_mh_summary.wxf"}],
+Export[combFile["summary", "q10_is_vs_mh"],
   <|"results" -> allResults, "createdAt" -> DateString[]|>, "WXF"];
 Print[""];
 Print["wrote q10_is_vs_mh_summary.wxf"];

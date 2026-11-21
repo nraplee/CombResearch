@@ -9,6 +9,7 @@
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 $smokeTestSkip = True;
 Get[FileNameJoin[{DirectoryName[$InputFileName], "sampler_mh.wl"}]];
 
@@ -68,7 +69,7 @@ panelB = panelStyle[
    Use the 500k CSV instead of the 12M WXF — same qualitative comparison,
    loads in seconds instead of waiting on a 1.36GB import. *)
 Print["[C] p=4 q=10 MH + IS reweighted (500k CSV) ..."];
-isCsvFile = FileNameJoin[{$CombDataDir, "p4q10_n500000_samples.csv"}];
+isCsvFile = combFile["isSamplesCSV", combISStem[4, 10, 500000]];
 isCsv = Import[isCsvFile, "CSV"];
 isHeader = First[isCsv]; isCsvRows = Rest[isCsv];
 Print["  loaded ", Length[isCsvRows], " rows from CSV"];

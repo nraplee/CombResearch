@@ -16,6 +16,7 @@ projectRoot = ParentDirectory[
   If[ValueQ[$InputFileName] && $InputFileName =!= "",
     DirectoryName[$InputFileName], Directory[]]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 dataDir             = $CombDataDir;
 figuresDir          = $CombFiguresDir;
 stackedPreviewsDir  = FileNameJoin[{figuresDir, "stacked_previews"}];
@@ -60,7 +61,7 @@ panelLabel[p_] := Style["p = " <> ToString[p],
 
 (* ===== load =====
    Prefers WXF (fast, typed). Falls back to legacy CSV if no WXF present. *)
-stem[p_] := "p" <> ToString[p] <> "q" <> ToString[qVal] <> "_merged";
+stem[p_] := combMergedStem[p, qVal];
 
 loadSamplesWXF[path_] := Module[{a, headers, rows},
   Print["  loading ", FileNameTake[path], " (WXF)"];
@@ -82,8 +83,8 @@ loadSamplesCSV[path_] := Module[{raw, headers, body, cols, parseCol},
   AssociationThread[headers -> (parseCol /@ cols)]];
 
 loadSamples[p_] := Module[{wxf, csv},
-  wxf = FileNameJoin[{dataDir, stem[p] <> "_stats.wxf"}];
-  csv = FileNameJoin[{dataDir, stem[p] <> "_samples.csv"}];
+  wxf = FileNameJoin[{dataDir, combName["isStats", stem[p]]}];
+  csv = FileNameJoin[{dataDir, combName["isSamplesCSV", stem[p]]}];
   Which[
     FileExistsQ[wxf], loadSamplesWXF[wxf],
     FileExistsQ[csv], loadSamplesCSV[csv],

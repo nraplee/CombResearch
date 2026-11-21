@@ -9,17 +9,14 @@
 *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 dataDir = $CombDataDir;
 figDir  = FileNameJoin[{$CombFiguresDir, "is_vs_mh"}];
 If[!DirectoryQ[figDir], CreateDirectory[figDir]];
 
-truthFile[p_, q_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}];
-mhFile[p_, q_, t_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_mh_" <> t <> ".wxf"}];
-isFile[p_, q_, t_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <>
-  "_is_" <> t <> "_numv_hist.wxf"}];
+truthFile[p_, q_] := combFile["truth", p, q];
+mhFile[p_, q_, t_] := combFile["mh", p, q, t];
+isFile[p_, q_, t_] := combFile["isHist", p, q, t];
 
 piKey = <|"vertex" -> "piVertex", "facet" -> "piFacet",
           "unlabeled" -> "piUnlabeled"|>;

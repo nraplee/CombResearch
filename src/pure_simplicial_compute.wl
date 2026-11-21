@@ -42,6 +42,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
 outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
@@ -86,18 +87,15 @@ numChunks = Ceiling[sampleSize / chunkSize];
 chunkSizeFor[k_] := If[k == numChunks,
   sampleSize - (numChunks - 1) * chunkSize, chunkSize];
 
-baseStem[p_] := "p" <> ToString[p] <> "q" <> ToString[qVal] <>
-  "_n" <> ToString[sampleSize] <>
-  If[nnFixed === None, "", "_nn" <> ToString[nnFixed]] <>
-  If[runTag === "", "", "_" <> runTag];
+baseStem[p_] := combISStem[p, qVal, sampleSize, nnFixed, runTag];
 chunkStatsFile[p_, k_] := FileNameJoin[{outputDir,
-  baseStem[p] <> "_chunk_" <> ToString[k] <> "_stats.wxf"}];
+  combName["isChunkStats", baseStem[p], k]}];
 chunkComplexesFile[p_, k_] := FileNameJoin[{outputDir,
-  baseStem[p] <> "_chunk_" <> ToString[k] <> "_complexes.wxf"}];
+  combName["isChunkComplexes", baseStem[p], k]}];
 finalStatsFile[p_] := FileNameJoin[{outputDir,
-  baseStem[p] <> "_stats.wxf"}];
+  combName["isStats", baseStem[p]]}];
 finalComplexesFile[p_] := FileNameJoin[{outputDir,
-  baseStem[p] <> "_complexes.wxf"}];
+  combName["isComplexes", baseStem[p]]}];
 
 firstMissingChunk[p_] := Module[{k = 1},
   While[k <= numChunks &&

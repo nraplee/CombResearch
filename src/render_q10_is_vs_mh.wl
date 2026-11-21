@@ -9,14 +9,13 @@
 *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 dataDir = $CombDataDir;
 figDir  = FileNameJoin[{$CombFiguresDir, "is_vs_mh"}];
 If[!DirectoryQ[figDir], CreateDirectory[figDir]];
 
-isFile[p_, t_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q10_is_" <> t <> "_numv_hist.wxf"}];
-mhFile[p_, t_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q10_mh_" <> t <> ".wxf"}];
+isFile[p_, t_] := combFile["isHist", p, 10, t];
+mhFile[p_, t_] := combFile["mh", p, 10, t];
 
 binMh[mh_Association] := Module[{vals},
   vals = Select[mh["rows"][[All, 1]], NumericQ];

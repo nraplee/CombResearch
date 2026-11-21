@@ -36,6 +36,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
 dataDir = $CombDataDir;
 
 Get[FileNameJoin[{scriptDir, "load_ecgrav.wl"}]];
@@ -60,8 +61,6 @@ envOr[name_, default_, f_] := With[{e = Environment[name]},
 resolvedCells   = envOr["COMB_EFF_CELLS", defaultCells, parseEnvCells];
 resolvedTargets = envOr["COMB_EFF_TARGETS", defaultTargets, parseEnvList];
 
-cellFile[p_, q_, suffix_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_" <> suffix <> ".wxf"}];
 loadIf[f_] := If[FileExistsQ[f], Import[f, "WXF"], Missing["NoFile"]];
 
 (* ----- histograms and distances ----- *)
@@ -109,12 +108,12 @@ isRow[src_, rows_, q_, target_, wall_, ref_] := Module[{w},
 
 processCellTarget[p_, q_, target_] := Module[
   {truth, mh, mc, ex, vx, legacy, ref, refName, out = {}, halves},
-  truth  = loadIf[cellFile[p, q, "truth"]];
-  mh     = loadIf[cellFile[p, q, "mh_" <> target]];
-  mc     = loadIf[cellFile[p, q, "ecgmcmc_" <> target]];
-  ex     = loadIf[cellFile[p, q, "ecgexact_" <> target]];
-  vx     = loadIf[cellFile[p, q, "ecgexact_vertex"]];
-  legacy = If[q == 10, loadIf[cellFile[p, q, "merged_stats"]], Missing[]];
+  truth  = loadIf[combFile["truth", p, q]];
+  mh     = loadIf[combFile["mh", p, q, target]];
+  mc     = loadIf[combFile["ecg", p, q, "mcmc", target]];
+  ex     = loadIf[combFile["ecg", p, q, "exact", target]];
+  vx     = loadIf[combFile["ecg", p, q, "exact", "vertex"]];
+  legacy = If[q == 10, loadIf[combFile["isStats", combMergedStem[p, q]]], Missing[]];
 
   {ref, refName} = Which[
     AssociationQ[truth], {truthMarginal[truth, target], "truth"},
@@ -187,7 +186,7 @@ Do[
     {s, r["rows"]}],
   {r, results}];
 
-Export[FileNameJoin[{dataDir, "sampler_efficiency_summary.wxf"}],
+Export[combFile["summary", "sampler_efficiency"],
   <|"results" -> results, "ecGravVersion" -> $CombECGravVersion,
     "createdAt" -> DateString[]|>, "WXF"];
 Print[""];

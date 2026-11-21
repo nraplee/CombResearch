@@ -33,6 +33,8 @@
 $smokeTestSkip = True;
 Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
   "sampler_mh.wl"}]];   (* loads comb_paths.wl and load_ecgrav.wl *)
+Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
+  "lib_names.wl"}]];
 
 $allCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {3, 4}, {3, 5}, {3, 6}, {4, 4}, {4, 5}};
 $targets = {"vertex", "unlabeled", "facet"};
@@ -45,8 +47,7 @@ $cells = With[{e = Environment["COMB_REG_CELLS"]},
     ToExpression /@ StringSplit[#, ","] & /@ StringSplit[StringTrim[e], ";"],
     $allCells]];
 
-truth[p_, q_] := truth[p, q] = Import[FileNameJoin[{$CombDataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}], "WXF"];
+truth[p_, q_] := truth[p, q] = Import[combFile["truth", p, q], "WXF"];
 
 piKey = <|"vertex" -> "piVertex", "unlabeled" -> "piUnlabeled", "facet" -> "piFacet"|>;
 

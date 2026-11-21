@@ -46,6 +46,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
 dataDir = $CombDataDir;
 
 defaultCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},
@@ -79,10 +80,8 @@ Print["L1 threshold     = ", threshold];
 Print["source           = ", source];
 Print[""];
 
-truthFile[p_, q_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}];
-mhFile[p_, q_, t_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_" <> source <> "_" <> t <> ".wxf"}];
+truthFile[p_, q_] := combFile["truth", p, q];
+mhFile[p_, q_, t_] := combFile["samples", p, q, source, t];
 
 (* Map target name -> truth Association key holding the exact π over iso
    classes. *)
@@ -289,6 +288,6 @@ If[missingInputs =!= {},
 
 (* Nothing validated (all inputs missing): keep any existing summary. *)
 If[allResults =!= {},
-  Export[FileNameJoin[{dataDir, "validation_" <> source <> "_summary.wxf"}],
+  Export[combFile["validationSummary", source],
     <|"source" -> source, "threshold" -> threshold, "results" -> allResults,
       "createdAt" -> DateString[]|>, "WXF"]];

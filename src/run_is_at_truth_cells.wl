@@ -27,6 +27,7 @@
 (* Always read/write to the canonical main checkout data dir, since
    truth/MH WXFs and the q=10 IS hists live there. *)
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 dataDir = $CombDataDir;
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
@@ -73,9 +74,7 @@ statRow[c_] := {
 
 If[useParallel, DistributeDefinitions[oneSkeleton, statRow]];
 
-isFile[p_, q_, t_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <>
-  "_is_" <> t <> "_numv_hist.wxf"}];
+isFile[p_, q_, t_] := combFile["isHist", p, q, t];
 
 processOne[p_, q_] := Module[
   {outFiles, targets, allExist, numChunks, sizeFor,

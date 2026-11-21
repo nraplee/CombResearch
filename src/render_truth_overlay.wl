@@ -25,6 +25,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 dataDir             = $CombDataDir;
 figuresDir          = $CombFiguresDir;
 stackedPreviewsDir  = FileNameJoin[{figuresDir, "stacked_previews"}];
@@ -80,17 +81,14 @@ emptyPanel[p_, q_, msg_] := Graphics[
 truthCache = <||>;
 loadTruth[p_, q_] := Module[{key = {p, q}, path},
   If[KeyExistsQ[truthCache, key], Return[truthCache[key]]];
-  path = FileNameJoin[{dataDir,
-    "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}];
+  path = FileNameJoin[{dataDir, combName["truth", p, q]}];
   If[!FileExistsQ[path], truthCache[key] = $Failed; Return[$Failed]];
   truthCache[key] = Import[path, "WXF"]];
 
 mhCache = <||>;
 loadMH[p_, q_, target_] := Module[{key = {p, q, target}, path},
   If[KeyExistsQ[mhCache, key], Return[mhCache[key]]];
-  path = FileNameJoin[{dataDir,
-    "p" <> ToString[p] <> "q" <> ToString[q] <>
-    "_mh_" <> target <> ".wxf"}];
+  path = FileNameJoin[{dataDir, combName["mh", p, q, target]}];
   If[!FileExistsQ[path], mhCache[key] = $Failed; Return[$Failed]];
   mhCache[key] = Import[path, "WXF"]];
 

@@ -59,6 +59,7 @@ projectRoot = ParentDirectory[scriptDir];
 $smokeTestSkip = True;
 Get[FileNameJoin[{scriptDir, "sampler_mh.wl"}]];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
 
 (* ===== statsFor + exportWxfAtomic (Phase 2 shared libraries) ===== *)
 Get[FileNameJoin[{scriptDir, "lib_stats.wl"}]];
@@ -136,11 +137,10 @@ Print["samplerVersion    = ", samplerVersion];
 
 (* ===== Per-cell paths ===== *)
 mhFile[p_Integer, q_Integer, target_String] := FileNameJoin[{outputDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <>
-  "_mh_" <> target <> tagVal <> ".wxf"}];
+  combName["mh", p, q, target, tagVal]}];
 
 truthFile[p_Integer, q_Integer] := FileNameJoin[{outputDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}];
+  combName["truth", p, q]}];
 
 (* ===== L1 helper for the (3,5) validation gate =====
    Marginalize truth's piUnlabeled onto numV, bin chain numV the same
