@@ -47,6 +47,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_io.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
@@ -278,6 +279,6 @@ If[missingInputs =!= {},
 
 (* Nothing validated (all inputs missing): keep any existing summary. *)
 If[allResults =!= {},
-  Export[combFile["validationSummary", source],
+  exportWxfAtomic[combFile["validationSummary", source],
     <|"source" -> source, "threshold" -> threshold, "results" -> allResults,
-      "createdAt" -> DateString[]|>, "WXF"]];
+      "createdAt" -> DateString[]|>]];

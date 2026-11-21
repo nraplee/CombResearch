@@ -5,6 +5,7 @@
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_io.wl"}]];
 
 Print["loading p4q10_merged_stats.wxf ..."]; $$t0 = AbsoluteTime[];
 data = Import[combFile["isStats", combMergedStem[4, 10]]];
@@ -24,8 +25,9 @@ fracHist = AssociationThread[Keys[hist] -> N[Values[hist] / total]];
 Print["  done in ", AbsoluteTime[] - $$t0, "s"];
 Print["  numV bins: ", Sort[Keys[fracHist]]];
 
-Export[combFile["isHist", 4, 10, "unlabeled"],
+exportWxfAtomic[combFile["isHist", 4, 10, "unlabeled"],
   <|"target" -> "unlabeled", "p" -> 4, "q" -> 10,
     "sourceN" -> Length[rows], "fracHist" -> fracHist,
-    "ESS" -> N[Total[wU]^2 / Total[wU^2]]|>, "WXF"];
+    "ESS" -> N[Total[wU]^2 / Total[wU^2]]|>,
+  <|"inputs" -> {combName["isStats", combMergedStem[4, 10]]}|>];
 Print["wrote data/p4q10_is_unlabeled_numv_hist.wxf"];

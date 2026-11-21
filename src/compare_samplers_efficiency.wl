@@ -37,6 +37,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_io.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
@@ -180,8 +181,8 @@ Do[
     {s, r["rows"]}],
   {r, results}];
 
-Export[combFile["summary", "sampler_efficiency"],
+exportWxfAtomic[combFile["summary", "sampler_efficiency"],
   <|"results" -> results, "ecGravVersion" -> $CombECGravVersion,
-    "createdAt" -> DateString[]|>, "WXF"];
+    "createdAt" -> DateString[]|>];
 Print[""];
 Print["wrote data/sampler_efficiency_summary.wxf"];

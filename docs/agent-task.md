@@ -1,5 +1,62 @@
 # Current Agent Task
 
+## Phase 2d: per-output manifests + backfill (2026-11-21, Ryzen, branch `claude/phase-2d`)
+
+Phase 2 is complete with this. Next: Phase 3 (`run.wl`).
+
+- `src/lib_io.wl`: `exportWxfAtomic[path, expr, extra]` now also writes
+  `<file>.manifest.wl` (atomic, one per output): file, bytes, sha256,
+  writtenAt, script, code commit + dirty flag (or a `VERSION` file),
+  ECGrav commit/version/dir, `$Version`, `$SystemID`, kernel count, session
+  time, profile, every `combSetting` resolved so far with its source, plus
+  `extra`. `extra = None` skips it (IS chunks only). `combManifest[path]`
+  reads one. A failed manifest write warns instead of aborting, so a long
+  run keeps its remaining cells.
+- Writers: truth, MH, ECGrav and final IS files already used
+  `exportWxfAtomic`. Switched from plain `Export`: `concat_samples` (records
+  `"inputs"`), `precompute_is_histogram(s_q10)` (inputs), `run_is_at_truth_cells`
+  (seed rule), the 4 compare summaries and the validation summary. These are
+  now atomic too, so a crash no longer leaves a half-written merged file;
+  the merge needs room for one extra merged file while it writes.
+  `pure_simplicial_compute` records its seed rule, offset, runTag, N, chunk.
+- `tools/dev/backfill_manifest.wl` (dry run by default; `write`, `write
+  force`): provenance table from `provenance.md` as data (rows T1-B1, most
+  specific first), embedded small keys from files up to 300 MB, sha256.
+  Each manifest gets `backfilled -> <|at, tool, toolCommit, provenanceId|>`
+  and `provenance -> <|..., status|>` (`ok`, `knownBad` = the 5 pre-fix
+  vertex chains, `smoke`, `negativeControl`, `usesKnownBad` =
+  sampler_efficiency_summary, `external` = Betre .mx). Never replaces a
+  real-run manifest. **Dry run on the store: all 147 files match a row;
+  nothing written.** Not yet run with `write` on the store: needs the
+  user's go-ahead (it adds 147 small files to `C:\CombResearch\data`).
+- `make_check_root.wl` family `manifests`; `lib_names_test.wl` skips
+  `*.manifest.wl` and `*.tmp`.
+- Finding: wolframscript drops every script argument from the first one
+  that starts with `-`. The backfill takes plain words; Phase 3's planned
+  `run.wl --profile quick` syntax has to change (plain words or env).
+- `tests/manifest_test.wl` (new, own temp `COMB_ROOT`).
+- Checks run (scratch `COMB_ROOT` reused from 2b/2c, `COMB_ECGRAV_DIR` =
+  shared clone; nothing written to the store):
+  - `tests/manifest_test.wl`, `lib_config_test.wl`, `lib_names_test.wl`: pass.
+  - Backfill dry run on the real store: 147/147 files matched a row.
+  - Backfill `write` in the scratch root: 128 manifests in 66 s; a second
+    dry run keeps all 128. The 5 files with no row are smoke-run artifacts.
+  - Writers run in the scratch root: `enumerate_truth` (2,4),
+    `run_mh_chains` (2,4) facet, `run_ecgrav_samplers` (2,4) vertex,
+    `run_is_at_truth_cells` (3,5), `run_p3.wl` (`COMB_RUNTAG=smoke2d`,
+    N=200), the 4 compares, `validate_mh_vs_truth`,
+    `precompute_is_histograms_q10` (`COMB_FORCE=1`). Each left a real-run
+    manifest replacing the backfilled one: sha256 matches, ECGrav
+    `474b5c2` where loaded, kernels 16 for parallel runs, settings with
+    sources, seeds/inputs where given. No chunk manifests, no `.tmp` left.
+  - One `compare_3way.wl` run exited with "The product exited because an
+    error occurred" after writing its summary and manifest; 3 reruns and
+    10 bare-kernel exits did not reproduce it. Seen once, cause unknown.
+  - `kernelCount` no longer calls `Kernels[]` unless the parallel package
+    is loaded (it cost 1.4 s per script and loaded Parallel for nothing).
+- Not done: `backfill_manifest.wl write` on the real store (waiting for
+  the user's go-ahead).
+
 ## Phase 2c: `lib_config.wl` + `config/cells.wl` (2026-11-20, Ryzen, branch `claude/phase-2c`)
 
 Last in Phase 2: per-output manifests + `tools/dev/backfill_manifest.wl`
