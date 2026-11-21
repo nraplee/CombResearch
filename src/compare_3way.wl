@@ -16,6 +16,7 @@
 *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 dataDir = $CombDataDir;
 
 parseEnvCells[s_String] := Module[{pairs},
@@ -31,13 +32,9 @@ targets = With[{e = Environment["COMB_3W_TARGETS"]},
   If[StringQ[e] && StringLength[e] > 0, parseEnvList[e],
     {"vertex", "unlabeled", "facet"}]];
 
-truthFile[p_, q_]    := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}];
-mhFile[p_, q_, t_]   := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_mh_" <> t <> ".wxf"}];
-isFile[p_, q_, t_]   := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <>
-  "_is_" <> t <> "_numv_hist.wxf"}];
+truthFile[p_, q_]    := combFile["truth", p, q];
+mhFile[p_, q_, t_]   := combFile["mh", p, q, t];
+isFile[p_, q_, t_]   := combFile["isHist", p, q, t];
 
 piKey = <|"vertex" -> "piVertex", "facet" -> "piFacet",
           "unlabeled" -> "piUnlabeled"|>;
@@ -147,7 +144,7 @@ Do[
     NumberForm[r["l1IsMh"], {5, 4}]],
   {r, results}];
 
-Export[FileNameJoin[{dataDir, "is_mh_truth_3way_summary.wxf"}],
+Export[combFile["summary", "is_mh_truth_3way"],
   <|"results" -> results, "createdAt" -> DateString[]|>, "WXF"];
 Print[""];
 Print["wrote is_mh_truth_3way_summary.wxf"];

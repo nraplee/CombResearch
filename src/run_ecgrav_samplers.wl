@@ -44,6 +44,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
 outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
@@ -93,10 +94,8 @@ Print["N / batch / seed= ", numSamplesVal, " / ", batchVal, " / ", seedVal];
 If[samplerVal === "mcmc", Print["trace steps     = ", traceStepsVal]];
 
 outFile[p_, q_, t_] := FileNameJoin[{outputDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_ecg" <> samplerVal <>
-  "_" <> t <> ".wxf"}];
-truthFile[p_, q_] := FileNameJoin[{outputDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}];
+  combName["ecg", p, q, samplerVal, t]}];
+truthFile[p_, q_] := FileNameJoin[{outputDir, combName["truth", p, q]}];
 
 (* ===== Truth class lookup: canonical key -> 1-based truth index ===== *)
 truthKeyIndex[p_, q_] := Module[{tf = truthFile[p, q], truth},

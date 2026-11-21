@@ -17,6 +17,7 @@
 *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 dataDir = $CombDataDir;
 
 targetColumn = <|"vertex" -> "wVertex", "unlabeled" -> "wUnlabeled",
@@ -33,8 +34,7 @@ $cachedHeaders = None;
 
 ensureCache[p_] := If[$cachedP =!= p,
   Module[{srcFile, t0, data},
-    srcFile = FileNameJoin[{dataDir,
-      "p" <> ToString[p] <> "q10_merged_stats.wxf"}];
+    srcFile = combFile["isStats", combMergedStem[p, 10]];
     Print["  loading ", FileNameTake[srcFile], " ..."];
     t0 = AbsoluteTime[];
     data = Import[srcFile];
@@ -46,8 +46,7 @@ ensureCache[p_] := If[$cachedP =!= p,
 
 processOne[p_, target_] := Module[
   {outFile, numVs, col, w, ess, hist, total, frac, t0},
-  outFile = FileNameJoin[{dataDir,
-    "p" <> ToString[p] <> "q10_is_" <> target <> "_numv_hist.wxf"}];
+  outFile = combFile["isHist", p, 10, target];
 
   Print["====  p=", p, "  target=", target, "  ===="];
   If[FileExistsQ[outFile] && FileByteCount[outFile] > 0 && !forceRecompute,

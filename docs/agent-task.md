@@ -1,5 +1,64 @@
 # Current Agent Task
 
+## Phase 2b: `lib_names.wl` (2026-11-20, Ryzen, branch `claude/phase-2b-371047`)
+
+Next in Phase 2: `lib_config.wl` + `config/cells.wl`, then manifests +
+`backfill_manifest.wl`.
+
+- `src/lib_names.wl`: `combName[family, args...]` (bare name) and
+  `combFile[...]` (path under `$CombDataDir`, or `$CombLogsDir` for
+  `"log"`/`"err"`), plus `combISStem`, `combMergedStem`, `combMHWarmTag`,
+  `combISStatsPattern`. Families: truth (with pipeline), mh (with tag), ecg,
+  samples (validate/efficiency source), isHist, isStats/isComplexes,
+  isChunk*, isSamplesCSV, validationSummary, summary, and the launcher log
+  names (mh, mhQ10, ecg, compute). Every name is today's flat name; a call
+  matching no family aborts.
+- 20 scripts switched from hand-built `"p" <> ToString[p] <> ...` names:
+  `compare_3way`, `compare_is_mh_q10`, `compare_q10_warm_vs_prod`,
+  `compare_samplers_efficiency`, `concat_samples`, `enumerate_truth`,
+  `precompute_is_histogram(s_q10)`, `pure_simplicial_compute`,
+  `render_3way`, `render_all_figures`, `render_q10_is_vs_mh`,
+  `render_q10_warm_vs_prod`, `render_sampler_progress`,
+  `render_truth_overlay`, `run_ecgrav_samplers`, `run_is_at_truth_cells`,
+  `run_mh_chains`, `validate_counts_vs_truth`, `validate_mh_vs_truth`,
+  `tests/ecgrav_regression`. Scripts with their own output dir
+  (`COMB_MH_OUTDIR`, `outputDir`) keep it and use `combName`.
+- Left alone: `migrate_csv_to_wxf.wl` (parses legacy CSV names),
+  `probe_betre_mx.wl` (fixed Betre `.mx` names), figure file names, and the
+  `.ps1` launchers/monitors (their log names match the "log" family; Phase 3
+  `run.wl` will use `combFile["log", ...]`).
+- `tests/lib_names_test.wl` (new, read-only): 36 literal cases; every file
+  in the store whose name has a family's shape is parsed and rebuilt
+  (138 data files, 51 logs, all identical); unknown calls abort.
+- Checks run (all pass; scratch `COMB_ROOT` from `make_check_root.wl ...
+  golden`, `COMB_ECGRAV_DIR` = the shared clone, nothing written to the
+  store):
+  - `tests/lib_names_test.wl`, against the real store.
+  - Read-only drivers rerun: summaries from `compare_is_mh_q10`,
+    `compare_q10_warm_vs_prod` are `===` the stored ones (except
+    `createdAt`). `compare_3way` matches except the (3,5) vertex row,
+    which now reads the pre-fix chain in the store (`mhAccept` 1.0; the May
+    summary used the good chain). `validate_mh_vs_truth` ecgexact differs only
+    in the unseeded `iidPValue`.
+  - Run clean: `validate_counts_vs_truth` (0 mismatches),
+    `validate_mh_vs_truth` (mh), `compare_samplers_efficiency` (2,4)+(3,5),
+    `render_3way`, `render_q10_is_vs_mh`, `render_q10_warm_vs_prod`,
+    `render_truth_overlay`, `render_sampler_progress`,
+    `precompute_is_histograms_q10` (finds and skips all 9 existing hists).
+  - Writers, at small size: `enumerate_truth` (2,4) cheap (equal to the store
+    except provenance fields) and mckay (`p2q4_truth_mckay.wxf`),
+    `run_mh_chains` (2,4) and with `COMB_MH_TAG=_seed67890_warm5`,
+    `run_ecgrav_samplers` (2,4) N=400, `run_is_at_truth_cells` (3,5) N=600,
+    `run_p3.wl` `COMB_N=200` (`p3q10_n200_{stats,complexes}.wxf`),
+    `tests/ecgrav_regression.wl` (2,4).
+  - Not run: `concat_samples`, `render_all_figures`,
+    `precompute_is_histogram` (each loads 0.3-2.8 GB merged stats); their
+    names are covered by the test's literal cases and store round trip.
+- Gotcha found: a script that `Abort[]`s still exits 0 from wolframscript,
+  and in a scratch root without `ECGrav-upstream` every ECGrav-loading
+  script aborts. Set `COMB_ECGRAV_DIR=C:\CombResearch\ECGrav-upstream` for
+  scratch-root checks and grep logs for `no ECGrav at`.
+
 ## Phase 2a: shared stats/io libraries + fixes (2026-11-20, Ryzen, branch `claude/phase-2-6f3995`)
 
 Phase 2 is split into PRs: **2a** (this), then `lib_names.wl`,

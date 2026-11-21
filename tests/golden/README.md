@@ -61,6 +61,10 @@ $env:COMB_ROOT = "C:\scratch\combcheck"; wolframscript -file tests\golden\golden
 (the q=10 merged stats), which are inputs that nothing rewrites. Never run
 `concat_samples.wl` against a check root.
 
+A check root has no `ECGrav-upstream`, so any script that loads ECGrav
+aborts there, and wolframscript still exits 0. Point it at the shared clone
+first: `$env:COMB_ECGRAV_DIR = "C:\CombResearch\ECGrav-upstream"`.
+
 ### What is frozen, and known-bad inputs
 
 The store is frozen **as it is** on 2026-11-20. The five pre-fix vertex MH

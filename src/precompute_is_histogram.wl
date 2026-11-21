@@ -4,9 +4,10 @@
    per render call. *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 
 Print["loading p4q10_merged_stats.wxf ..."]; $$t0 = AbsoluteTime[];
-data = Import[FileNameJoin[{$CombDataDir, "p4q10_merged_stats.wxf"}]];
+data = Import[combFile["isStats", combMergedStem[4, 10]]];
 rows = data["rows"];
 Print["  loaded ", Length[rows], " rows in ", AbsoluteTime[] - $$t0, "s"];
 
@@ -23,7 +24,7 @@ fracHist = AssociationThread[Keys[hist] -> N[Values[hist] / total]];
 Print["  done in ", AbsoluteTime[] - $$t0, "s"];
 Print["  numV bins: ", Sort[Keys[fracHist]]];
 
-Export[FileNameJoin[{$CombDataDir, "p4q10_is_unlabeled_numv_hist.wxf"}],
+Export[combFile["isHist", 4, 10, "unlabeled"],
   <|"target" -> "unlabeled", "p" -> 4, "q" -> 10,
     "sourceN" -> Length[rows], "fracHist" -> fracHist,
     "ESS" -> N[Total[wU]^2 / Total[wU^2]]|>, "WXF"];

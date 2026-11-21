@@ -22,6 +22,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
 dataDir = $CombDataDir;
 
 Get[FileNameJoin[{scriptDir, "load_ecgrav.wl"}]];
@@ -38,8 +39,7 @@ parseEnvCells[s_String] := Module[{pairs},
 resolvedCells = With[{e = Environment["COMB_VAL_CELLS"]},
   If[StringQ[e] && StringLength[e] > 0, parseEnvCells[e], defaultCells]];
 
-truthFile[p_, q_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth.wxf"}];
+truthFile[p_, q_] := combFile["truth", p, q];
 
 (* Per-n exact counts from a truth payload. *)
 truthCountsByN[truth_Association] := Module[{q = truth["q"], cs},

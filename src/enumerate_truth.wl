@@ -33,6 +33,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
 outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
@@ -115,9 +116,7 @@ Print["enumeratorVersion = ", enumeratorVersion];
    Non-cheap pipelines get a tagged filename so cheap and McKay runs of
    the same cell can coexist for cross-validation. *)
 truthFile[p_Integer, q_Integer] := FileNameJoin[{outputDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_truth"
-    <> If[pipelineName === "cheap", "", "_" <> pipelineName]
-    <> ".wxf"}];
+  combName["truth", p, q, pipelineName]}];
 
 statsHeaders = $CombStatsHeaders;
 

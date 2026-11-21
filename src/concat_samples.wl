@@ -23,10 +23,11 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
   DirectoryName[$InputFileName], Directory[]];
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
 dataDir = $CombDataDir;
 
-mergedStatsName[p_]     := "p" <> ToString[p] <> "q" <> ToString[qVal] <> "_merged_stats.wxf";
-mergedComplexesName[p_] := "p" <> ToString[p] <> "q" <> ToString[qVal] <> "_merged_complexes.wxf";
+mergedStatsName[p_]     := combName["isStats", combMergedStem[p, qVal]];
+mergedComplexesName[p_] := combName["isComplexes", combMergedStem[p, qVal]];
 mergedStatsPath[p_]     := FileNameJoin[{dataDir, mergedStatsName[p]}];
 mergedComplexesPath[p_] := FileNameJoin[{dataDir, mergedComplexesName[p]}];
 
@@ -34,7 +35,7 @@ mergedComplexesPath[p_] := FileNameJoin[{dataDir, mergedComplexesName[p]}];
    Pattern:  p{p}q10_*_stats.wxf
    Excludes: the merged output itself. *)
 statsInputsForP[p_] := Module[{pattern, matches},
-  pattern = "p" <> ToString[p] <> "q" <> ToString[qVal] <> "_*_stats.wxf";
+  pattern = combISStatsPattern[p, qVal];
   matches = FileNames[pattern, dataDir];
   Select[matches, FileBaseName[#] =!= FileBaseName[mergedStatsName[p]] &]];
 

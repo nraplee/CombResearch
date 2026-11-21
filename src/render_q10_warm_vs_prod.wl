@@ -9,6 +9,7 @@
 *)
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
 dataDir = $CombDataDir;
 figDir  = FileNameJoin[{$CombFiguresDir, "is_vs_mh"}];
 If[!DirectoryQ[figDir], CreateDirectory[figDir]];
@@ -16,14 +17,9 @@ If[!DirectoryQ[figDir], CreateDirectory[figDir]];
 cells = {{3, 10, "unlabeled", 14}, {3, 10, "facet", 14},
          {4, 10, "unlabeled", 18}, {4, 10, "facet", 18}};
 
-isFile[p_, q_, t_]     := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <>
-  "_is_" <> t <> "_numv_hist.wxf"}];
-mhFile[p_, q_, t_]     := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <> "_mh_" <> t <> ".wxf"}];
-warmFile[p_, q_, t_, n_] := FileNameJoin[{dataDir,
-  "p" <> ToString[p] <> "q" <> ToString[q] <>
-  "_mh_" <> t <> "_seed67890_warm" <> ToString[n] <> ".wxf"}];
+isFile[p_, q_, t_]     := combFile["isHist", p, q, t];
+mhFile[p_, q_, t_]     := combFile["mh", p, q, t];
+warmFile[p_, q_, t_, n_] := combFile["mh", p, q, t, combMHWarmTag[67890, n]];
 
 binMh[mh_] := Module[{vals},
   vals = Select[mh["rows"][[All, 1]], NumericQ];
