@@ -105,8 +105,15 @@ firstMissingChunk[p_] := Module[{k = 1},
 (* Per-chunk files hold bare lists — the Association wrapper with metadata is
    only applied at the final consolidated file. *)
 exportChunkAtomic[p_, k_, sample_, rows_] := (
-  exportWxfAtomic[chunkStatsFile[p, k], rows];
-  exportWxfAtomic[chunkComplexesFile[p, k], sample]);
+  exportWxfAtomic[chunkStatsFile[p, k], rows, None];
+  exportWxfAtomic[chunkComplexesFile[p, k], sample, None]);
+
+(* Manifest extras for the final IS files: how the per-chunk seeds were made. *)
+isManifestExtra[p_] := <|"seedRule" ->
+    "SeedRandom[randomSeed + runSeedOffset + 1000 p + k], k = chunk",
+  "randomSeed" -> randomSeed, "runSeedOffset" -> runSeedOffset,
+  "runTag" -> runTag, "sampleSize" -> sampleSize, "chunkSize" -> chunkSize,
+  "nnFixed" -> nnFixed|>;
 
 consolidateChunks[p_] := Module[{allRows, allComplexes, n, statsAssoc, complexesAssoc},
   allRows      = Join @@ (Import[chunkStatsFile[p, #], "WXF"] & /@ Range[numChunks]);
@@ -127,8 +134,8 @@ consolidateChunks[p_] := Module[{allRows, allComplexes, n, statsAssoc, complexes
     "n"         -> n,
     "runTag"    -> runTag,
     "createdAt" -> DateString[]|>;
-  exportWxfAtomic[finalStatsFile[p],     statsAssoc];
-  exportWxfAtomic[finalComplexesFile[p], complexesAssoc];
+  exportWxfAtomic[finalStatsFile[p],     statsAssoc,     isManifestExtra[p]];
+  exportWxfAtomic[finalComplexesFile[p], complexesAssoc, isManifestExtra[p]];
   Do[
     DeleteFile[chunkStatsFile[p, k]];
     DeleteFile[chunkComplexesFile[p, k]],

@@ -24,6 +24,7 @@
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_io.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
@@ -132,7 +133,7 @@ Do[
     NumberForm[r["l1"], {6, 4}]],
   {r, allResults}];
 
-Export[combFile["summary", "q10_is_vs_mh"],
-  <|"results" -> allResults, "createdAt" -> DateString[]|>, "WXF"];
+exportWxfAtomic[combFile["summary", "q10_is_vs_mh"],
+  <|"results" -> allResults, "createdAt" -> DateString[]|>];
 Print[""];
 Print["wrote q10_is_vs_mh_summary.wxf"];

@@ -113,7 +113,9 @@ logRules = {
     combName[e, "compute", int[p], sfx]};
 
 roundTrip[dir_, rules_] := Module[{names, hit = 0, other = {}, rebuilt},
-  names = FileNameTake /@ Select[FileNames["*", dir], !DirectoryQ[#] &];
+  (* manifests (lib_io.wl) and tmp files are not outputs *)
+  names = FileNameTake /@ Select[FileNames["*", dir],
+    !DirectoryQ[#] && !StringEndsQ[#, ".manifest.wl" | ".tmp"] &];
   Do[
     rebuilt = FirstCase[rules, r_ /; StringMatchQ[n, First[r]] :>
       First[StringCases[n, r, 1]], None];

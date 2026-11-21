@@ -24,6 +24,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_io.wl"}]];
 dataDir = $CombDataDir;
 
 mergedStatsName[p_]     := combName["isStats", combMergedStem[p, qVal]];
@@ -102,7 +103,8 @@ mergeForP[p_] := Module[{statsFiles, complexFiles, statsAssocs, allRows,
     "runTag"    -> "merged",
     "sourceFiles" -> (FileNameTake /@ statsFiles),
     "createdAt" -> DateString[]|>;
-  Export[mergedStatsPath[p], mergedStats, "WXF"];
+  exportWxfAtomic[mergedStatsPath[p], mergedStats,
+    <|"inputs" -> (FileNameTake /@ statsFiles)|>];
   Print["  wrote ", FileNameTake[mergedStatsPath[p]]];
 
   If[hasAllComplexes,
@@ -118,7 +120,8 @@ mergeForP[p_] := Module[{statsFiles, complexFiles, statsAssocs, allRows,
       "runTag"      -> "merged",
       "sourceFiles" -> (FileNameTake /@ complexFiles),
       "createdAt"   -> DateString[]|>;
-    Export[mergedComplexesPath[p], mergedComplexes, "WXF"];
+    exportWxfAtomic[mergedComplexesPath[p], mergedComplexes,
+      <|"inputs" -> (FileNameTake /@ complexFiles)|>];
     Print["  wrote ", FileNameTake[mergedComplexesPath[p]]],
     Print["  skipped ", FileNameTake[mergedComplexesPath[p]],
       " (some inputs lack complexes)"]];

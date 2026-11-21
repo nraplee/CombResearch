@@ -46,7 +46,8 @@ $families = <|
   "summaries"      -> {"*_summary.wxf"},
   "mharchive"      -> {"p*_mh_*.wxf.bak", "q10_pilot_archive/*.wxf"},
   "iscsv"          -> {"p*q10_n*_samples.csv"},
-  "betre"          -> {"p*SX*.mx"}
+  "betre"          -> {"p*SX*.mx"},
+  "manifests"      -> {"*.manifest.wl", "q10_pilot_archive/*.manifest.wl"}
 |>;
 
 (* Every input of tests/golden/golden_derived.wl. *)

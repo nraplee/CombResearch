@@ -28,6 +28,7 @@
    truth/MH WXFs and the q=10 IS hists live there. *)
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_io.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
@@ -120,9 +121,10 @@ processOne[p_, q_] := Module[
     frac = KeySort @ AssociationThread[Keys[hist] -> Values[hist]/total];
     Print["  target=", t, "  ESS=", NumberForm[ess, 5],
       "  bins=", Length[frac]];
-    Export[outFiles[t], <|"p" -> p, "q" -> q, "target" -> t,
+    exportWxfAtomic[outFiles[t], <|"p" -> p, "q" -> q, "target" -> t,
       "sourceN" -> Length[allNumVs], "ESS" -> ess,
-      "fracHist" -> frac, "seed" -> seed|>, "WXF"];
+      "fracHist" -> frac, "seed" -> seed|>,
+      <|"seed" -> seed, "seedRule" -> "SeedRandom[seed + 1000 p + 100 q + k], k = chunk"|>];
     Print["    wrote ", FileNameTake[outFiles[t]]],
     {t, targets}]];
 

@@ -18,6 +18,7 @@
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_io.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
@@ -79,9 +80,10 @@ processOne[p_, target_] := Module[
   Do[Print["    numV=", k, "  frac=", NumberForm[frac[k], {6, 5}]],
     {k, Keys[frac]}];
 
-  Export[outFile, <|"p" -> p, "q" -> 10, "target" -> target,
+  exportWxfAtomic[outFile, <|"p" -> p, "q" -> 10, "target" -> target,
     "sourceN" -> Length[$cachedRows], "ESS" -> ess,
-    "fracHist" -> frac|>, "WXF"];
+    "fracHist" -> frac|>,
+    <|"inputs" -> {combName["isStats", combMergedStem[p, 10]]}|>];
   Print["  wrote ", FileNameTake[outFile]];
   Print[""]];
 
