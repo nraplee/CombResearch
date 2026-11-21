@@ -17,20 +17,11 @@
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
-parseEnvCells[s_String] := Module[{pairs},
-  pairs = StringSplit[StringTrim[s], ";"];
-  pairs = StringSplit[#, ","] & /@ pairs;
-  ToExpression /@ # & /@ pairs];
-parseEnvList[s_String] := StringTrim /@ StringSplit[StringTrim[s], ","];
-
-cells = With[{e = Environment["COMB_3W_CELLS"]},
-  If[StringQ[e] && StringLength[e] > 0, parseEnvCells[e],
-    {{3, 5}, {4, 5}}]];
-targets = With[{e = Environment["COMB_3W_TARGETS"]},
-  If[StringQ[e] && StringLength[e] > 0, parseEnvList[e],
-    {"vertex", "unlabeled", "facet"}]];
+cells = combSetting["COMB_3W_CELLS", {{3, 5}, {4, 5}}, "cells"];
+targets = combSetting["COMB_3W_TARGETS", {"vertex", "unlabeled", "facet"}, "list"];
 
 truthFile[p_, q_]    := combFile["truth", p, q];
 mhFile[p_, q_, t_]   := combFile["mh", p, q, t];

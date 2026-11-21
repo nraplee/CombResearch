@@ -34,6 +34,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_config.wl"}]];
 outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
@@ -54,19 +55,9 @@ expectedIsoCounts = <|
   {2, 4} -> 11, {2, 5} -> 26, {2, 6} -> 68,
   {3, 4} -> 66, {3, 5} -> 445|>;
 
-parseEnvCells[s_String] := Module[{pairs},
-  pairs = StringSplit[StringTrim[s], ";"];
-  pairs = StringSplit[#, ","] & /@ pairs;
-  ToExpression /@ # & /@ pairs];
+resolvedCells = combSetting["COMB_TRUTH_CELLS", defaultCells, "cells"];
 
-resolvedCells = Which[
-  StringQ[Environment["COMB_TRUTH_CELLS"]] &&
-    StringLength[Environment["COMB_TRUTH_CELLS"]] > 0,
-    parseEnvCells[Environment["COMB_TRUTH_CELLS"]],
-  True, defaultCells];
-
-forceRecompute = With[{e = Environment["COMB_FORCE"]},
-  StringQ[e] && e === "1"];
+forceRecompute = combSetting["COMB_FORCE", False, "flag"];
 
 (* ===== Pipeline + parallelism env knobs (added 2026-05-13 Phase 4b) =====
    COMB_TRUTH_PIPELINE selects which enumerator: cheap | bliss | mckay.
@@ -76,19 +67,14 @@ forceRecompute = With[{e = Environment["COMB_FORCE"]},
      where ~14 subkernels would multiply working-set memory past 32 GB.
    When pipeline != cheap, the output filename gets a `_<pipeline>` tag
    so cheap and McKay runs of the same cell coexist for cross-validation. *)
-pipelineName = With[{e = Environment["COMB_TRUTH_PIPELINE"]},
-  If[StringQ[e] && StringLength[e] > 0, ToLowerCase[StringTrim[e]],
-    "cheap"]];
+pipelineName = ToLowerCase[StringTrim[combSetting["COMB_TRUTH_PIPELINE", "cheap"]]];
 pipelineFn = Switch[pipelineName,
   "cheap", streamingEnumeratePure,
   "bliss", streamingEnumeratePureBLISS,
   "mckay", streamingEnumeratePureMcKay,
   _, Print["    ERROR: unknown COMB_TRUTH_PIPELINE: ", pipelineName,
        " (expected cheap | bliss | mckay)"]; Abort[]];
-parallelMode = With[{e = Environment["COMB_TRUTH_PARALLEL"]},
-  If[StringQ[e] && StringLength[e] > 0,
-    ToLowerCase[StringTrim[e]] =!= "false",
-    True]];
+parallelMode = combSetting["COMB_TRUTH_PARALLEL", True, "notFalse"];
 
 (* ===== Provenance ===== *)
 (* Detected by load_ecgrav.wl. Before Phase 2 this was a hardcoded "1.0.0"

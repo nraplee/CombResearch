@@ -18,13 +18,13 @@
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
 targetColumn = <|"vertex" -> "wVertex", "unlabeled" -> "wUnlabeled",
                  "facet"  -> "wFacet"|>;
 
-forceRecompute = With[{e = Environment["COMB_FORCE"]},
-  StringQ[e] && e === "1"];
+forceRecompute = combSetting["COMB_FORCE", False, "flag"];
 
 (* Per-p cache: import the 12M-row stats file once, then drive all three
    target reweightings from the cached rows. *)

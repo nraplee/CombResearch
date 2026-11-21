@@ -45,6 +45,7 @@ scriptDir = If[ValueQ[$InputFileName] && $InputFileName =!= "",
 projectRoot = ParentDirectory[scriptDir];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{scriptDir, "lib_names.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_config.wl"}]];
 outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
@@ -63,23 +64,15 @@ statsHeaders = $CombStatsHeaders;
 labelChoice = <|"vertex" -> 0, "facet" -> 1, "unlabeled" -> 2|>;
 
 (* ===== Env parsing ===== *)
-parseEnvCells[s_String] := Module[{pairs},
-  pairs = StringSplit[StringTrim[s], ";"];
-  pairs = StringSplit[#, ","] & /@ pairs;
-  ToExpression /@ # & /@ pairs];
-parseEnvList[s_String] := StringTrim /@ StringSplit[StringTrim[s], ","];
-envOr[name_, default_, f_:Identity] := With[{e = Environment[name]},
-  If[StringQ[e] && StringLength[e] > 0, f[e], default]];
-
-resolvedCells   = envOr["COMB_ECG_CELLS", defaultCells, parseEnvCells];
-resolvedTargets = envOr["COMB_ECG_TARGETS", defaultTargets, parseEnvList];
-samplerVal      = envOr["COMB_ECG_SAMPLER", "exact"];
-numSamplesVal   = envOr["COMB_ECG_N",
-  If[samplerVal === "mcmc", 20000, 100000], ToExpression];
-batchVal        = envOr["COMB_ECG_BATCH", 2000, ToExpression];
-seedVal         = envOr["COMB_ECG_SEED", 24680, ToExpression];
-traceStepsVal   = envOr["COMB_ECG_TRACE_STEPS", 200000, ToExpression];
-forceRecompute  = envOr["COMB_FORCE", False, # === "1" &];
+resolvedCells   = combSetting["COMB_ECG_CELLS", defaultCells, "cells"];
+resolvedTargets = combSetting["COMB_ECG_TARGETS", defaultTargets, "list"];
+samplerVal      = combSetting["COMB_ECG_SAMPLER", "exact"];
+numSamplesVal   = combSetting["COMB_ECG_N",
+  If[samplerVal === "mcmc", 20000, 100000], "expr"];
+batchVal        = combSetting["COMB_ECG_BATCH", 2000, "expr"];
+seedVal         = combSetting["COMB_ECG_SEED", 24680, "expr"];
+traceStepsVal   = combSetting["COMB_ECG_TRACE_STEPS", 200000, "expr"];
+forceRecompute  = combSetting["COMB_FORCE", False, "flag"];
 
 If[!MemberQ[{"exact", "mcmc", "legacyfacet"}, samplerVal],
   Print["unknown COMB_ECG_SAMPLER: ", samplerVal]; Abort[]];

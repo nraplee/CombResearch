@@ -28,28 +28,17 @@
    truth/MH WXFs and the q=10 IS hists live there. *)
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 dataDir = $CombDataDir;
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 
-parseEnvCells[s_String] := Module[{pairs},
-  pairs = StringSplit[StringTrim[s], ";"];
-  pairs = StringSplit[#, ","] & /@ pairs;
-  ToExpression /@ # & /@ pairs];
-
-cells = With[{e = Environment["COMB_IS_CELLS"]},
-  If[StringQ[e] && StringLength[e] > 0, parseEnvCells[e],
-    {{3, 5}, {4, 5}}]];
-nSamples = With[{e = Environment["COMB_IS_N"]},
-  If[StringQ[e] && StringLength[e] > 0, ToExpression[e], 100000]];
-chunkSize = With[{e = Environment["COMB_IS_CHUNK"]},
-  If[StringQ[e] && StringLength[e] > 0, ToExpression[e], 5000]];
-seed = With[{e = Environment["COMB_IS_SEED"]},
-  If[StringQ[e] && StringLength[e] > 0, ToExpression[e], 42]];
-useParallel = With[{e = Environment["COMB_IS_PAR"]},
-  !(StringQ[e] && e === "0")];
-forceRecompute = With[{e = Environment["COMB_FORCE"]},
-  StringQ[e] && e === "1"];
+cells = combSetting["COMB_IS_CELLS", {{3, 5}, {4, 5}}, "cells"];
+nSamples = combSetting["COMB_IS_N", 100000, "expr"];
+chunkSize = combSetting["COMB_IS_CHUNK", 5000, "expr"];
+seed = combSetting["COMB_IS_SEED", 42, "expr"];
+useParallel = combSetting["COMB_IS_PAR", True, "notZero"];
+forceRecompute = combSetting["COMB_FORCE", False, "flag"];
 
 Print["dataDir     = ", dataDir];
 Print["cells       = ", cells];

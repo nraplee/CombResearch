@@ -35,17 +35,15 @@ Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
   "sampler_mh.wl"}]];   (* loads comb_paths.wl and load_ecgrav.wl *)
 Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
   "lib_names.wl"}]];
+Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
+  "lib_config.wl"}]];
 
 $allCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {3, 4}, {3, 5}, {3, 6}, {4, 4}, {4, 5}};
 $targets = {"vertex", "unlabeled", "facet"};
 $threshold = 0.05;
 $mhThreshold = 0.1;
-$n = With[{e = Environment["COMB_REG_N"]},
-  If[StringQ[e] && StringLength[e] > 0, ToExpression[e], 20000]];
-$cells = With[{e = Environment["COMB_REG_CELLS"]},
-  If[StringQ[e] && StringLength[e] > 0,
-    ToExpression /@ StringSplit[#, ","] & /@ StringSplit[StringTrim[e], ";"],
-    $allCells]];
+$n = combSetting["COMB_REG_N", 20000, "expr"];
+$cells = combSetting["COMB_REG_CELLS", $allCells, "cells"];
 
 truth[p_, q_] := truth[p, q] = Import[combFile["truth", p, q], "WXF"];
 

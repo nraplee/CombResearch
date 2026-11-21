@@ -3,8 +3,7 @@
    falls back to 500000 if unset. ParallelMap on. *)
 pListOverride       = {2};
 useParallelOverride = True;
+Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
 If[!ValueQ[sampleSizeOverride],
-  With[{envN = Environment["COMB_N"]},
-    sampleSizeOverride = If[StringQ[envN] && StringLength[envN] > 0,
-      ToExpression[envN], 500000]]];
+  sampleSizeOverride = combSetting["COMB_N", 500000, "expr"]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "pure_simplicial_compute.wl"}]];
