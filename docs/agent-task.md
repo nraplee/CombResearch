@@ -267,7 +267,7 @@ Tick items off in this file and commit the results (handoff protocol).
     gives ESS/s.
 12. **Record and commit.**
     - Put the results in this file.
-    - In `AGENTS.md`, replace "this pin is not yet re-validated" in the
+    - In `CLAUDE.md`, replace "this pin is not yet re-validated" in the
       overview.
     - Note the Ryzen global install under Setup.
     - Commit and push in one commit.
@@ -517,7 +517,7 @@ powershell -ExecutionPolicy Bypass -File src\monitor_mh.ps1
 
 Before continuing, the next agent must:
 
-1. Read `AGENTS.md`.
+1. Read `CLAUDE.md`.
 2. Read `CLAUDE.md` if using Claude Code.
 3. Read this file.
 4. Run `git status --short`.
@@ -536,14 +536,14 @@ Claude Code on 2026-05-18 (Phase 4c part 3: warm-start + second-seed disambiguat
 When switching from Claude to Codex:
 
 ```text
-Read AGENTS.md and docs/agent-task.md. Run git status --short and git diff.
+Read CLAUDE.md and docs/agent-task.md. Run git status --short and git diff.
 Continue from the current repo state. Do not restart the task from scratch.
 ```
 
 When switching from Codex to Claude Code:
 
 ```text
-Read CLAUDE.md, AGENTS.md, and docs/agent-task.md. Run git status --short and
+Read CLAUDE.md and docs/agent-task.md. Run git status --short and
 inspect the diff. Continue from the current repo state. Do not restart the task
 from scratch.
 ```

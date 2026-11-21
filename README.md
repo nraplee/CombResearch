@@ -48,7 +48,7 @@ ECGrav/     Vendored ECGrav snapshots; scripts load one pinned snapshot via src/
 
 ## Docs
 
-- `AGENTS.md` - canonical working instructions for coding agents.
+- `CLAUDE.md` - project instructions for Claude Code.
 - `docs/agent-task.md` - live handoff and current project state.
 - `docs/enumeration.md` - truth enumeration, BLISS, McKay, validation.
 - `docs/sampling.md` - importance sampling, MH sampler, q=10 ESS caveat.

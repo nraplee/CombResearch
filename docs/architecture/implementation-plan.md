@@ -49,7 +49,7 @@ Companion to `current.md` and `ideal.md`.
    - Order: CLI flag, then `COMB_*` env, then named profile, then script
      default. `run.wl` prints each setting with its source and warns when a
      leftover env var overrides a named profile.
-   - Every existing `COMB_*` knob keeps its name. `AGENTS.md` maps
+   - Every existing `COMB_*` knob keeps its name. `CLAUDE.md` maps
      `--cells` to each stage's own knob (`COMB_TRUTH_CELLS`,
      `COMB_MH_CELLS`, `COMB_ECG_CELLS`, `COMB_VAL_CELLS`, `COMB_IS_CELLS`,
      and p-only `COMB_CMP_PS`).
@@ -139,7 +139,7 @@ This phase replaces the pin.
   `BuildingAndInstallingPaclets.nb`. They stay in git history.
   `install_ecgrav_global.wl` installs from the shared clone, for notebook
   use only.
-- **Update `AGENTS.md`:** the "pinned snapshot" rules become "latest
+- **Update `CLAUDE.md`:** the "pinned snapshot" rules become "latest
   upstream, loaded via `load_ecgrav.wl`". Remove the snapshot-update
   procedure and the global-install step from the Ryzen checklist.
 - Check: the regression passes on today's upstream main, and the three
@@ -226,7 +226,7 @@ names.
     Today `run_p4q5_mh_parallel.ps1:27`, `run_parallel.ps1:48` and
     `comb_paths.ps1:20` rely on `$PSScriptRoot`;
   - the sync hook path;
-  - `AGENTS.md`.
+  - `CLAUDE.md`.
 
   Check: each launcher with `-DryRun` or tiny N, and the hook command.
 - **Delete:** shims, superseded scripts, `archive/`. Git history and the
