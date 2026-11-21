@@ -17,7 +17,7 @@
 Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 $smokeTestSkip = True;
-Get["src/sampler_mh.wl"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "sampler_mh.wl"}]];
 
 Print["enumerating p=2 q=4 ..."];
 isoClasses = ChooseNonIsomorphicSimplicialComplexes[

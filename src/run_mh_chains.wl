@@ -60,17 +60,11 @@ $smokeTestSkip = True;
 Get[FileNameJoin[{scriptDir, "sampler_mh.wl"}]];
 Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 
-(* ===== Pull statsFor + helpers from pure_simplicial_compute.wl =====
-   The Get'd script also runs a per-p sampling loop on load; suppress
-   it by passing pListOverride={} and sampleSizeOverride=0. Definitions
-   (oneSkeleton, statsFor, exportWxfAtomic, etc.) persist. *)
-Block[{pListOverride = {}, sampleSizeOverride = 0,
-       useParallelOverride = False},
-  Get[FileNameJoin[{scriptDir, "pure_simplicial_compute.wl"}]]];
+(* ===== statsFor + exportWxfAtomic (Phase 2 shared libraries) ===== *)
+Get[FileNameJoin[{scriptDir, "lib_stats.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_io.wl"}]];
 
-(* outputDir override AFTER the Get's — pure_simplicial_compute.wl sets
-   outputDir = projectRoot/data on its own, which would otherwise clobber
-   COMB_MH_OUTDIR. Setting here lets the env var win. *)
+(* COMB_MH_OUTDIR overrides the shared data dir. *)
 outputDir = With[{e = Environment["COMB_MH_OUTDIR"]},
   If[StringQ[e] && StringLength[e] > 0, e,
     $CombDataDir]];
@@ -79,10 +73,7 @@ If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 (* ===== Defaults ===== *)
 defaultCells = {{2, 4}, {2, 5}, {2, 6}, {3, 4}, {3, 5}};
 defaultTargets = {"unlabeled", "facet", "vertex"};
-statsHeaders = {"numV", "aut", "autF", "connected",
-  "num1VConnComps", "num2VConnComps", "largestCompRatio",
-  "num2PathConnComps", "num3PathConnComps",
-  "Betti1", "Betti2", "Betti3"};
+statsHeaders = $CombStatsHeaders;
 
 (* ===== Env parsing ===== *)
 parseEnvCells[s_String] := Module[{pairs},

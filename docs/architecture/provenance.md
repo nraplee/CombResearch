@@ -13,7 +13,8 @@ General caveats:
   with a bare `Needs["ECGrav`"]`, so it used whatever paclet was installed
   globally. That was 1.0.0 according to code comments at `7143104` and
   `5118c14`. Truth files say `"1.0.0"`, but that string is hardcoded
-  (`enumerate_truth.wl:98`), not detected. Only the Phase 5a ecg* files
+  (`enumerate_truth.wl:98` before Phase 2a; new truth files record
+  `$CombECGravVersion`), not detected. Only the Phase 5a ecg* files
   record their real ECGrav: the vendored 1.17.0 (upstream `d15739c`).
 - **Version stamps.** `samplerVersion` (MH) and `enumeratorVersion` (truth)
   are the checkout's `git rev-parse HEAD` at run time. They do not show

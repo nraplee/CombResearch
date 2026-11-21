@@ -14,6 +14,10 @@
 
    Idempotent: a second Get is a no-op.
 
+   The git root is used only if it holds src/comb_paths.wl; otherwise (no
+   git, or this tree unpacked inside an unrelated repo) the output root is
+   the code checkout itself.
+
    Env:
      COMB_ROOT   override the output root (e.g. a checkout without git, or a
                  scratch copy for tests). Default: the main checkout.
@@ -42,10 +46,19 @@ If[!ValueQ[$CombRoot],
       If[common =!= "" &&
           !StringMatchQ[common, RegularExpression["^([A-Za-z]:|/|\\\\).*"]],
         common = FileNameJoin[{here, common}]];
-      If[common =!= "" && DirectoryQ[common],
-        ParentDirectory[ExpandFileName[common]],
-        Print["comb_paths: git not available; using ", $CombCodeRoot];
-        $CombCodeRoot]];
+      common = If[common =!= "" && DirectoryQ[common],
+        ParentDirectory[ExpandFileName[common]], None];
+      Which[
+        common === None,
+          Print["comb_paths: git not available; using ", $CombCodeRoot];
+          $CombCodeRoot,
+        (* Repo-marker guard: a zip of this repo unpacked inside some other
+           git repo would otherwise send outputs to that repo's root. *)
+        !FileExistsQ[FileNameJoin[{common, "src", "comb_paths.wl"}]],
+          Print["comb_paths: git root ", common,
+            " is not a CombResearch checkout; using ", $CombCodeRoot];
+          $CombCodeRoot,
+        True, common]];
     $CombRoot = ExpandFileName[$CombRoot];
     $CombDataDir = FileNameJoin[{$CombRoot, "data"}];
     $CombFiguresDir = FileNameJoin[{$CombRoot, "figures"}];
