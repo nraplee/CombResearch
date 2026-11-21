@@ -1,5 +1,28 @@
 # Current Agent Task
 
+## Phase 2 complete: exit checks (2026-11-21, Ryzen, main @ `459924d`)
+
+The plan's Phase 2 checks, rerun after 2a-2d plus the `.gitignore` fix
+(#20-#24) were all merged, in a fresh scratch root (`make_check_root.wl
+... golden`, `COMB_ECGRAV_DIR` = shared clone). All pass:
+
+| Check | Result | Wall |
+|---|---|---|
+| `test_streaming.wl` | ALL PASS | 41 s |
+| `test_streaming_bliss.wl` | all gates pass (5 default cells incl. (3,5)) | 17 min |
+| `test_streaming_mckay.wl` | all correctness gates pass | 67 s |
+| `run_p3.wl` `COMB_N=200` | runs clean | 14 s |
+| `lib_names_test`, `lib_config_test`, `manifest_test` | PASS | 44 s |
+| `golden/derived` check | all 11 sections ok (compare, efficiency, ishists, overlay, progress_csv, q10_p2/p3/p4, samplecols, truth, validate) | 36 min |
+
+`q10_p4` peaks at 7.7 GB. `validate` prints `General::munfl` underflow
+warnings; they do not change any record.
+
+Next: Phase 3 (`run.wl`). Its CLI must use plain words or env, not
+`--flags` (wolframscript drops them). The main checkout at
+`C:\CombResearch` is behind `origin/main` until it is pulled; until then it
+still shows the 147 manifests as untracked.
+
 ## Phase 2d: per-output manifests + backfill (2026-11-21, Ryzen, branch `claude/phase-2d`)
 
 Phase 2 is complete with this. Next: Phase 3 (`run.wl`).
