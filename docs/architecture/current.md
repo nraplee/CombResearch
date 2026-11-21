@@ -290,7 +290,7 @@ repo root.
    none of it except the 104 MB Mac-only `.mx` files. Everything has to be
    regenerated, which takes days (q=10 IS) plus 17 h for (4,5) truth.
 2. **No single entry point.** About 15 scripts run in an order kept in
-   `AGENTS.md` and people's heads. Configuration is about 30 `COMB_*`
+   `CLAUDE.md` and people's heads. Configuration is about 30 `COMB_*`
    environment variables. Parallel runs need Windows PowerShell.
 3. **Manual steps in the chain.** McKay truth must be renamed by hand from
    `_truth_mckay.wxf` to `_truth.wxf`. The `.tex` needs figures copied by
