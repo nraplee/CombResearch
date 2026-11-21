@@ -47,22 +47,18 @@ Get[FileNameJoin[{scriptDir, "comb_paths.wl"}]];
 outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
-(* ===== Load the pinned ECGrav, then our helpers ===== *)
+(* ===== Load ECGrav, then our helpers ===== *)
 Get[FileNameJoin[{scriptDir, "load_ecgrav.wl"}]];
 Get[FileNameJoin[{scriptDir, "streaming_enumerator_bliss.wl"}]];
-Block[{pListOverride = {}, sampleSizeOverride = 0,
-       useParallelOverride = False},
-  Get[FileNameJoin[{scriptDir, "pure_simplicial_compute.wl"}]]];
+Get[FileNameJoin[{scriptDir, "lib_stats.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_io.wl"}]];
 
 (* ===== Defaults ===== *)
 defaultCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},
                 {3, 4}, {3, 5}, {3, 6},
                 {4, 4}, {4, 5}};
 defaultTargets = {"unlabeled", "facet", "vertex"};
-statsHeaders = {"numV", "aut", "autF", "connected",
-  "num1VConnComps", "num2VConnComps", "largestCompRatio",
-  "num2PathConnComps", "num3PathConnComps",
-  "Betti1", "Betti2", "Betti3"};
+statsHeaders = $CombStatsHeaders;
 labelChoice = <|"vertex" -> 0, "facet" -> 1, "unlabeled" -> 2|>;
 
 (* ===== Env parsing ===== *)

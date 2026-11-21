@@ -16,7 +16,7 @@
        "piUnlabeled"       -> {N, ...},     (* uniform 1/numIsoClasses *)
        "wallClockSec"      -> ...,
        "peakMemMB"         -> ...,
-       "ecGravVersion"     -> "1.0.0",
+       "ecGravVersion"     -> $CombECGravVersion,
        "enumeratorVersion" -> "streaming_enumerator.wl@<sha>",
        "createdAt"         -> ...|>
 
@@ -43,14 +43,9 @@ Get[FileNameJoin[{scriptDir, "streaming_enumerator.wl"}]];
 Get[FileNameJoin[{scriptDir, "streaming_enumerator_bliss.wl"}]];
 Get[FileNameJoin[{scriptDir, "streaming_enumerator_mckay.wl"}]];
 
-(* ===== Pull statsFor + helpers from pure_simplicial_compute.wl =====
-   The Get'd script also runs a per-p sampling loop on load; suppress it
-   by passing pListOverride = {} so the loop is a no-op. Definitions
-   (oneSkeleton, statsFor, etc.) persist after Block returns because
-   Block scopes only the OwnValues of the listed symbols. *)
-Block[{pListOverride = {}, sampleSizeOverride = 0,
-       useParallelOverride = False},
-  Get[FileNameJoin[{scriptDir, "pure_simplicial_compute.wl"}]]];
+(* ===== statsFor + exportWxfAtomic (Phase 2 shared libraries) ===== *)
+Get[FileNameJoin[{scriptDir, "lib_stats.wl"}]];
+Get[FileNameJoin[{scriptDir, "lib_io.wl"}]];
 
 (* ===== Cells + expected iso-class counts (validation gates) ===== *)
 defaultCells = {{2, 4}, {2, 5}, {2, 6}, {3, 4}, {3, 5}};
@@ -95,7 +90,10 @@ parallelMode = With[{e = Environment["COMB_TRUTH_PARALLEL"]},
     True]];
 
 (* ===== Provenance ===== *)
-ecGravVersion = "1.0.0";  (* hardcoded label, not detected; Phase 2 replaces it with $CombECGravVersion *)
+(* Detected by load_ecgrav.wl. Before Phase 2 this was a hardcoded "1.0.0"
+   label; see docs/architecture/provenance.md for what the stored truth
+   WXFs were really made with. *)
+ecGravVersion = $CombECGravVersion;
 enumeratorVersion = Module[{res, sha},
   res = Quiet @ RunProcess[{
     "git", "-C", projectRoot, "rev-parse", "--short", "HEAD"}];
@@ -121,21 +119,7 @@ truthFile[p_Integer, q_Integer] := FileNameJoin[{outputDir,
     <> If[pipelineName === "cheap", "", "_" <> pipelineName]
     <> ".wxf"}];
 
-statsHeaders = {"numV", "aut", "autF", "connected",
-  "num1VConnComps", "num2VConnComps", "largestCompRatio",
-  "num2PathConnComps", "num3PathConnComps",
-  "Betti1", "Betti2", "Betti3"};
-
-exportWxfAtomic[path_String, expr_] := Module[{tmp, res},
-  tmp = path <> ".tmp";
-  If[FileExistsQ[tmp], DeleteFile[tmp]];
-  Export[tmp, expr, "WXF"];
-  If[!FileExistsQ[tmp],
-    Print["    ERROR: tmp not written: ", tmp]; Abort[]];
-  If[FileExistsQ[path], DeleteFile[path]];
-  res = RenameFile[tmp, path];
-  If[res === $Failed,
-    Print["    ERROR: rename failed ", tmp, " -> ", path]; Abort[]]];
+statsHeaders = $CombStatsHeaders;
 
 processCell[{p_Integer, q_Integer}] := Module[
   {outFile, expectedIso, sr, wallSec, peakMemMB, isoReps, nIso,

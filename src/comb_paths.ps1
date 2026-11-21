@@ -14,10 +14,17 @@ if ($env:COMB_ROOT) {
   if ($LASTEXITCODE -eq 0 -and $common -and -not [IO.Path]::IsPathRooted($common)) {
     $common = Join-Path $PSScriptRoot $common
   }
+  $codeRoot = Split-Path -Parent $PSScriptRoot
   if ($LASTEXITCODE -eq 0 -and $common -and (Test-Path $common)) {
     $CombRoot = Split-Path -Parent (Resolve-Path $common).Path
+    # Repo-marker guard (twin of comb_paths.wl): a zip unpacked inside an
+    # unrelated git repo must not write into that repo's root.
+    if (!(Test-Path (Join-Path $CombRoot "src\comb_paths.wl"))) {
+      Write-Host "comb_paths: git root $CombRoot is not a CombResearch checkout; using $codeRoot"
+      $CombRoot = $codeRoot
+    }
   } else {
-    $CombRoot = Split-Path -Parent $PSScriptRoot
+    $CombRoot = $codeRoot
     Write-Host "comb_paths: git not available; using $CombRoot"
   }
 }

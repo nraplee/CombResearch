@@ -1,5 +1,42 @@
 # Current Agent Task
 
+## Phase 2a: shared stats/io libraries + fixes (2026-11-20, Ryzen, branch `claude/phase-2-6f3995`)
+
+Phase 2 is split into PRs: **2a** (this), then `lib_names.wl`,
+`lib_config.wl` + `config/cells.wl`, and manifests + `backfill_manifest.wl`.
+
+- `src/lib_stats.wl`: `statsFor` and its helpers moved verbatim from
+  `pure_simplicial_compute.wl`, plus `$CombStatsHeaders` (12 columns) and
+  `$CombISHeaders` (+ 3 weights). Loads ECGrav via `load_ecgrav.wl`.
+- `src/lib_io.wl`: `exportWxfAtomic` (one copy instead of two).
+- `pure_simplicial_compute.wl`, `enumerate_truth.wl`, `run_mh_chains.wl`,
+  `run_ecgrav_samplers.wl` `Get` the libs; the three drivers no longer
+  `Block`-`Get` the IS script.
+- Fixes: `enumerate_truth.wl` records `$CombECGravVersion` instead of the
+  hardcoded `"1.0.0"`; `render_ecgrav_compare`, `render_sampler_progress`,
+  `render_uniformity_check` load `sampler_mh.wl` from their own folder
+  instead of cwd-relative `src/`; `comb_paths.wl`/`.ps1` repo-marker guard
+  (git root used only if it holds `src/comb_paths.wl`).
+- Checks run (all pass; scratch `COMB_ROOT`, nothing written to the store):
+  - `DownValues` of the 6 moved functions, `headers` and `exportWxfAtomic`
+    are `===` to HEAD's (`398baaf`) `pure_simplicial_compute.wl`.
+  - New `statsFor` reproduces the stored stats of all 10,882 truth classes
+    (9 cells), 0 mismatches.
+  - `test_streaming`, `test_streaming_bliss`, `test_streaming_mckay`: pass.
+  - `enumerate_truth.wl` (2,4)+(3,4): gates pass; (2,4) WXF equals the
+    stored one except provenance fields; `ecGravVersion` = `1.18.0-474b5c2`.
+  - `run_mh_chains.wl` (2,4) 4k iters, `run_ecgrav_samplers.wl` (2,4) N=400,
+    `run_p3.wl` `COMB_N=200` (16 kernels): run clean, schemas as before.
+  - Repo-marker guard: inside an unrelated git repo both `comb_paths.wl` and
+    `.ps1` fall back to the unpacked folder; from a worktree they still
+    give `C:\CombResearch`.
+  - `golden/derived` check in a scratch root (see PR).
+  - `render_ecgrav_compare`, `render_sampler_progress`,
+    `render_uniformity_check`, launched from a folder outside the repo with
+    a scratch `COMB_ROOT`: all load `sampler_mh.wl`, run clean, and write
+    their 3 PDF+PNG pairs (MH facet L1 0.019; ECGrav legacy facet 0.43, the
+    expected negative control).
+
 ## Phase 1: latest upstream ECGrav (2026-11-20, Ryzen, branch `claude/phase1-ecgrav-upstream`)
 
 - Shared clone `C:\CombResearch\ECGrav-upstream` (gitignored), made and

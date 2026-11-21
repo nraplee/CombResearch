@@ -10,7 +10,7 @@
 Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
 $smokeTestSkip = True;
-Get["src/sampler_mh.wl"];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "sampler_mh.wl"}]];
 
 (* ===== Style (matches existing figures) ===== *)
 fontFam = "Times";
