@@ -333,6 +333,23 @@ the riskiest move and waits until the package pattern is proven.
 `pure_simplicial_compute.wl` loads the package on its subkernels
 (`combLoadCombResearchOnKernels[]`). No pipeline stage for this row.
 
+**As built, row 3 (MHSampler / `30_mh.wl`, 2026-11-22):**
+`Kernel/Subpackages/MHSampler.wl` (moved verbatim from `src/sampler_mh.wl`,
+with its derivation; option names became strings); public
+`PureComplexMHChain[p, q, target, numIter, opts]` (checks target and
+kernel) and `IntegratedAutocorrelationTime`; `Tests/MHSampler.wlt`.
+`pipeline/30_mh.wl` is `run_mh_chains.wl` on the package (same knobs,
+defaults and file names; `samplerVersion` label now
+`CombResearch/MHSampler.wl@<sha>`); `run.wl mh` runs it.
+`src/run_mh_chains.wl` and `src/sampler_mh.wl` are shims (the latter
+keeps its smoke test). The (2,7), (3,6), (4,4) chains were already added
+in Phase 3a. Not done: the four MH `.ps1` launchers still call
+`run_mh_chains.wl` (the shim) rather than `run.wl`. Making them thin
+`run.wl` callers is left for a separate PR: they do more than `run.wl mh`
+(the q=10 pilot writes the production file names; the overnight launcher
+has a one-time file-restore step), and proving a converted launcher needs
+a production-sized run.
+
 ## Phase 5: reorganise and delete
 
 - **One mechanical `git mv` PR** into `CombResearch/`, `pipeline/`,

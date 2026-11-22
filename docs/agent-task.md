@@ -1,5 +1,33 @@
 # Current Agent Task
 
+## Phase 4 row 3: MHSampler.wl + `pipeline/30_mh.wl` (2026-11-22, Ryzen, branch `claude/phase-4-mh`, stacked on `claude/phase-4-statistics`)
+
+Next: row 4 (`pipeline/40_ecgrav.wl`).
+
+- `CombResearch/Kernel/Subpackages/MHSampler.wl`: `sampler_mh.wl` moved
+  verbatim with its derivation; option names became strings. Public
+  `PureComplexMHChain` (checks target and kernel), `IntegratedAutocorrelationTime`.
+  `Tests/MHSampler.wlt` (12 tests: numV L1 < 0.06 vs the exact marginal at
+  (2,4) for all three targets, seed reproducibility, state shape, warm start,
+  bad arguments, autocorrelation on constant/iid/AR(1) series).
+- `pipeline/30_mh.wl`: `run_mh_chains.wl` on the package, same knobs,
+  defaults and names; `samplerVersion` label `CombResearch/MHSampler.wl@<sha>`.
+  `run.wl mh` runs it. `src/run_mh_chains.wl` (Gets 30_mh) and
+  `src/sampler_mh.wl` (keeps its smoke test) are shims.
+- Not done: the four MH `.ps1` launchers still call the shim, not `run.wl`
+  (they do more than `run.wl mh`; proving a converted one needs a
+  production-sized run).
+- Checks (scratch roots; nothing written to the real store):
+  - package tests: Enumeration 21/21, Statistics 12/12, MHSampler 12/12;
+  - old code (`origin/main`) vs the shim vs `30_mh.wl` directly, same
+    seeds: (3,4) unlabeled/facet/vertex 4k iters and a (2,5) facet chain
+    with seed 777, mixed kernel, tag, warm start 4: identical (only
+    wallSeconds/createdAt/samplerVersion differ);
+  - `run.wl mh profile quick cells "2,4" targets facet` in a scratch root: ok;
+  - `src/sampler_mh.wl` smoke test (p = 2, 3, 4 at q = 10) runs;
+  - `run_wl_test.wl` PASS (53 checks, incl. the mh job runs 30_mh.wl);
+  - `golden_derived.wl check`: all 11 sections PASS.
+
 ## Phase 4 row 2: Statistics.wl (2026-11-22, Ryzen, branch `claude/phase-4-statistics`)
 
 Next: row 3 (MHSampler + `pipeline/30_mh.wl`).

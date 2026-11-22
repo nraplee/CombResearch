@@ -13,7 +13,8 @@
 
    Subpackages:
      Enumeration.wl   exact unlabeled enumeration (cheap key, BLISS, McKay)
-     Statistics.wl    the 12 per-complex statistics *)
+     Statistics.wl    the 12 per-complex statistics
+     MHSampler.wl     Metropolis-Hastings for the three targets *)
 
 If[!MemberQ[$Packages, "ECGrav`"],
   Print["CombResearch: load ECGrav first (src/load_combresearch.wl does both)."];
@@ -104,10 +105,39 @@ PureComplexBettiNumber::usage =
 	complex over Z_2 (rank-nullity on the mod-2 boundary matrices).";
 
 
+(* ::Section:: *)
+(* MHSampler *)
+
+PureComplexMHChain::usage =
+"PureComplexMHChain[p, q, target, numIter] runs a Metropolis-Hastings chain over
+	pure simplicial complexes with q facets of size p, vertex-labeled inside a
+	fixed ambient set of N = q p labels, whose marginal over isomorphism classes
+	is target: \"unlabeled\" (uniform over classes), \"facet\" (uniform over
+	facet-labeled complexes) or \"vertex\" (uniform over vertex-labeled
+	complexes on numV vertices). It returns <|\"p\", \"q\", \"N\", \"target\",
+	\"numIter\", \"burnIn\", \"thin\", \"seed\", \"trace\" -> {state, ...},
+	\"acceptRate\", \"deltaNumVCounts\", \"wallSeconds\"|>; each state is a sorted
+	list of q sorted facets. The start is one ECGrav
+	RandomVertexLabeledPureSimplicialComplex draw after SeedRandom[seed].
+	Options: \"burnIn\" -> 0, \"thin\" -> 1, \"seed\" -> 12345, \"verbose\" -> True,
+	\"kernel\" -> \"global\" | \"local\" | \"swap\" | \"mixed\" (proposal),
+	\"initNumV\" -> Automatic | m (warm start: q random p-subsets of 1..m).";
+
+PureComplexMHChain::target = "Target `1` is not one of \"unlabeled\", \"facet\", \"vertex\".";
+PureComplexMHChain::kernel = "Kernel `1` is not one of \"global\", \"local\", \"swap\", \"mixed\".";
+
+IntegratedAutocorrelationTime::usage =
+"IntegratedAutocorrelationTime[x] estimates the integrated autocorrelation time
+	of the series x (summing autocorrelations until the first non-positive one)
+	and returns <|\"tau\" -> t, \"ess\" -> n/(2 t), \"lagsUsed\" -> k|>, or
+	<|\"tau\" -> Infinity, \"ess\" -> 0|> for a constant series.";
+
+
 Begin["`Private`"];
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "Enumeration.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "Statistics.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "MHSampler.wl"}]];
 
 End[];
 

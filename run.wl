@@ -12,7 +12,7 @@
      is        q=10 IS batches (run_p{p}.wl, one process per p and batch),
                IS at the truth cells (run_is_at_truth_cells.wl), and the
                q=10 numV histograms (precompute_is_histograms_q10.wl)
-     mh        run_mh_chains.wl, one process per cell and target
+     mh        pipeline/30_mh.wl, one process per cell and target
      ecgrav    run_ecgrav_samplers.wl, one process per sampler and target
      validate  counts, MH/ECGrav validation, efficiency and comparison
                summaries; warns when one kind of input (e.g. the MH chains)
@@ -303,7 +303,7 @@ jobsFor["is"] := Module[{batches = planOf["isBatches"], out = {}, cellsIS},
 jobsFor["mh"] := Flatten @ Map[Function[g, Module[{tag = Lookup[g, "tag", ""]},
     Table[
       With[{p = c[[1]], q = c[[2]]},
-        job["mh " <> combCell[p, q] <> " " <> t <> tag, "src/run_mh_chains.wl",
+        job["mh " <> combCell[p, q] <> " " <> t <> tag, "pipeline/30_mh.wl",
           resolveKnobs[DeleteMissing @ <|
               "COMB_MH_CELLS" -> {c}, "COMB_MH_TARGETS" -> {t},
               "COMB_MH_NUMITER" -> g["numIter"], "COMB_MH_BURNIN" -> g["burnIn"],
