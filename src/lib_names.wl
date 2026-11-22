@@ -30,7 +30,10 @@
      "isSamplesCSV", stem              {stem}_samples.csv (legacy)
      "validationSummary", source       validation_{source}_summary.wxf
      "summary", name                   {name}_summary.wxf
+     "fig2", p, q, n                   p3q3_n10000_fig2.wxf (render_fig2.wl)
      "log" | "err", "mh", p, q, target        mh_p4q5_vertex.log
+     "log" | "err", "mh", p, q, target, tag   mh_p3q10_facet_seed67890_warm14.log
+     "log" | "err", "job", name               {name}.log (run.wl jobs with no family)
      "log" | "err", "ecg", sampler, target    ecgexact_vertex.log
      "log" | "err", "mhQ10", phase, p, target [, tag]
                                               mh_q10_prod_p4_facet.log
@@ -102,9 +105,16 @@ combName["validationSummary", source_String] :=
   "validation_" <> source <> "_summary.wxf";
 combName["summary", name_String] := name <> "_summary.wxf";
 
+(* Figure 2 (q=3): all distributions behind the four panels, render_fig2.wl *)
+combName["fig2", p_Integer, q_Integer, n_Integer] :=
+  combCell[p, q] <> "_n" <> ToString[n] <> "_fig2.wxf";
+
 (* ----- logs (names used by the .ps1 launchers) ----- *)
 combLogStem["mh", p_Integer, q_Integer, target_String] :=
-  "mh_" <> combCell[p, q] <> "_" <> target;
+  combLogStem["mh", p, q, target, ""];
+combLogStem["mh", p_Integer, q_Integer, target_String, tag_String] :=
+  "mh_" <> combCell[p, q] <> "_" <> target <> tag;
+combLogStem["job", name_String] := name;
 combLogStem["ecg", sampler_String, target_String] :=
   "ecg" <> sampler <> "_" <> target;
 combLogStem["mhQ10", phase_String, p_Integer, target_String] :=

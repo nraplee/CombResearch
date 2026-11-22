@@ -54,7 +54,11 @@ cases = {
   {combISStatsPattern[3, 10], "p3q10_*_stats.wxf"},
   {combName["validationSummary", "ecgexact"], "validation_ecgexact_summary.wxf"},
   {combName["summary", "q10_warm_vs_prod"], "q10_warm_vs_prod_summary.wxf"},
+  {combName["fig2", 3, 3, 10000], "p3q3_n10000_fig2.wxf"},
   {combName["log", "mh", 4, 5, "vertex"], "mh_p4q5_vertex.log"},
+  {combName["log", "mh", 3, 10, "facet", combMHWarmTag[67890, 14]],
+    "mh_p3q10_facet_seed67890_warm14.log"},
+  {combName["log", "job", "validate_mh"], "validate_mh.log"},
   {combName["err", "mh", 4, 5, "vertex"], "mh_p4q5_vertex.err"},
   {combName["log", "ecg", "mcmc", "facet"], "ecgmcmc_facet.log"},
   {combName["log", "compute", 3], "compute_p3.log"},
@@ -96,6 +100,8 @@ dataRules = {
     combName[If[k === "stats", "isStats", "isComplexes"], st],
   StartOfString ~~ st : isStemP ~~ "_samples.csv" ~~ EndOfString :>
     combName["isSamplesCSV", st],
+  StartOfString ~~ cell ~~ "_n" ~~ n : DigitCharacter .. ~~ "_fig2.wxf" ~~ EndOfString :>
+    combName["fig2", int[p], int[q], int[n]],
   StartOfString ~~ "validation_" ~~ s : word ~~ "_summary.wxf" ~~ EndOfString :>
     combName["validationSummary", s],
   StartOfString ~~ s : (word ~~ ("_" ~~ word) ...) ~~ "_summary.wxf" ~~ EndOfString :>
