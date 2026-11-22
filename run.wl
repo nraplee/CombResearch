@@ -490,7 +490,8 @@ regressionPassed[commit_] := With[{r = Quiet @ Get[FileNameJoin[{$CombResultsDir
 staleReport[] := Module[{commit = ecgravCommit[], files, rows, cls, counts, flagged},
   files = Select[FileNames["*", $CombDataDir, Infinity],
     !DirectoryQ[#] && !StringEndsQ[#, ".manifest.wl" | ".tmp"] &&
-      !StringContainsQ[#, "_from_worktrees"] &];
+      (* folders starting with "_" hold copies (_from_worktrees, _superseded), not outputs *)
+      !StringStartsQ[StringReplace[StringDrop[#, StringLength[$CombDataDir] + 1], "\\" -> "/"], "_"] &];
   rows = Map[Function[f, Module[{m = combManifest[f], rel},
       rel = StringReplace[StringDrop[f, StringLength[$CombDataDir] + 1], "\\" -> "/"];
       cls = Which[

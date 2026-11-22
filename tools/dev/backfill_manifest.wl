@@ -15,7 +15,7 @@
    even with force.
 
    The store is $CombDataDir (COMB_ROOT respected), including
-   q10_pilot_archive/; _from_worktrees/ is skipped. Files up to 300 MB are
+   q10_pilot_archive/; folders starting with "_" (_from_worktrees/, _superseded/) are skipped. Files up to 300 MB are
    imported to read their small metadata keys; larger ones (q=10 merged and
    batch3) and non-WXF files (CSV, Betre .mx) get provenance only.
 
@@ -184,7 +184,7 @@ storeFiles[] := Module[{all},
   all = Select[FileNames["*", $CombDataDir, Infinity], !DirectoryQ[#] &];
   Select[all, With[{rel = StringReplace[
         StringDrop[#, StringLength[$CombDataDir] + 1], "\\" -> "/"]},
-      !StringStartsQ[rel, "_from_worktrees/"] &&
+      !StringStartsQ[rel, "_"] &&   (* _from_worktrees/, _superseded/: copies, not outputs *)
       !StringEndsQ[rel, ".manifest.wl" | ".tmp"]] &]];
 relName[f_] := StringReplace[StringDrop[f, StringLength[$CombDataDir] + 1], "\\" -> "/"];
 
