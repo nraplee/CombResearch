@@ -1,5 +1,47 @@
 # Current Agent Task
 
+## Phase 3a: regenerate the flagged data (2026-11-21, Ryzen, code `@6db1aa4`, ECGrav 474b5c2)
+
+Next: Phase 4 (`docs/architecture/implementation-plan.md`).
+
+First production use of `run.wl` (profile `paper`, real store). Replaced
+files and their manifests were first copied to
+`C:\CombResearch\data\_superseded\phase3a\` (70 files).
+
+| Step | Command (`run.wl ...`) | Result | Wall |
+|---|---|---|---|
+| 1 | `mh cells "2,4;2,5;2,6;3,4;3,5" targets vertex force` | 5 post-fix chains | 69–110 s each |
+| 2 | `mh cells "2,7;3,6;4,4" jobs 2` | 9 new chains | 35 min (facet 11–12, unlabeled 7–8, vertex 2–3 min each) |
+| 3 | `mh cells "2,4" targets unlabeled,facet force jobs 2` | 200k replaces 30k smoke | 8.4 min |
+| 4 | `ecgrav sampler mcmc force jobs 1` | 27 files | 2 h 53 min (unlabeled 2 h 33 min) |
+| 4 | `ecgrav sampler exact force jobs 2`, `legacyfacet force` | 27 + 2 files | 15.6 min, 2 min |
+| 5 | `validate force`; `validate sampler legacyfacet force` | all summaries rewritten | 3.2 min |
+| 6 | `figures` (Figure 2); `render_truth_overlay`, `render_3way`, `render_ecgrav_compare` directly | see below | ~10 min |
+
+- **Validation:** `mh`, `ecgexact`, `ecgmcmc` each 27/27 PASS (L1 < 0.05);
+  worst L1 0.029 (MH (4,5) facet), 0.011 (exact), 0.021 (MCMC). Legacy
+  facet (negative control) fails as intended, L1 0.22. Counters match truth.
+  (3,5) vertex rerun vs the May `.bak`: L1 0.010. `validate` warns that MH
+  inputs mix ECGrav commits (16 new on 474b5c2, 11 backfilled M2/M5 chains);
+  expected.
+- **Golden/derived:** re-baselined `compare`, `efficiency`, `overlay`,
+  `samplecols`, `validate` (inputs changed); `ishists`, `progress_csv`,
+  `q10_p2/p3/p4`, `truth` unchanged and PASS. `fig2_check` PASS.
+- **Store:** `run.wl status` and the backfill dry run flag only the q=10
+  pilot chains (M6, M7) and the external Betre `.mx` files.
+- **Licence:** the Wolfram MCP servers (one kernel per Claude session) hold
+  licence slots. With 5 of them open, `jobs 4` failed 2 jobs within 5 s
+  with empty logs; keep `run.wl` plus jobs at ≤ 5 kernels in that state.
+- **Not done / follow-ups:**
+  - `render_3way.wl` PNG export fails (`Rasterize::bigraster`): the legend
+    lays out ~8000 px wide at 144 dpi, the PNG keeps the 11-20 version
+    (old bad (3,5) vertex), though the script prints "wrote". The PDF is new.
+  - `comb_paths.wl` falls back to the worktree when `git` fails ("git not
+    available"); this happened once in a golden subprocess (the section then
+    found no inputs and exited 2). A failing fallback would be safer.
+  - `backfill_manifest.wl` keeps M1/M3 rows with `smoke`/`knownBad`; they
+    now only match files with real manifests, so nothing is written.
+
 ## Phase 3: `run.wl`, golden/quick, `render_fig2.wl` (2026-11-21, Ryzen, branch `claude/phase-3`)
 
 Next: Phase 3a (regenerate the flagged data with `run.wl`; commands and

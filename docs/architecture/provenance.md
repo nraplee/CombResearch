@@ -57,9 +57,22 @@ General caveats:
 | S3 | 3-way at q=5 | `is_mh_truth_3way_summary` | `compare_3way.wl` (May; committed later in `9700ca9`) | 2026-05-17 22:21 | – | used M4 (the good (3,5) vertex chain) |
 | S4 | q=10 IS vs MH | `q10_is_vs_mh_summary` | `compare_is_mh_q10.wl` | 2026-05-17 21:04 | – | read the original (4,10) unlabeled chain; M9 reproduces it |
 | S5 | q=10 warm vs prod | `q10_warm_vs_prod_summary` | `compare_q10_warm_vs_prod.wl` | 2026-05-18 06:16 | – | inputs M8–M10 |
+| R1 | MH vertex, post-fix (Phase 3a) | `p2q{4,5,6}_mh_vertex`, `p3q{4,5}_mh_vertex` (replace M3) | `run.wl mh ... targets vertex force`, `@6db1aa4` | 2026-11-21 | 474b5c2 | 12345; 200k/20k/5; real manifests |
+| R2 | MH (2,7) (3,6) (4,4), 3 targets (Phase 3a) | `p2q7_mh_*`, `p3q6_mh_*`, `p4q4_mh_*` (were missing) | `run.wl mh`, `@6db1aa4` | 2026-11-21 | 474b5c2 | 12345; 200k/20k/5 |
+| R3 | MH (2,4) unlabeled/facet (Phase 3a) | `p2q4_mh_{unlabeled,facet}` (replace M1) | `run.wl mh ... force`, `@6db1aa4` | 2026-11-21 | 474b5c2 | 12345; 200k/20k/5 |
+| R4 | ECGrav exact, MCMC, legacy facet (Phase 3a) | all 56 `p*_ecg*` (replace E1–E3) | `run.wl ecgrav sampler {mcmc,exact,legacyfacet} force`, `@6db1aa4` | 2026-11-21 | 474b5c2 | 24680; exact N=100k, MCMC N=20k |
+| R5 | summaries (Phase 3a) | `validation_{mh,ecgexact,ecgmcmc,ecglegacyfacet}_summary`, `sampler_efficiency_summary`, `is_mh_truth_3way_summary`, `q10_*_summary` (replace S1–S5) | `run.wl validate force`, `@6db1aa4` | 2026-11-21 | inputs R1–R4, M2, M5 | — |
 | B1 | Betre `.mx` | `p4q{4,5}SX{FacetLabeled,Unlabeled}.mx` | Dr. Betre; git `28f97f0` | received 2026-05-15 | unknown | MacOSX-ARM64 dumps, unreadable on Windows; only git-tracked files in `data/` |
 
 ## Problems found
+
+**Phase 3a (2026-11-21) fixed problems 1–3 and replaced E1–E3**: rows
+R1–R5. The 70 replaced files (M1, M3, E1–E3, S1–S3 and their manifests) are
+kept byte-identical in `C:\CombResearch\data\_superseded\phase3a\`, which the
+store report and the backfill tool skip. M2 and M5 (the other MH chains)
+keep their backfilled ECGrav 1.0.0 manifests, so `run.wl validate` warns that
+the MH inputs mix ECGrav commits (expected; those chains still pass). All 27 cell × target pairs pass L1 < 0.05 vs truth for `mh`,
+`ecgexact` and `ecgmcmc`. The (3,5) vertex rerun is within L1 0.010 of M4.
 
 1. **Five live vertex MH chains are wrong (M3).** `p2q4`, `p2q5`, `p2q6`,
    `p3q4` and `p3q5` `_mh_vertex.wxf` predate the 2026-05-14 vertex fix
@@ -103,11 +116,11 @@ General caveats:
 
 | Data | Action | Why |
 |---|---|---|
-| MH vertex (2,4) (2,5) (2,6) (3,4) | rerun 200k, seed 12345 | pre-fix, wrong |
-| MH vertex (3,5) | restore the `.bak` or rerun | pre-fix live file |
-| MH (2,7) (3,6) (4,4), 3 targets | run 200k | missing |
-| MH (2,4) unlabeled/facet | optional 200k rerun | smoke budget |
-| ecgmcmc, then ecgexact | rerun on latest ECGrav | as in `implementation-plan.md` |
+| MH vertex (2,4) (2,5) (2,6) (3,4) | rerun 200k, seed 12345 | done (R1) |
+| MH vertex (3,5) | restore the `.bak` or rerun | done: rerun (R1) |
+| MH (2,7) (3,6) (4,4), 3 targets | run 200k | done (R2) |
+| MH (2,4) unlabeled/facet | optional 200k rerun | done (R3) |
+| ecgmcmc, then ecgexact | rerun on latest ECGrav | done on 474b5c2 (R4) |
 | truth, q=10 IS, other MH | keep | verified correct |
 
 Golden/derived freezes the store **as it is** today, including the bad
