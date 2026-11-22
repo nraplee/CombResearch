@@ -118,6 +118,9 @@ has["COMB_NN_FIXED is an identity knob (in the ignored warning)", r["out"],
 hasNot["COMB_NN_FIXED not passed as a profile override", r["out"],
   RegularExpression["(?m)^WARNING: COMB_. variables in this shell .*COMB_NN_FIXED"]];
 has["...the batch keeps its planned file name", r["out"], line["run", "is q=10 p=2 quick"]];
+has["merge job planned after the batch", r["out"], line["skip", "is merge q=10 p=2"]];
+has["...waiting for its batch", r["out"], "inputs missing: p2q10_n2000_quick_stats.wxf"];
+has["...with the declared batch list", r["out"], knob["COMB_IS_MERGE_STEMS", "p2q10_n2000_quick"]];
 
 (* ----- truth: pipeline/10_truth.wl writes the final name (no McKay rename) ----- *)
 touch[combFile["truth", 4, 4, "mckay"]];

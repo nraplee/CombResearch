@@ -372,6 +372,18 @@ receiving `DistributeDefinitions` of the helpers. 5b (next PR): the batch
 merge (`concat_samples.wl`) becomes a `run.wl is` job driven by the
 profile's batch list.
 
+**As built, row 5b (merge, 2026-11-22):** `pipeline/21_is_merge.wl` is
+`concat_samples.wl` with two knobs, `COMB_IS_MERGE_PS` and
+`COMB_IS_MERGE_STEMS` (identity knobs in `run.wl`). With stems it merges
+exactly those batches, in sorted file order, which is the order the glob
+gives, so a declared list of the same files reproduces the old merge;
+without, it globs as before (`src/concat_samples.wl` is a shim). `run.wl
+is` plans one merge job per p after that p's batches, with the profile's
+batch list (the paper lists name exactly the files the stored merges came
+from). Like every job it is decided when the stage is planned, so on a
+fresh store the merge (and the q=10 histograms) run on the next `run.wl
+is`; `force` remerges. The scheduler is unchanged.
+
 ## Phase 5: reorganise and delete
 
 - **One mechanical `git mv` PR** into `CombResearch/`, `pipeline/`,

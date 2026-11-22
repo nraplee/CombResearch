@@ -1,5 +1,33 @@
 # Current Agent Task
 
+## Phase 4 row 5b: q=10 batch merge as a `run.wl is` job (2026-11-22, Ryzen, branch `claude/phase-4-is-merge`, stacked on `claude/phase-4-is`)
+
+Next: row 6 (Compare.wl + `50_validate.wl`). It adds new outputs
+(`results/*.csv`, pre-binned q=10 statistics); agree their format with the
+user before building it.
+
+- `pipeline/21_is_merge.wl`: `concat_samples.wl` with `COMB_IS_MERGE_PS` and
+  `COMB_IS_MERGE_STEMS` (identity knobs). Declared stems are merged in sorted
+  file order (= the glob order); unset, it globs as before.
+  `src/concat_samples.wl` is a shim.
+- `run.wl is`: one merge job per p after its batches, with the profile's
+  batch list (paper lists = exactly the files the stored merges came from;
+  on the real store all three are skipped, outputs exist).
+- Known wart (follow-up): jobs are decided once per run, so a fresh store
+  needs three `run.wl is` runs (batches, then merges, then the q=10
+  histograms; before, the histograms already needed a second run). Fix:
+  re-plan once after a stage's jobs finish.
+- Checks (scratch roots; nothing written to the real store):
+  - old `concat_samples.wl` (glob) vs the shim (glob) vs `21_is_merge.wl`
+    with a declared, unsorted stem list: merged stats and complexes
+    identical for p = 2, 3, 4 (incl. the stats-only path when a batch has no
+    complexes file);
+  - `run.wl all profile quick jobs 3` from an empty store: ok;
+    `golden_quick` PASS; then `run.wl is` ran the 3 merges, and the next one
+    the histograms;
+  - `run.wl is dryrun` on the real store: merges skipped, lists shown;
+  - `run_wl_test.wl` PASS (57); `golden_derived.wl check` all 11 PASS.
+
 ## Phase 4 row 5a: ISSampler.wl + `pipeline/20_is_q10.wl` (2026-11-22, Ryzen, branch `claude/phase-4-is`, stacked on `claude/phase-4-ecgrav`)
 
 Next: 5b (batch merge as a `run.wl is` job, `pipeline/21_is_merge.wl`).
