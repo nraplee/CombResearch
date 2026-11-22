@@ -1,5 +1,28 @@
 # Current Agent Task
 
+## Phase 4 row 5a: ISSampler.wl + `pipeline/20_is_q10.wl` (2026-11-22, Ryzen, branch `claude/phase-4-is`, stacked on `claude/phase-4-ecgrav`)
+
+Next: 5b (batch merge as a `run.wl is` job, `pipeline/21_is_merge.wl`).
+
+- `CombResearch/Kernel/Subpackages/ISSampler.wl`: the weight formulas and the
+  per-chunk sample + statistics step. Public `PureComplexISSample`,
+  `PureComplexISWeights`, `$PureComplexISNames`, `EffectiveSampleSize`.
+  `Tests/ISSampler.wlt` (11 tests; the reweighting bound scales with the ESS,
+  which is only ~N/5 for unlabeled/facet at (2,4)).
+- `pipeline/20_is_q10.wl`: the q=10 IS driver on the package.
+  `src/pure_simplicial_compute.wl` is a shim that Gets it in the same kernel,
+  so `run_p{2,3,4}.wl`, the `*Override` variables, knobs, chunk resume and
+  file names are unchanged. `$CombISHeaders` = `$PureComplexISNames`.
+- Checks (scratch roots; nothing written to the real store):
+  - old code vs new, same seeds: `run_p{2,3,4}.wl` N=250 in 3 chunks
+    (parallel stats, 16 subkernels), a tagged p=3 batch and a COMB_NN_FIXED=18
+    p=2 batch: all 10 stats/complexes files identical (createdAt aside);
+  - chunk resume: chunks 1-2 rebuilt from a finished run, finals deleted;
+    the new code resumed at chunk 3 and wrote identical files;
+  - `run.wl is profile quick cells "2,10"`: ok;
+  - package tests 4 files ALL PASS; `run_wl_test.wl` PASS (54);
+    `golden_derived.wl check` all 11 PASS.
+
 ## Phase 4 row 4: `pipeline/40_ecgrav.wl` (2026-11-22, Ryzen, branch `claude/phase-4-ecgrav`, stacked on `claude/phase-4-mh`)
 
 Next: row 5 (ISSampler + `20_is_q10.wl`), split into 5a (package + sampling
