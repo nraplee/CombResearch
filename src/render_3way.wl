@@ -99,7 +99,10 @@ panel[p_, q_, t_] := Module[
   lo = First[keys]; hi = Last[keys];
   truthPts = Pick[Transpose[{keys, tV}], # > 0 & /@ tV];
 
-  Show[
+  (* Legend via Legended, not ChartLegends -> Placed[..., Top]: in 15.0.1
+     the placed chart legend stretches each panel to ~2800 px wide, and
+     the 144-dpi PNG export then fails (Rasterize::bigraster). *)
+  Legended[Show[
     Histogram[
       {WeightedData[keys, isV], WeightedData[keys, mhV]},
       {lo - 0.5, hi + 0.5, 1},
@@ -109,11 +112,11 @@ panel[p_, q_, t_] := Module[
           EdgeForm[Directive[colorIS, AbsoluteThickness[0.4]]]],
         Directive[colorMH, Opacity[0.55],
           EdgeForm[Directive[colorMH, AbsoluteThickness[0.4]]]]},
-      ChartLegends -> Placed[translucentLegend, Top],
       FrameLabel -> {{"fraction", None}, {"numV", None}},
       PlotLabel -> panelLabel[p, q, t, l1IsT, l1MhT, ess],
       frameOpts],
-    Graphics[{Black, AbsolutePointSize[4], Point[truthPts]}]]];
+    Graphics[{Black, AbsolutePointSize[4], Point[truthPts]}]],
+    Placed[translucentLegend, Top]]];
 
 cells = {{3, 5}, {4, 5}};
 targets = {"vertex", "unlabeled", "facet"};
@@ -124,11 +127,13 @@ panels = Table[panel[cell[[1]], cell[[2]], t],
 grid = Grid[panels, Spacings -> {0.5, 0.5},
   Frame -> None, Background -> White];
 
-Export[FileNameJoin[{figDir, "q5_is_mh_truth_3way.png"}], grid,
-  ImageResolution -> 144];
-Print["wrote figures/is_vs_mh/q5_is_mh_truth_3way.png"];
+(* Fail loudly: an Export that returns $Failed leaves the old file. *)
+exportOrDie[name_, opts___] :=
+  If[Export[FileNameJoin[{figDir, name}], grid, opts] === $Failed,
+    Print["ERROR: export failed: ", name]; Exit[1],
+    Print["wrote figures/is_vs_mh/", name]];
 
-Export[FileNameJoin[{figDir, "q5_is_mh_truth_3way.pdf"}], grid];
-Print["wrote figures/is_vs_mh/q5_is_mh_truth_3way.pdf"];
+exportOrDie["q5_is_mh_truth_3way.png", ImageResolution -> 144];
+exportOrDie["q5_is_mh_truth_3way.pdf"];
 
 Print["Done."];
