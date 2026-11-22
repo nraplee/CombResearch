@@ -37,7 +37,7 @@ Install/setup:
 
 Generated outputs (added 2026-11-20):
 
-- Every script takes `data/`, `figures/` and `logs/` from `src/comb_paths.wl` (`$CombDataDir`, `$CombFiguresDir`, `$CombLogsDir`) or, in PowerShell launchers, `src/comb_paths.ps1`. These resolve to the main checkout (the parent of `git rev-parse --git-common-dir`) even when the script runs from a worktree. Code still runs from the checkout the script lives in. `COMB_ROOT` overrides the output root.
+- Every script takes `data/`, `figures/` and `logs/` from `src/comb_paths.wl` (`$CombDataDir`, `$CombFiguresDir`, `$CombLogsDir`) or, in PowerShell launchers, `src/comb_paths.ps1`. These resolve to the main checkout (the parent of `git rev-parse --git-common-dir`) even when the script runs from a worktree. Code still runs from the checkout the script lives in. `COMB_ROOT` overrides the output root. If the git call fails twice in a worktree, the main checkout is read from the worktree's `.git` file (`gitdir:` + `commondir`); if that fails too the script stops (`.wl`: Exit 3; `.ps1`: throws) instead of writing to `<worktree>\data`.
 - Safety net: `src/sync_worktree_data.ps1` copies untracked/ignored files from every worktree's `data/`, `figures/`, `logs/` into the main checkout. It never overwrites or deletes; a file that differs from main's goes to `<dir>\_from_worktrees\<worktree>\` and is reported as a conflict. `-DryRun` previews. The committed `.claude/settings.json` runs it on Claude Code SessionStart and SessionEnd.
 
 ```powershell
