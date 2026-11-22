@@ -299,6 +299,32 @@ in-kernel shims left behind.
 The `.ps1` launchers become thin callers of `run.wl` with the same log
 names.
 
+**Order (agreed 2026-11-21):** Enumeration, Statistics, MHSampler,
+`40_ecgrav`, ISSampler, Compare, figures. MH goes before IS because it is
+smaller and fully checkable against truth; IS (chunk resume, `*Override`) is
+the riskiest move and waits until the package pattern is proven.
+
+**As built, row 1 (Enumeration / `10_truth.wl`, 2026-11-21):**
+
+- `CombResearch/PacletInfo.wl`, `Kernel/CombResearch.wl` (usage messages;
+  refuses to load unless `ECGrav`` is already loaded),
+  `Kernel/Subpackages/Enumeration.wl` (the three enumerators moved verbatim
+  into the private context), `Tests/Enumeration.wlt` + `TestPrelude.wl` +
+  `run_tests.wl`. `src/load_combresearch.wl` loads ECGrav, then the package.
+- Public: `EnumerateUnlabeledPureComplexes[p, q, Method -> Automatic |
+  "Cheap" | "BLISS" | "McKay", "Parallel" -> True]` (Automatic = McKay for
+  p >= 4; result gains a `"method"` key), `PureComplexCanonicalKey`,
+  `ChooseNonIsomorphicPureComplexesBucketed`, `$CombTruthIsoCounts` (gates
+  for all 9 cells), `$CombResearchSubkernelSetup` (how parallel code loads
+  ECGrav on subkernels; the loader sets it to `combLoadECGravOnKernels`).
+- `pipeline/10_truth.wl` always writes the final `_truth.wxf`; `run.wl
+  truth` runs it and no longer has a "waiting for rename" state.
+  `src/enumerate_truth.wl` is unchanged (cross-validation, tagged names) and
+  runs on the package through the shims `src/streaming_enumerator*.wl`.
+- Still as before: McKay's `totalFacetLabeled` is the pruned leaf count,
+  not the facet-labeled total (golden truth's known finding). Fixing it
+  changes stored-data semantics, so it is a separate, deliberate change.
+
 ## Phase 5: reorganise and delete
 
 - **One mechanical `git mv` PR** into `CombResearch/`, `pipeline/`,

@@ -1,5 +1,42 @@
 # Current Agent Task
 
+## Phase 4 row 1: `CombResearch` package + `pipeline/10_truth.wl` (2026-11-21, Ryzen, branch `claude/adoring-brahmagupta-4bc3dc`)
+
+Next: Phase 4 row 2 (Statistics.wl). Agreed order for the rest: Statistics,
+MHSampler + `30_mh`, `40_ecgrav`, ISSampler + `20_is_q10`, Compare +
+`50_validate`, `60_figures` (`docs/architecture/implementation-plan.md`).
+
+- New package `CombResearch/` laid out like ECGrav: `PacletInfo.wl`,
+  `Kernel/CombResearch.wl` (usage messages), `Kernel/Subpackages/Enumeration.wl`
+  (cheap, BLISS, McKay moved verbatim), `Tests/Enumeration.wlt`,
+  `Tests/TestPrelude.wl`, `Tests/run_tests.wl`. Loaded through
+  `src/load_combresearch.wl` (ECGrav first).
+- Public: `EnumerateUnlabeledPureComplexes` (Method Automatic = McKay at
+  p >= 4), `PureComplexCanonicalKey`, `ChooseNonIsomorphicPureComplexesBucketed`,
+  `$CombTruthIsoCounts`, `$CombResearchSubkernelSetup`.
+- `pipeline/10_truth.wl`: the truth stage; always writes the final
+  `_truth.wxf` (no McKay rename); gates for all 9 cells; exit 1 on a failed
+  gate. `run.wl truth` runs it; the rename-pending state is gone. `run.wl
+  check` also runs the package tests.
+- Shims: `src/streaming_enumerator{,_bliss,_mckay}.wl` keep the old Global
+  names. `src/enumerate_truth.wl` unchanged (cross-validation, tagged names).
+- Checks (scratch roots; nothing written to the real store):
+  - `CombResearch/Tests/run_tests.wl`: Enumeration.wlt 21/21 PASS (4.6 min).
+  - `src/test_streaming.wl` ALL PASS, `src/test_streaming_mckay.wl` all gates
+    pass (through the shims; the first uses the parallel path).
+  - `pipeline/10_truth.wl` regenerated (2,4) (2,5) (2,6) (3,4) (3,5) cheap
+    and (4,4) McKay sequential: `complexes`, the three pi vectors and the
+    counts are identical (`===`) to the stored files.
+  - `run.wl truth profile quick` in an empty root: one job, ok, files
+    identical to the store; a second run skips. `run.wl truth dryrun` on the
+    real store plans nothing; `run.wl check dryrun` lists the package tests.
+  - `tests/run_wl_test.wl` PASS (52 checks), `lib_names_test`,
+    `lib_config_test` PASS.
+  - `tests/golden/golden_derived.wl check`: all 11 sections PASS (34 min).
+- Not done / follow-ups: McKay `totalFacetLabeled` is still the pruned leaf
+  count (fix = deliberate golden re-baseline); (2,7), (3,6), (4,5) were not
+  regenerated (4-17 h each), covered by gates and the stored data only.
+
 ## Phase 3a: regenerate the flagged data (2026-11-21, Ryzen, code `@6db1aa4`, ECGrav 474b5c2)
 
 Next: Phase 4 (`docs/architecture/implementation-plan.md`).

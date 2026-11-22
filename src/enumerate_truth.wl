@@ -1,4 +1,10 @@
 (* enumerate_truth.wl
+   Legacy truth driver. run.wl's truth stage now runs pipeline/10_truth.wl
+   (Phase 4), which always writes the final _truth.wxf. This script is kept,
+   unchanged, for cross-validation runs (non-cheap pipelines write tagged
+   _truth_<pipeline>.wxf names); its enumerators come from the CombResearch
+   package through the src/streaming_enumerator*.wl shims.
+
    Truth-enumeration driver. For each requested (p, q), run one of the
    streaming enumerators, compute per-iso-class statistics and the three exact
    distributions, and persist a WXF cache.

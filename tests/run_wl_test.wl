@@ -12,7 +12,7 @@
      - partial outputs: only the missing cells are run, the job counts as
        done, existing outputs are untouched; a cell with only some IS hists
        is held back without force;
-     - a McKay file waiting for its rename is not rerun;
+     - a leftover McKay-tagged truth file does not block the truth job;
      - a lock file stops a launch, at plan time;
      - validate with cells: every summary writer is skipped, counts runs;
        sampler legacyfacet validates legacyfacet;
@@ -118,11 +118,13 @@ hasNot["COMB_NN_FIXED not passed as a profile override", r["out"],
   RegularExpression["(?m)^WARNING: COMB_. variables in this shell .*COMB_NN_FIXED"]];
 has["...the batch keeps its planned file name", r["out"], line["run", "is q=10 p=2 quick"]];
 
-(* ----- McKay output waiting for rename ----- *)
+(* ----- truth: pipeline/10_truth.wl writes the final name (no McKay rename) ----- *)
 touch[combFile["truth", 4, 4, "mckay"]];
 r = runwl[{"truth", "profile", "paper", "cells", "4,4", "dryrun"}];
-has["mckay pending is skipped with a rename hint", r["out"],
-  "rename p4q4_truth_mckay.wxf -> p4q4_truth.wxf"];
+has["mckay leftover does not block the truth job", r["out"], line["run", "truth mckay 4,4"]];
+has["truth job runs pipeline/10_truth.wl", r["out"], "pipeline/10_truth.wl"];
+has["truth job passes the McKay pipeline", r["out"], knob["COMB_TRUTH_PIPELINE", "mckay"]];
+hasNot["no rename hint", r["out"], "rename p4q4_truth_mckay.wxf"];
 
 (* ----- lock file ----- *)
 touch[combFile["truth", 2, 4]];
