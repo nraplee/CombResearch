@@ -325,6 +325,14 @@ the riskiest move and waits until the package pattern is proven.
   not the facet-labeled total (golden truth's known finding). Fixing it
   changes stored-data semantics, so it is a separate, deliberate change.
 
+**As built, row 2 (Statistics, 2026-11-22):** `Kernel/Subpackages/Statistics.wl`
+(moved verbatim from `src/lib_stats.wl`); public `PureComplexStatistics[c, p]`,
+`$PureComplexStatisticNames`, `PureComplexKPathComponents`,
+`PureComplexBettiNumber`; `Tests/Statistics.wlt`. `src/lib_stats.wl` is a shim
+(same Global names; `$CombISHeaders` stays there until ISSampler).
+`pure_simplicial_compute.wl` loads the package on its subkernels
+(`combLoadCombResearchOnKernels[]`). No pipeline stage for this row.
+
 ## Phase 5: reorganise and delete
 
 - **One mechanical `git mv` PR** into `CombResearch/`, `pipeline/`,

@@ -1,5 +1,26 @@
 # Current Agent Task
 
+## Phase 4 row 2: Statistics.wl (2026-11-22, Ryzen, branch `claude/phase-4-statistics`)
+
+Next: row 3 (MHSampler + `pipeline/30_mh.wl`).
+
+- `CombResearch/Kernel/Subpackages/Statistics.wl`: the 12 statistics moved
+  verbatim from `src/lib_stats.wl`. Public `PureComplexStatistics[c, p]`,
+  `$PureComplexStatisticNames`, `PureComplexKPathComponents`,
+  `PureComplexBettiNumber`. `Tests/Statistics.wlt` (12 tests).
+- `src/lib_stats.wl` is a shim (same Global names, `$CombISHeaders` stays).
+  `pure_simplicial_compute.wl` loads the package on its subkernels.
+- Checks (scratch roots; nothing written to the real store):
+  - package tests: Enumeration 21/21, Statistics 12/12 PASS;
+  - the package recomputes the stored stats of all 10,882 truth classes
+    (9 cells) exactly; the `statsFor` shim gives the same rows;
+  - old code (`origin/main`) vs new code, same seeds: `run_p3.wl` N=200
+    (parallel IS), `run_mh_chains.wl` (3,4) vertex+facet 3k iters,
+    `run_ecgrav_samplers.wl` (3,4) unlabeled N=300: outputs identical
+    (MH differs only in wallSeconds/createdAt/samplerVersion label);
+  - `test_streaming.wl`, `test_streaming_mckay.wl` PASS;
+  - `golden_derived.wl check`: all 11 sections PASS (33 min).
+
 ## Phase 4 row 1: `CombResearch` package + `pipeline/10_truth.wl` (2026-11-21, Ryzen, branch `claude/adoring-brahmagupta-4bc3dc`)
 
 Next: Phase 4 row 2 (Statistics.wl). Agreed order for the rest: Statistics,

@@ -12,7 +12,8 @@
    never pick up a globally installed ECGrav paclet by accident.
 
    Subpackages:
-     Enumeration.wl   exact unlabeled enumeration (cheap key, BLISS, McKay) *)
+     Enumeration.wl   exact unlabeled enumeration (cheap key, BLISS, McKay)
+     Statistics.wl    the 12 per-complex statistics *)
 
 If[!MemberQ[$Packages, "ECGrav`"],
   Print["CombResearch: load ECGrav first (src/load_combresearch.wl does both)."];
@@ -74,9 +75,39 @@ $CombTruthIsoCounts::usage =
 	project's truth grid. Used as validation gates.";
 
 
+(* ::Section:: *)
+(* Statistics *)
+
+PureComplexStatistics::usage =
+"PureComplexStatistics[complex, p] gives the 12 statistics of a pure simplicial
+	complex with facets of size p, in the order of $PureComplexStatisticNames:
+	number of vertices; vertex automorphism group order (ECGrav
+	PureComplexAutomorphismGroupOrder); facet automorphism group order
+	(PureComplexFacetAutomorphismGroupOrder); connected (1 or 0); number of
+	connected and of 2-vertex-connected components of the 1-skeleton; largest
+	component size / number of vertices (a Real); number of 2-path and 3-path
+	connected components; Betti numbers 1, 2, 3 over Z_2. Entries that do not
+	apply at this p (2-path and Betti2 for p < 3, 3-path and Betti3 for p < 4)
+	are \"\".
+PureComplexStatistics[complex] takes p from the first facet.";
+
+$PureComplexStatisticNames::usage =
+"$PureComplexStatisticNames is the list of the 12 statistic names, in the
+	order PureComplexStatistics returns them.";
+
+PureComplexKPathComponents::usage =
+"PureComplexKPathComponents[complex, k] gives the number of k-path connected
+	components: (k-1)-simplices are joined when they lie in a common facet.";
+
+PureComplexBettiNumber::usage =
+"PureComplexBettiNumber[complex, k] gives the k-th Betti number of the
+	complex over Z_2 (rank-nullity on the mod-2 boundary matrices).";
+
+
 Begin["`Private`"];
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "Enumeration.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "Statistics.wl"}]];
 
 End[];
 

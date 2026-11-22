@@ -68,7 +68,7 @@ If[useParallel,
   Print["launching parallel kernels ..."];
   LaunchKernels[];
   Print["  ", Length[Kernels[]], " kernels active"];
-  combLoadECGravOnKernels[];
+  combLoadCombResearchOnKernels[];  (* ECGrav + the package (statsFor) *)
   DistributeDefinitions[oneSkeleton, kPathComps, simplicesOfDim,
     boundaryMatrix, bettiNumber, statsFor, qVal]];
 
