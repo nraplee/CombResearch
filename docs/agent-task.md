@@ -33,9 +33,10 @@ files and their manifests were first copied to
   licence slots. With 5 of them open, `jobs 4` failed 2 jobs within 5 s
   with empty logs; keep `run.wl` plus jobs at ≤ 5 kernels in that state.
 - **Not done / follow-ups:**
-  - `render_3way.wl` PNG export fails (`Rasterize::bigraster`): the legend
-    lays out ~8000 px wide at 144 dpi, the PNG keeps the 11-20 version
-    (old bad (3,5) vertex), though the script prints "wrote". The PDF is new.
+  - Fixed in this PR: `render_3way.wl` PNG export failed in 15.0.1
+    (`ChartLegends -> Placed[..., Top]` stretched panels to ~2800 px;
+    `Rasterize::bigraster`) while printing "wrote". Now `Legended`, and a
+    failed export exits 1; PNG re-rendered.
   - `comb_paths.wl` falls back to the worktree when `git` fails ("git not
     available"); this happened once in a golden subprocess (the section then
     found no inputs and exited 2). A failing fallback would be safer.
