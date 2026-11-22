@@ -13,7 +13,7 @@
                IS at the truth cells (run_is_at_truth_cells.wl), and the
                q=10 numV histograms (precompute_is_histograms_q10.wl)
      mh        pipeline/30_mh.wl, one process per cell and target
-     ecgrav    run_ecgrav_samplers.wl, one process per sampler and target
+     ecgrav    pipeline/40_ecgrav.wl, one process per sampler and target
      validate  counts, MH/ECGrav validation, efficiency and comparison
                summaries; warns when one kind of input (e.g. the MH chains)
                mixes ECGrav commits (guarantee 6, from the manifests)
@@ -320,7 +320,7 @@ jobsFor["ecgrav"] := Flatten @ Map[Function[r, If[$cliSampler =!= All && r["samp
         todo = If[$force, cells,
           Select[cells, !FileExistsQ[combFile["ecg", #[[1]], #[[2]], r["sampler"], t]] &]];
         If[cells === {}, Nothing,
-          job["ecg" <> r["sampler"] <> " " <> t, "src/run_ecgrav_samplers.wl",
+          job["ecg" <> r["sampler"] <> " " <> t, "pipeline/40_ecgrav.wl",
             resolveKnobs[DeleteMissing @ <|"COMB_ECG_SAMPLER" -> r["sampler"],
                 "COMB_ECG_CELLS" -> If[todo === {}, cells, todo], "COMB_ECG_TARGETS" -> {t},
                 "COMB_ECG_N" -> r["n"], "COMB_ECG_BATCH" -> Lookup[r, "batch", Missing[]],

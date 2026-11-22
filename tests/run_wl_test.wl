@@ -126,6 +126,8 @@ has["mckay leftover does not block the truth job", r["out"], line["run", "truth 
 has["truth job runs pipeline/10_truth.wl", r["out"], "pipeline/10_truth.wl"];
 has["truth job passes the McKay pipeline", r["out"], knob["COMB_TRUTH_PIPELINE", "mckay"]];
 hasNot["no rename hint", r["out"], "rename p4q4_truth_mckay.wxf"];
+r = runwl[{"ecgrav", "profile", "quick", "cells", "2,4", "targets", "facet", "sampler", "exact", "dryrun"}];
+has["ecgrav job runs pipeline/40_ecgrav.wl", r["out"], "pipeline/40_ecgrav.wl"];
 
 (* ----- lock file ----- *)
 touch[combFile["truth", 2, 4]];
