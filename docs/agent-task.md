@@ -1,5 +1,21 @@
 # Current Agent Task
 
+## Phase 4 row 4: `pipeline/40_ecgrav.wl` (2026-11-22, Ryzen, branch `claude/phase-4-ecgrav`, stacked on `claude/phase-4-mh`)
+
+Next: row 5 (ISSampler + `20_is_q10.wl`), split into 5a (package + sampling
+stage) and 5b (batch merge built into `run.wl is`).
+
+- `pipeline/40_ecgrav.wl`: `run_ecgrav_samplers.wl` on the package
+  (`PureComplexCanonicalKey`, `PureComplexStatistics`), same knobs, defaults
+  and names. `run.wl ecgrav` runs it; `src/run_ecgrav_samplers.wl` is a
+  shim, so `run_ecgrav_campaign.ps1` is unchanged.
+- Checks (scratch roots; nothing written to the real store):
+  - old code vs shim vs `40_ecgrav.wl` directly: exact (3,4) all three
+    targets N=300, mcmc (2,4) unlabeled N=200, legacyfacet (2,4) N=200:
+    identical apart from timing fields;
+  - `run.wl ecgrav profile quick cells "2,4" targets facet sampler exact`: ok;
+  - `run_wl_test.wl` PASS (54 checks); `golden_derived.wl check` all 11 PASS.
+
 ## Phase 4 row 3: MHSampler.wl + `pipeline/30_mh.wl` (2026-11-22, Ryzen, branch `claude/phase-4-mh`, stacked on `claude/phase-4-statistics`)
 
 Next: row 4 (`pipeline/40_ecgrav.wl`).

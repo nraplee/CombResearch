@@ -13,7 +13,7 @@
      "mhChains"    pipeline/30_mh.wl groups. "fanOut" -> "target" runs one
                    process per target (the (4,5) launcher); "tag" is
                    COMB_MH_TAG, "initNumV" COMB_MH_INITNUMV
-     "ecgravRuns"  run_ecgrav_samplers.wl runs, one process per target
+     "ecgravRuns"  pipeline/40_ecgrav.wl runs, one process per target
    The run plans are data for Phase 3's run.wl; no script reads them yet.
 
    "paper": the settings that made the stored data, from the launchers and

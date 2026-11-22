@@ -350,6 +350,14 @@ in Phase 3a. Not done: the four MH `.ps1` launchers still call
 has a one-time file-restore step), and proving a converted launcher needs
 a production-sized run.
 
+**As built, row 4 (`40_ecgrav.wl`, 2026-11-22):** `pipeline/40_ecgrav.wl` is
+`run_ecgrav_samplers.wl` on the package (`PureComplexCanonicalKey`,
+`PureComplexStatistics`), same knobs, defaults and names; `run.wl ecgrav`
+runs it; `src/run_ecgrav_samplers.wl` is a shim, so
+`run_ecgrav_campaign.ps1` is unchanged. The count check
+(`validate_counts_vs_truth.wl`) stays in `validate`; folding it into the
+ECGrav regression is left for `50_validate`.
+
 ## Phase 5: reorganise and delete
 
 - **One mechanical `git mv` PR** into `CombResearch/`, `pipeline/`,
