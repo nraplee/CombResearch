@@ -10,6 +10,8 @@
                stale outputs
      truth     pipeline/10_truth.wl, one process per truth run of the profile
      is        q=10 IS batches (run_p{p}.wl, one process per p and batch),
+               their merge per p (pipeline/21_is_merge.wl, the profile's batch
+               list; runs once the batches exist),
                IS at the truth cells (run_is_at_truth_cells.wl), and the
                q=10 numV histograms (precompute_is_histograms_q10.wl)
      mh        pipeline/30_mh.wl, one process per cell and target
@@ -156,7 +158,7 @@ $identityKnobs = {"COMB_TRUTH_CELLS", "COMB_TRUTH_PIPELINE", "COMB_N", "COMB_RUN
   "COMB_NN_FIXED", "COMB_IS_CELLS", "COMB_MH_CELLS", "COMB_MH_TARGETS", "COMB_MH_TAG",
   "COMB_ECG_SAMPLER", "COMB_ECG_CELLS", "COMB_ECG_TARGETS", "COMB_VAL_SOURCE",
   "COMB_VAL_CELLS", "COMB_VAL_TARGETS", "COMB_EFF_CELLS", "COMB_EFF_TARGETS",
-  "COMB_3W_CELLS", "COMB_3W_TARGETS", "COMB_FIG2_N"};
+  "COMB_3W_CELLS", "COMB_3W_TARGETS", "COMB_FIG2_N", "COMB_IS_MERGE_PS", "COMB_IS_MERGE_STEMS"};
 $notInherited = Join[$stripped, $identityKnobs];
 (* drop them from an environment, whatever their case *)
 dropNotInherited[env_Association] := KeySelect[env, !MemberQ[$notInherited, ToUpperCase[#]] &];
@@ -270,7 +272,22 @@ jobsFor["is"] := Module[{batches = planOf["isBatches"], out = {}, cellsIS},
                has no force knob *)
             "noForce" -> "force cannot rerun a q=10 batch: the driver skips a finished batch; " <>
               "move " <> FileNameTake[combFile["isStats", stem]] <> " away first"|>]],
-        {b, bs}]]], batches];
+        {b, bs}];
+      (* the merge of this p's batches, from the declared list (Phase 4 row 5b).
+         Decided at plan time like every job: on a fresh store it runs on the
+         next run.wl is, once the batches exist. force remerges. *)
+      With[{stems = Sort[combISStem[p, 10, #[[2]], None, #[[1]]] & /@ bs],
+          merged = combMergedStem[p, 10]},
+        AppendTo[out, job["is merge q=10 p=" <> ToString[p], "pipeline/21_is_merge.wl",
+          resolveKnobs[<||>, <|"COMB_IS_MERGE_PS" -> {{p}, "job split"},
+            "COMB_IS_MERGE_STEMS" -> {stems, "job split"}|>],
+          {combFile["isStats", merged]}, combFile["isStats", #] & /@ stems,
+          "is_merge_p" <> ToString[p]] ~Join~
+          (* batches migrated from CSV have no complexes file; the merge then
+             writes the merged stats only *)
+          <|"written" -> If[AllTrue[stems, FileExistsQ[combFile["isComplexes", #]] &],
+            {combFile["isStats", merged], combFile["isComplexes", merged]},
+            {combFile["isStats", merged]}]|>]]]], batches];
   cellsIS = pickCells[combSetting["COMB_IS_CELLS", {{3, 5}, {4, 5}}, "cells"]];
   (* The driver works per cell: it rewrites all 3 hists of a cell it runs. A
      cell with only some hists would have its existing ones overwritten, so
