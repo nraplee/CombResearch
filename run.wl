@@ -8,7 +8,7 @@
      check     update the shared ECGrav clone, run tests\ecgrav_regression.wl
                if that commit has not passed, run the smoke tests, report
                stale outputs
-     truth     enumerate_truth.wl, one process per truth run of the profile
+     truth     pipeline/10_truth.wl, one process per truth run of the profile
      is        q=10 IS batches (run_p{p}.wl, one process per p and batch),
                IS at the truth cells (run_is_at_truth_cells.wl), and the
                q=10 numV histograms (precompute_is_histograms_q10.wl)
@@ -239,32 +239,18 @@ planOf[key_] := Lookup[$profile, key, {}];
 truthPath[{p_, q_}] := combFile["truth", p, q];
 targets3 = {"unlabeled", "facet", "vertex"};
 
-pipeFile[{p_, q_}, pipeline_] := combFile["truth", p, q, pipeline];
-jobsFor["truth"] := Flatten @ Map[Function[r, Module[{cells, pl = r["pipeline"], pending, todo, use, j},
+(* pipeline/10_truth.wl always writes the final _truth.wxf, whatever the
+   pipeline (Phase 4), so there is no McKay rename step any more. A leftover
+   _truth_<pipeline>.wxf from enumerate_truth.wl is ignored. *)
+jobsFor["truth"] := Flatten @ Map[Function[r, Module[{cells, pl = r["pipeline"], todo, use},
     cells = pickCells[r["cells"]];
-    (* A non-cheap pipeline writes _truth_<pipeline>.wxf; the canonical
-       _truth.wxf is a manual rename (Phase 4 automates it). A cell whose
-       pipeline file exists but canonical file does not is waiting for that
-       rename, not for a rerun. *)
-    pending = If[pl === "cheap" || $force, {},
-      Select[cells, !FileExistsQ[truthPath[#]] && FileExistsQ[pipeFile[#, pl]] &]];
-    todo = If[$force, cells, Select[cells, !FileExistsQ[truthPath[#]] && !MemberQ[pending, #] &]];
+    todo = If[$force, cells, Select[cells, !FileExistsQ[truthPath[#]] &]];
     use = If[todo === {}, cells, todo];
     If[cells === {}, {},
-      j = job["truth " <> pl <> " " <> envString[cells], "src/enumerate_truth.wl",
+      job["truth " <> pl <> " " <> envString[cells], "pipeline/10_truth.wl",
         resolveKnobs[<|"COMB_TRUTH_PARALLEL" -> If[TrueQ[r["parallel"]], "true", "false"]|>,
           <|"COMB_TRUTH_CELLS" -> cliOr[use], "COMB_TRUTH_PIPELINE" -> {pl, "job split"}|>],
-        truthPath /@ use, {}, "truth_" <> pl] ~Join~
-        <|"written" -> (pipeFile[#, pl] & /@ use)|>;
-      (* checked again at start: another run.wl may finish this pipeline run *)
-      If[pl =!= "cheap", j["doneWhen"] = pipeFile[#, pl] & /@ use];
-      If[todo === {} && pending =!= {},
-        j["skipReason"] = "rename " <> StringRiffle[FileNameTake[pipeFile[#, pl]] <> " -> " <>
-          FileNameTake[truthPath[#]] & /@ pending, ", "] <> " (" <> pl <> " output present)"];
-      If[pending =!= {} && todo =!= {},
-        Print["  note: ", pl, " output waiting for rename: ",
-          StringRiffle[FileNameTake[pipeFile[#, pl]] & /@ pending, ", "]]];
-      j]]],
+        truthPath /@ use, {}, "truth_" <> pl]]]],
   planOf["truthRuns"]];
 
 jobsFor["is"] := Module[{batches = planOf["isBatches"], out = {}, cellsIS},
@@ -524,11 +510,12 @@ jobsFor["check"] := Module[{out = {}, commit},
         {3, 5}, {3, 6}, {4, 4}, {4, 5}}, "cells"], "check_ecgrav_regression"],
     "when" -> Function[!regressionPassed[ecgravCommit[]]]|>];
   out = Join[out, MapThread[job[#1, #2, <||>, {}, {}, #3] &, {
-    {"smoke: streaming", "smoke: streaming McKay", "smoke: lib_names", "smoke: lib_config", "smoke: manifests"},
-    {"src/test_streaming.wl", "src/test_streaming_mckay.wl", "tests/lib_names_test.wl",
-      "tests/lib_config_test.wl", "tests/manifest_test.wl"},
-    {"check_test_streaming", "check_test_streaming_mckay", "check_lib_names", "check_lib_config",
-      "check_manifest"}}]];
+    {"smoke: streaming", "smoke: streaming McKay", "smoke: package tests", "smoke: lib_names",
+      "smoke: lib_config", "smoke: manifests"},
+    {"src/test_streaming.wl", "src/test_streaming_mckay.wl", "CombResearch/Tests/run_tests.wl",
+      "tests/lib_names_test.wl", "tests/lib_config_test.wl", "tests/manifest_test.wl"},
+    {"check_test_streaming", "check_test_streaming_mckay", "check_package_tests", "check_lib_names",
+      "check_lib_config", "check_manifest"}}]];
   out];
 
 (* ----- running jobs ----- *)
