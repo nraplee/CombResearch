@@ -1,5 +1,22 @@
 # Current Agent Task
 
+## run.wl: later passes within a stage (2026-11-22, Ryzen, branch `claude/run-wl-second-pass`)
+
+Fixes the row 5b wart below: `run.wl` now finishes a stage in one run when
+one job's inputs are another job's outputs.
+
+- `laterPasses` in `run.wl`: after a stage's jobs all succeed, the stage is
+  planned again (`jobsFor`) and the jobs that were skipped only for
+  "inputs missing" are decided again; those now "run" are run. Repeats until
+  nothing new runs, at most `$maxPasses` = 4 passes. A failed job stops the
+  stage as before; dry runs and the `check` stage are unchanged.
+- `run.wl all profile quick` from an empty store: `is` ran the batches, then
+  "pass 2" the 3 merges, then "pass 3" the 9 q=10 histograms, in one run.
+- Checks (scratch roots; nothing written to the real store): that run ok;
+  `golden_quick` PASS; `run_wl_test.wl` PASS (68, new "later pass" checks:
+  a real p=2 batch + merge in one run, rerun starts nothing, no pass in a
+  dry run); `golden_derived.wl check` (see PR).
+
 ## Phase 4 row 5b: q=10 batch merge as a `run.wl is` job (2026-11-22, Ryzen, branch `claude/phase-4-is-merge`, stacked on `claude/phase-4-is`)
 
 Next: row 6 (Compare.wl + `50_validate.wl`). It adds new outputs
@@ -13,7 +30,7 @@ user before building it.
 - `run.wl is`: one merge job per p after its batches, with the profile's
   batch list (paper lists = exactly the files the stored merges came from;
   on the real store all three are skipped, outputs exist).
-- Known wart (follow-up): jobs are decided once per run, so a fresh store
+- Known wart (fixed by the later passes above): jobs are decided once per run, so a fresh store
   needs three `run.wl is` runs (batches, then merges, then the q=10
   histograms; before, the histograms already needed a second run). Fix:
   re-plan once after a stage's jobs finish.

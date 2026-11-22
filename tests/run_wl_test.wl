@@ -1,7 +1,8 @@
 (* run_wl_test.wl
    Checks run.wl's planning and safety rules (Phase 3) in a fresh temporary
    COMB_ROOT that the test creates and deletes. Never touches the store.
-   Mostly dry runs; two real runs: one IS-at-truth-cells job (about 40 s) and
+   Mostly dry runs; real runs: one q=10 p=2 quick batch and its merge in a
+   later pass of the same run.wl, one IS-at-truth-cells job (about 40 s) and
    one check stage (smoke tests, about 3 min).
 
    Covers the review findings fixed in Phase 3:
@@ -121,6 +122,21 @@ has["...the batch keeps its planned file name", r["out"], line["run", "is q=10 p
 has["merge job planned after the batch", r["out"], line["skip", "is merge q=10 p=2"]];
 has["...waiting for its batch", r["out"], "inputs missing: p2q10_n2000_quick_stats.wxf"];
 has["...with the declared batch list", r["out"], knob["COMB_IS_MERGE_STEMS", "p2q10_n2000_quick"]];
+hasNot["dry run plans no later pass", r["out"], "-- pass"];
+
+(* ----- later pass: the merge runs in the same run.wl, after its batch ----- *)
+r = runwl[{"is", "profile", "quick", "cells", "2,10"}];
+check["later pass: real run exits 0", r["code"], 0];
+has["later pass: batch done first", r["out"], "done   is q=10 p=2 quick"];
+has["later pass: pass 2 announced", r["out"], "-- pass 2: inputs written by the pass before"];
+has["later pass: merge done in the same run", r["out"], "done   is merge q=10 p=2"];
+check["later pass: merged stats written", FileExistsQ[combFile["isStats", combMergedStem[2, 10]]], True];
+check["later pass: merged complexes written", FileExistsQ[combFile["isComplexes", combMergedStem[2, 10]]], True];
+check["later pass: merge lock removed", FileExistsQ[FileNameJoin[{$CombLogsDir, "is_merge_p2.log.lock"}]], False];
+r = runwl[{"is", "profile", "quick", "cells", "2,10"}];
+check["later pass: rerun exits 0", r["code"], 0];
+hasNot["later pass: rerun starts nothing", r["out"], "] start "];
+hasNot["later pass: rerun has no pass 2", r["out"], "-- pass"];
 
 (* ----- truth: pipeline/10_truth.wl writes the final name (no McKay rename) ----- *)
 touch[combFile["truth", 4, 4, "mckay"]];
