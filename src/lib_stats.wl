@@ -6,9 +6,8 @@
 
      statsFor[c, p]        = PureComplexStatistics[c, p]   (12-column row)
      $CombStatsHeaders     = $PureComplexStatisticNames
-     $CombISHeaders        $CombStatsHeaders plus the 3 IS weight columns
-                           (pure_simplicial_compute.wl stats WXFs; moves with
-                           ISSampler.wl)
+     $CombISHeaders        = $PureComplexISNames ($CombStatsHeaders plus the
+                           3 IS weight columns of the q=10 stats WXFs)
      oneSkeleton, kPathComps, simplicesOfDim, boundaryMatrix, bettiNumber
                            the helpers
 
@@ -22,7 +21,7 @@ Get[FileNameJoin[{DirectoryName[$InputFileName], "load_combresearch.wl"}]];
 
 $CombStatsHeaders = $PureComplexStatisticNames;
 
-$CombISHeaders = Join[$CombStatsHeaders, {"wVertex", "wUnlabeled", "wFacet"}];
+$CombISHeaders = $PureComplexISNames;
 
 ClearAll[oneSkeleton, kPathComps, simplicesOfDim, boundaryMatrix, bettiNumber, statsFor];
 oneSkeleton[c_List] := CombResearch`Private`oneSkeleton[c];

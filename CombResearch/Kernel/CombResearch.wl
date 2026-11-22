@@ -14,7 +14,8 @@
    Subpackages:
      Enumeration.wl   exact unlabeled enumeration (cheap key, BLISS, McKay)
      Statistics.wl    the 12 per-complex statistics
-     MHSampler.wl     Metropolis-Hastings for the three targets *)
+     MHSampler.wl     Metropolis-Hastings for the three targets
+     ISSampler.wl     importance sampling + reweighting *)
 
 If[!MemberQ[$Packages, "ECGrav`"],
   Print["CombResearch: load ECGrav first (src/load_combresearch.wl does both)."];
@@ -133,11 +134,39 @@ IntegratedAutocorrelationTime::usage =
 	<|\"tau\" -> Infinity, \"ess\" -> 0|> for a constant series.";
 
 
+(* ::Section:: *)
+(* ISSampler *)
+
+PureComplexISSample::usage =
+"PureComplexISSample[{p, q}, n] draws n complexes with ECGrav's
+	RandomVertexLabeledPureSimplicialComplex (uniform over vertex-labeled
+	complexes) and returns <|\"complexes\" -> {...}, \"rows\" -> {...}|>, one row of
+	15 values per complex in the order of $PureComplexISNames: the 12
+	PureComplexStatistics followed by the importance weights to the vertex,
+	unlabeled and facet targets. PureComplexISSample[{p, q, numV}, n] conditions
+	on numV. Seed with SeedRandom first. Option \"Parallel\" -> False | True
+	computes the statistics on subkernels (which must have the package loaded).";
+
+PureComplexISWeights::usage =
+"PureComplexISWeights[statsRows, q] appends to each 12-value statistics row the
+	weights {1, aut/numV!, aut q!/(autF numV!)} that reweight a vertex-labeled
+	sample to the vertex, unlabeled and facet targets (exact rationals).";
+
+$PureComplexISNames::usage =
+"$PureComplexISNames is $PureComplexStatisticNames followed by \"wVertex\",
+	\"wUnlabeled\", \"wFacet\": the columns of PureComplexISSample rows.";
+
+EffectiveSampleSize::usage =
+"EffectiveSampleSize[w] is the Kish effective sample size Total[w]^2/Total[w^2]
+	of the weights w (0 when all weights are 0).";
+
+
 Begin["`Private`"];
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "Enumeration.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "Statistics.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "MHSampler.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "ISSampler.wl"}]];
 
 End[];
 

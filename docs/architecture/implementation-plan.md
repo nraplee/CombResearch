@@ -358,6 +358,20 @@ runs it; `src/run_ecgrav_samplers.wl` is a shim, so
 (`validate_counts_vs_truth.wl`) stays in `validate`; folding it into the
 ECGrav regression is left for `50_validate`.
 
+**As built, row 5a (ISSampler / `20_is_q10.wl`, 2026-11-22):** the row is
+split in two PRs. 5a: `Kernel/Subpackages/ISSampler.wl` (the weight
+formulas and the per-chunk sample + statistics step from
+`pure_simplicial_compute.wl`; public `PureComplexISSample`,
+`PureComplexISWeights`, `$PureComplexISNames`, `EffectiveSampleSize`),
+`Tests/ISSampler.wlt`; `pipeline/20_is_q10.wl` is the driver on the
+package, and `src/pure_simplicial_compute.wl` is a shim that `Get`s it in
+the same kernel, so `run_p{2,3,4}.wl`, the `*Override` variables, the
+knobs, chunk resume and the file names are unchanged (`run.wl is` keeps
+launching `run_p{p}.wl`). Subkernels load the package instead of
+receiving `DistributeDefinitions` of the helpers. 5b (next PR): the batch
+merge (`concat_samples.wl`) becomes a `run.wl is` job driven by the
+profile's batch list.
+
 ## Phase 5: reorganise and delete
 
 - **One mechanical `git mv` PR** into `CombResearch/`, `pipeline/`,
