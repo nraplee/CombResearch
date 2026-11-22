@@ -103,6 +103,7 @@ r = runwl[{"mh", "profile", "quick", "cells", "2,4", "targets", "facet", "dryrun
   <|"COMB_FORCE" -> "1", "COMB_MH_CELLS" -> "9,9", "COMB_MH_NUMITER" -> "777"|>];
 has["leftover identity/force warned as ignored", r["out"], "ignored (run.wl sets these per job"];
 has["identity knob keeps the job's cell", r["out"], knob["COMB_MH_CELLS", "2,4"]];
+has["mh job runs pipeline/30_mh.wl", r["out"], "pipeline/30_mh.wl"];
 hasNot["no COMB_FORCE knob without the force word", r["out"], knob["COMB_FORCE", "1"]];
 has["tuning knob from env wins over profile", r["out"], knob["COMB_MH_NUMITER", "777"]];
 has["...and says so", r["out"], "env (overrides profile quick)"];

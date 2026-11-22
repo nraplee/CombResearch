@@ -10,7 +10,7 @@
      "truthRuns"   enumerate_truth.wl invocations: cells, pipeline, parallel
      "isBatches"   q=10 IS batches per p: {runTag, N, chunk}
                    (pure_simplicial_compute.wl via run_p{p}.wl)
-     "mhChains"    run_mh_chains.wl groups. "fanOut" -> "target" runs one
+     "mhChains"    pipeline/30_mh.wl groups. "fanOut" -> "target" runs one
                    process per target (the (4,5) launcher); "tag" is
                    COMB_MH_TAG, "initNumV" COMB_MH_INITNUMV
      "ecgravRuns"  run_ecgrav_samplers.wl runs, one process per target
