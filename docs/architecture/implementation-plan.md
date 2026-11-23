@@ -384,6 +384,42 @@ from). Like every job it is decided when the stage is planned, so on a
 fresh store the merge (and the q=10 histograms) run on the next `run.wl
 is`; `force` remerges. The scheduler is unchanged.
 
+**As built, row 6 (Compare / `50_validate.wl`, 2026-11-22):** the output
+formats were left to "whatever simplifies the process"; the choices:
+
+- `Kernel/Subpackages/Compare.wl`: the helpers each comparison script had
+  its own copy of, once: `PureComplexTruthMarginal` (exact marginal of any
+  statistic under a target), `SampleHistogram` (unweighted / weighted),
+  `HistogramL1Distance`, `IIDL1PValue`, `IsoClassChiSquare`, and
+  `PureComplexStatisticHistograms` (the pre-binning); `Tests/Compare.wlt`.
+- `pipeline/50_validate.wl`: one stage file, one job per process, named by
+  `COMB_VAL_JOB` (an identity knob) or a plain word: `counts`, `samples`,
+  `efficiency`, `3way`, `q10_is_vs_mh`, `q10_warm_vs_prod`, `results`. Each
+  job is its old script's code on the package, same knobs, inputs, output
+  names and payloads; the six old scripts are shims that set the job.
+  `run_is_at_truth_cells.wl` stays as it is: it samples rather than
+  compares, and it computes only numV/aut/autF, so it has no package
+  piece to use.
+- `results/*.csv`: the `results` job (run last in `run.wl validate`, a
+  "final" job, so it sees the summaries the other jobs just wrote) writes
+  every summary WXF that exists as a flat table, one row per result, nested
+  fields as `name_field` columns: `validation_{source}.csv`,
+  `sampler_efficiency.csv`, `is_mh_truth_3way.csv`, `q10_is_vs_mh.csv`,
+  `q10_warm_vs_prod.csv`; `counts` writes `counts_vs_truth.csv` (one row per
+  cell and vertex count). The WXFs stay the source; the CSVs are derived, so
+  no summary is recomputed to make them. Manifests as for data.
+- Pre-binning: `pipeline/22_is_hists.wl` (was
+  `precompute_is_histograms_q10.wl`, still in the `is` stage) also writes
+  `data/p{p}q10_is_stat_hists.wxf`: every one of the 12 statistics x the 3
+  targets x {all, connected}, exact value -> weighted fraction, plus ESS
+  and counts per filter. Exact values, not bins, so the figures can bin as
+  they like (decades for aut/autF); row 7's `render_all_figures` should
+  give `largestCompRatio` fixed bins, since `Automatic` bins on the
+  distinct values could differ from those on the raw samples. The numV
+  hists are unchanged and still written; existing files are skipped, so on
+  the store only the three new files are made (it reads the 2.8 GB of
+  merged stats once).
+
 ## Phase 5: reorganise and delete
 
 - **One mechanical `git mv` PR** into `CombResearch/`, `pipeline/`,

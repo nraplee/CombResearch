@@ -16,6 +16,7 @@
      - a leftover McKay-tagged truth file does not block the truth job;
      - a lock file stops a launch, at plan time;
      - validate with cells: every summary writer is skipped, counts runs;
+       validate runs pipeline/50_validate.wl jobs, results tables last;
        sampler legacyfacet validates legacyfacet;
      - force on a finished q=10 batch is refused;
      - check: the regression is decided after the update, and skipped at run
@@ -165,6 +166,13 @@ Do[has["restricted validate skips " <> l, r["out"], line["skip", l]];
   hasNot["restricted validate runs " <> l, r["out"], line["run", l]],
   {l, {"validate mh", "validate ecgexact", "sampler efficiency", "3-way IS/MH/truth"}}];
 has["restricted validate still runs counts", r["out"], line["run", "counts vs truth"]];
+has["validate jobs run pipeline/50_validate.wl", r["out"], "pipeline/50_validate.wl"];
+has["counts job is COMB_VAL_JOB counts", r["out"], knob["COMB_VAL_JOB", "counts"]];
+has["results tables planned", r["out"], line["run", "results tables"]];
+r = runwl[{"validate", "profile", "quick", "dryrun"}];
+has["summary job names its job", r["out"], knob["COMB_VAL_JOB", "q10_is_vs_mh"]];
+r = runwl[{"is", "profile", "quick", "dryrun"}];
+has["q=10 histograms run pipeline/22_is_hists.wl", r["out"], "pipeline/22_is_hists.wl"];
 touch[combFile["ecg", 2, 4, "legacyfacet", "facet"]];
 r = runwl[{"validate", "profile", "quick", "sampler", "legacyfacet", "dryrun"}];
 has["sampler legacyfacet plans an ecglegacyfacet validation", r["out"], line["(run|skip)", "validate ecglegacyfacet"]];

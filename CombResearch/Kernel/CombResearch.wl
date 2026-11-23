@@ -15,7 +15,8 @@
      Enumeration.wl   exact unlabeled enumeration (cheap key, BLISS, McKay)
      Statistics.wl    the 12 per-complex statistics
      MHSampler.wl     Metropolis-Hastings for the three targets
-     ISSampler.wl     importance sampling + reweighting *)
+     ISSampler.wl     importance sampling + reweighting
+     Compare.wl       sampled vs exact distributions, IS histograms *)
 
 If[!MemberQ[$Packages, "ECGrav`"],
   Print["CombResearch: load ECGrav first (src/load_combresearch.wl does both)."];
@@ -161,12 +162,53 @@ EffectiveSampleSize::usage =
 	of the weights w (0 when all weights are 0).";
 
 
+(* ::Section:: *)
+(* Compare *)
+
+PureComplexTruthMarginal::usage =
+"PureComplexTruthMarginal[truth, target] is the exact distribution of numV under
+	target (\"vertex\", \"facet\" or \"unlabeled\") from a truth payload
+	(pipeline/10_truth.wl), as value -> probability.
+PureComplexTruthMarginal[truth, target, stat] does the same for the statistic
+	stat (a name in $PureComplexStatisticNames).";
+
+SampleHistogram::usage =
+"SampleHistogram[values] is the empirical distribution of the numeric values, as
+	value -> fraction, sorted by value.
+SampleHistogram[values, weights] is the weighted one: each value's share of the
+	total weight.";
+
+HistogramL1Distance::usage =
+"HistogramL1Distance[a, b] is the L1 distance of two histograms (value -> mass)
+	on the union of their values.";
+
+IIDL1PValue::usage =
+"IIDL1PValue[bars, n, l1] is the Monte Carlo probability that n iid draws from
+	bars (value -> probability) have an empirical L1 distance >= l1 from it.
+	Option \"Replicates\" (default 400).";
+
+IsoClassChiSquare::usage =
+"IsoClassChiSquare[pi, classIdx] is the Pearson chi-square test of samples whose
+	truth iso classes are classIdx (0 = matched none) against the class
+	probabilities pi, with classes pooled until each bin expects >= 5. Gives
+	<|\"chi2\", \"df\", \"bins\", \"pValue\"|>.";
+
+PureComplexStatisticHistograms::usage =
+"PureComplexStatisticHistograms[headers, rows] are the weighted histograms of
+	every statistic of an IS sample (rows with columns headers, as
+	$PureComplexISNames) for each target and for all or only connected
+	samples: <|\"hists\" -> <|stat -> <|filter -> <|target -> <|value ->
+	fraction|>|>|>|>, \"ESS\" -> <|filter -> <|target -> ess|>|>, \"n\",
+	\"sourceN\", \"filters\", \"targets\", \"statistics\"|>.";
+
+
 Begin["`Private`"];
 
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "Enumeration.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "Statistics.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "MHSampler.wl"}]];
 Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "ISSampler.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "Subpackages", "Compare.wl"}]];
 
 End[];
 

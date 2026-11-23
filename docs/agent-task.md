@@ -1,5 +1,44 @@
 # Current Agent Task
 
+## Phase 4 row 6: Compare.wl + `pipeline/50_validate.wl` (2026-11-22, Ryzen, branch `claude/phase-4-compare`)
+
+Next: row 7 (`60_figures.wl`): the renders read `results/` and the new
+`p{p}q10_is_stat_hists.wxf` instead of the merged stats (give
+`largestCompRatio` fixed bins there).
+
+- Output formats were the user's call; answer: "whatever simplifies the
+  processes best; all statistics, unless they're computed elsewhere".
+- `CombResearch/Kernel/Subpackages/Compare.wl` (+ `Tests/Compare.wlt`, 15
+  tests): `PureComplexTruthMarginal`, `SampleHistogram`,
+  `HistogramL1Distance`, `IIDL1PValue`, `IsoClassChiSquare`,
+  `PureComplexStatisticHistograms`.
+- `pipeline/50_validate.wl`: jobs `counts`, `samples`, `efficiency`, `3way`,
+  `q10_is_vs_mh`, `q10_warm_vs_prod`, `results` (`COMB_VAL_JOB`, identity
+  knob, or a plain word). The six `src/validate_*` / `compare_*` scripts are
+  shims. `run.wl validate` runs them with the same labels and logs, then
+  `results tables` last (a "final" job).
+- `results/*.csv` (main checkout `results/`): one per summary WXF, written
+  from the WXF; `counts_vs_truth.csv` from the counts job.
+- `pipeline/22_is_hists.wl` (was `precompute_is_histograms_q10.wl`, shim):
+  numV hists unchanged, plus `p{p}q10_is_stat_hists.wxf` (12 statistics x 3
+  targets x all/connected). On the store the next `run.wl is` writes only
+  these three files (reads the 2.8 GB of merged stats; not run here).
+- Not moved: `run_is_at_truth_cells.wl` (sampling, numV/aut/autF only).
+- Checks (scratch roots; nothing written to the real store):
+  - old (main) vs new code on copies of the real inputs: all 8 summary WXFs
+    and the 9 q=10 numV hists identical (`===`, dropping `createdAt`).
+  - The stat hists' numV part equals the numV hists exactly, and every hist
+    is normalized.
+  - Package tests ALL PASS (Compare 15, Enumeration 21, ISSampler 11,
+    MHSampler 12, Statistics 12).
+  - `lib_names_test`, `lib_config_test` and `run_wl_test` PASS.
+  - `run.wl all profile quick` in `C:\scratch\quick6`: ok, with results
+    tables last. `golden_quick` PASS (quick makes no q=10 MH, so it expects
+    no `q10_is_vs_mh.csv`).
+  - `golden_derived check`: all 11 sections PASS.
+  - Dry runs on the real store: validate runs counts and results tables only
+    (the summaries exist); is runs only the 3 stat-hist files.
+
 ## run.wl: later passes within a stage (2026-11-22, Ryzen, branch `claude/run-wl-second-pass`)
 
 Fixes the row 5b wart below: `run.wl` now finishes a stage in one run when
