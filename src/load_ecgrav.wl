@@ -21,7 +21,7 @@
    tests/ecgrav_regression.wl.
 
    Idempotent: a second Get with the same source is a no-op, so library
-   files (sampler_mh.wl, streaming_enumerator*.wl) can load it
+   files (load_combresearch.wl, the pipeline stages) can load it
    unconditionally.
 
    Subkernels: call combLoadECGravOnKernels[] after LaunchKernels[] instead

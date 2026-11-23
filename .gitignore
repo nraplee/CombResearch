@@ -1,4 +1,4 @@
-# --- Large generated data (regenerable from src/pure_simplicial_compute.wl) ---
+# --- Large generated data (regenerable with run.wl) ---
 data/**/*.csv
 data/*_chunk_*.csv
 data/*.tmp

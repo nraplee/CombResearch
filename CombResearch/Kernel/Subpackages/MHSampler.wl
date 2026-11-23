@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
 (* MHSampler.wl (CombResearch package; moved verbatim in Phase 4 from
-   src/sampler_mh.wl, now a shim. Loaded by Kernel/CombResearch.wl into
+   src/sampler_mh.wl, deleted in Phase 5. Loaded by Kernel/CombResearch.wl into
    CombResearch`Private`. Only change: option names are strings, e.g.
    "burnIn" -> 1000; a caller's bare burnIn -> 1000 still matches.)
 

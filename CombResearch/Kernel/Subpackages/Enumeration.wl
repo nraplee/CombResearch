@@ -6,7 +6,7 @@
 
    Three enumerators, all the same DFS over "complexes in progress" (moved
    verbatim in Phase 4 from src/streaming_enumerator.wl, _bliss.wl and
-   _mckay.wl, which are now shims):
+   _mckay.wl, deleted in Phase 5):
 
      cheap  (streamingEnumeratePure)       cheap invariant key, then
                                            IsomorphicSimplicialComplexQ inside

@@ -5,8 +5,8 @@
 # Usage from the worktree root:
 #   powershell -ExecutionPolicy Bypass -File src\run_p4q5_mh_parallel.ps1
 #
-# Optional env overrides (passed through to run_mh_chains.wl):
-#   $env:COMB_MH_NUMITER = "500000"   # default 200000 in run_mh_chains.wl
+# Optional env overrides (passed through to pipeline/30_mh.wl):
+#   $env:COMB_MH_NUMITER = "500000"   # default 200000 in pipeline/30_mh.wl
 #   $env:COMB_MH_BURNIN  = "50000"
 #   $env:COMB_MH_THIN    = "5"
 #   $env:COMB_MH_SEED    = "12345"
@@ -28,7 +28,7 @@ $srcDir  = $PSScriptRoot   # code: this checkout
 $logsDir = Join-Path $root "logs"
 if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-Null }
 
-$wrapper = Join-Path $srcDir "run_mh_chains.wl"
+$wrapper = Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "30_mh.wl"
 $targets = @("unlabeled", "facet", "vertex")
 
 # Pinning settings printed for the log.

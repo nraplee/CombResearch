@@ -1,6 +1,6 @@
 (* pipeline/30_mh.wl
-   MH stage (Phase 4): run.wl's mh stage runs this; src/run_mh_chains.wl is
-   now a shim that Gets it, so bare runs and the .ps1 launchers behave as
+   MH stage (Phase 4): run.wl's mh stage runs this; it replaced
+   src/run_mh_chains.wl (deleted in Phase 5); bare runs and the launchers behave as
    before (same knobs, same defaults, same file names). The sampler and the
    statistics come from the CombResearch package (PureComplexMHChain,
    PureComplexStatistics).

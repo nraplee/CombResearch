@@ -469,6 +469,21 @@ formats were left to "whatever simplifies the process"; the choices:
   `powershell.exe`. Make it skip quietly when that isn't available, so
   Claude Code users on macOS or Linux don't see failures.
 
+**As built, PR A (delete, 2026-11-23):** done first, so the move PR does not
+move files that are about to go. Order: A delete, B move (stacked on A, with
+the `reference/` moves and the hook), C untrack (from main).
+
+- Deleted the 25 shims and `enumerate_truth.wl`, `run_p{2,3,4}.wl`,
+  `test_streaming*.wl` (their checks are all in `Enumeration.wlt`), the
+  superseded scripts of the ideal.md mapping, and tracked `archive/` except
+  `related_pdfs/`.
+- `run_p{p}.wl` set `*Override` variables; `pipeline/20_is_q10.wl` now reads
+  the same settings as knobs (`COMB_IS_PS`, `COMB_N`, `COMB_IS_PAR`; an
+  Override still wins), so `run.wl is` and `run_parallel.ps1` call the stage
+  directly. `COMB_IS_PS` is an identity knob.
+- Callers moved to package symbols: `PureComplexStatistics` (10_truth),
+  `PureComplexMHChain` (ECGrav regression).
+
 ## Phase 6: upstream to ECGrav (with Dr. Betre)
 
 - Agree with Betre which pieces he wants:

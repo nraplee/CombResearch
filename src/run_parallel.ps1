@@ -8,9 +8,9 @@
 # Optional: pass a sample size override (default 500000) as $env:N
 #   $env:N = 100000; powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
 #
-# Sample size is passed to Wolfram via the COMB_N environment variable
-# (inherited by child processes). Each wrapper (run_p{2,3,4}.wl) reads
-# COMB_N via `Environment["COMB_N"]` and falls back to 500000 if unset.
+# Each process runs pipeline\20_is_q10.wl with COMB_IS_PS = its p,
+# COMB_IS_PAR = 1 and COMB_N (inherited environment). run.wl is does the same
+# from the profile's batch list; this launcher stays for ad-hoc batches.
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "comb_paths.ps1")
@@ -26,7 +26,7 @@ $env:COMB_N = "$N"
 # Optional run tag. When set, each p's output file is named
 # p{p}q10_n{N}_{RUNTAG}_samples.csv AND per-chunk seeds are offset by a hash of
 # the tag — a fresh tag produces fully independent samples safe to concatenate
-# with a prior run via src/concat_samples.wl.
+# with a prior run (pipeline/21_is_merge.wl, run.wl is).
 if ($env:RUNTAG) { $env:COMB_RUNTAG = $env:RUNTAG }
 $tagLabel = if ($env:COMB_RUNTAG) { $env:COMB_RUNTAG } else { "(none)" }
 
@@ -43,9 +43,11 @@ $plistSpec = if ($env:COMB_PLIST) { $env:COMB_PLIST } else { "3,4" }
 $pList = @($plistSpec.Split(",") | ForEach-Object { [int]$_.Trim() })
 Write-Host "  pList = $($pList -join ', ')"
 
+$wrapper = Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "20_is_q10.wl"
+$env:COMB_IS_PAR = "1"
 $jobs = @()
 foreach ($p in $pList) {
-  $wrapper = Join-Path $srcDir ("run_p{0}.wl" -f $p)
+  $env:COMB_IS_PS = "$p"   # read by the child at start; set before each launch
   $logFile = Join-Path $logsDir ("compute_p{0}{1}.log" -f $p, $logSuffix)
   $errFile = Join-Path $logsDir ("compute_p{0}{1}.err" -f $p, $logSuffix)
 

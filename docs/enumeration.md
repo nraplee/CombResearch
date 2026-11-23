@@ -16,7 +16,7 @@ The `(4,5)` truth count is **5,532** isomorphism classes. It was produced by `st
 
 ## What Truth Enumeration Produces
 
-For each `(p, q)`, `src/enumerate_truth.wl` writes:
+For each `(p, q)`, `pipeline/10_truth.wl` writes:
 
 ```text
 data/p{p}q{q}_truth.wxf
@@ -53,29 +53,29 @@ The three exact distributions are over isomorphism classes:
 
 ```powershell
 # Default truth run.
-wolframscript -file src\enumerate_truth.wl
+wolframscript -file pipeline\10_truth.wl
 
 # Restrict cells.
 $env:COMB_TRUTH_CELLS = "4,5"
-wolframscript -file src\enumerate_truth.wl
+wolframscript -file pipeline\10_truth.wl
 
 # Select enumerator.
-$env:COMB_TRUTH_PIPELINE = "mckay"   # cheap | bliss | mckay
+$env:COMB_TRUTH_PIPELINE = "mckay"   # auto (McKay for p>=4) | cheap | bliss | mckay
 $env:COMB_TRUTH_PARALLEL = "false"   # use false for memory-heavy p=4 cells
-wolframscript -file src\enumerate_truth.wl
+wolframscript -file pipeline\10_truth.wl
 
 # Force overwrite.
 $env:COMB_FORCE = "1"
-wolframscript -file src\enumerate_truth.wl
+wolframscript -file pipeline\10_truth.wl
 ```
 
-Non-cheap pipelines write tagged files such as `data/p4q5_truth_mckay.wxf` so they can coexist with the cheap filename. For production consumers, `data/p4q5_truth.wxf` is the canonical filename even though it is copied from the McKay output.
+Every pipeline writes `data/p{p}q{q}_truth.wxf`. To cross-validate one pipeline against another, run it in a scratch `COMB_ROOT` (the tagged `_truth_<pipeline>.wxf` files of the old `src/enumerate_truth.wl` went with that script in Phase 5).
 
 ## Enumerators
 
 ### Cheap Streaming
 
-`src/streaming_enumerator.wl` reimplements ECGrav's facet-labeled generator as a DFS that emits one finished complex at a time. Each emitted complex is bucketed by a cheap relabeling-invariant key:
+`EnumerateUnlabeledPureComplexes[p, q, Method -> "Cheap"]` (`CombResearch/Kernel/Subpackages/Enumeration.wl`; was `src/streaming_enumerator.wl`) reimplements ECGrav's facet-labeled generator as a DFS that emits one finished complex at a time. Each emitted complex is bucketed by a cheap relabeling-invariant key:
 
 - number of active vertices,
 - sorted vertex-degree multiset,
@@ -85,34 +85,32 @@ Within each bucket, `IsomorphicSimplicialComplexQ` confirms uniqueness. This is 
 
 ### BLISS Canonical Keys
 
-`src/streaming_enumerator_bliss.wl` replaces the cheap key with a true canonical form using Mathematica `CanonicalGraph` on a bipartite face-incidence graph with a facet-side distinguishing gadget. It is correct, but not a standalone speedup because DFS traversal dominates runtime.
+`Method -> "BLISS"` (was `src/streaming_enumerator_bliss.wl`) replaces the cheap key with a true canonical form using Mathematica `CanonicalGraph` on a bipartite face-incidence graph with a facet-side distinguishing gadget. It is correct, but not a standalone speedup because DFS traversal dominates runtime.
 
 BLISS remains important because McKay uses its canonical key and canonical-removal primitive.
 
 ### McKay Canonical Augmentation
 
-`src/streaming_enumerator_mckay.wl` prunes DFS branches with a McKay-style canonical-augmentation predicate. It defines a canonical removal vertex from the BLISS-canonicalized bipartite incidence graph, accepts only canonical augmentations within each DFS subtree, and deduplicates cross-start duplicates at leaves using BLISS keys.
+`Method -> "McKay"` (was `src/streaming_enumerator_mckay.wl`) prunes DFS branches with a McKay-style canonical-augmentation predicate. It defines a canonical removal vertex from the BLISS-canonicalized bipartite incidence graph, accepts only canonical augmentations within each DFS subtree, and deduplicates cross-start duplicates at leaves using BLISS keys.
 
 This is the only viable path currently known for `p = 4, q >= 5`.
 
 ## Validation
 
-Small correctness checks:
+Small correctness checks (iso counts of all three enumerators, keys, parallel path; the old test_streaming*.wl checks live here now):
 
 ```powershell
-wolframscript -file src\test_streaming.wl
-wolframscript -file src\test_streaming_bliss.wl
-wolframscript -file src\test_streaming_mckay.wl
+wolframscript -file CombResearch/Tests/run_tests.wl
 ```
 
 MH-vs-truth validation:
 
 ```powershell
-wolframscript -file src\validate_mh_vs_truth.wl
+wolframscript -file pipeline\50_validate.wl samples
 
 $env:COMB_VAL_CELLS = "3,5"
 $env:COMB_VAL_TARGETS = "vertex"
-wolframscript -file src\validate_mh_vs_truth.wl
+wolframscript -file pipeline\50_validate.wl samples
 ```
 
 As of the Phase 4b closeout, all 27 combinations in the 9-cell truth grid crossed against `{unlabeled, facet, vertex}` pass the numV-marginal L1 threshold `< 0.05`.

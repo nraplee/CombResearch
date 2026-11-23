@@ -1,6 +1,6 @@
 (* pipeline/40_ecgrav.wl
    ECGrav stage (Phase 4): run.wl's ecgrav stage runs this;
-   src/run_ecgrav_samplers.wl is now a shim that Gets it, so bare runs and
+   it replaced src/run_ecgrav_samplers.wl (deleted in Phase 5); bare runs and
    run_ecgrav_campaign.ps1 behave as before (same knobs, defaults, names).
    The BLISS key and the statistics come from the CombResearch package
    (PureComplexCanonicalKey, PureComplexStatistics).

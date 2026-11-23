@@ -12,26 +12,23 @@ Wolfram Mathematica research code for probability distributions of pure simplici
 
 ## Quick Start
 
+`run.wl` is the single entry point. It launches the `pipeline/` stages and
+skips any job whose outputs already exist.
+
 ```powershell
-# Exact truth enumeration.
-wolframscript -file src\enumerate_truth.wl
-
-# MH chains.
-wolframscript -file src\run_mh_chains.wl
-
-# Validate MH against truth.
-wolframscript -file src\validate_mh_vs_truth.wl
-
-# Render truth/MH overlay panels.
-wolframscript -file src\render_truth_overlay.wl
+wolframscript -file run.wl check                 # update the ECGrav clone, regression, smoke tests
+wolframscript -file run.wl all profile quick     # small end-to-end run (about 10-20 min)
+wolframscript -file run.wl all dryrun            # every planned job and why it runs or skips
+wolframscript -file run.wl status                # store report
 ```
 
-Older q=10 importance-sampling commands are still available:
+Stages can also be run directly, for example:
 
 ```powershell
-wolframscript -file src\pure_simplicial_compute.wl
-wolframscript -file src\render_all_figures.wl
-powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
+wolframscript -file pipeline\10_truth.wl          # exact truth enumeration
+wolframscript -file pipeline\30_mh.wl             # MH chains
+wolframscript -file pipeline\50_validate.wl samples
+wolframscript -file pipeline\60_figures.wl truth_overlay
 ```
 
 ## Layout
