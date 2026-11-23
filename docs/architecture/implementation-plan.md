@@ -530,7 +530,7 @@ candidate piece): `phase6-deliverable.md`.
 - Optional: CI on `--profile quick`. It needs a Wolfram Engine licence in
   CI.
 
-**As built (2026-11-23, Ryzen; the laptop run is still to do):** every
+**As built (2026-11-23, Ryzen, then the laptop):** every
 scenario was run with every `COMB_*` variable cleared, in
 `C:\scratch\p7\`, then `run.wl check`, `run.wl all profile quick` and
 `tests\golden\golden_quick.wl`. All pass:

@@ -23,7 +23,12 @@
   print as `40.4 s`, not `40.400000000000006 s`.
 - Laptop run (i7-8750H, 32 GB, fresh Windows 11, cloned to `D:\p7test\clone`, branch
   `claude/phase7-outside`): `check` cloned ECGrav (upstream main is now
-  `42d6118`, 1.19.0, not yet regression-tested); in progress.
+  `42d6118`, 1.19.0, not yet regression-tested). All pass: `check`
+  (package tests 631 s), `all profile quick` (about 8 min after check, 56
+  current outputs), `golden_quick` PASS on 42d6118, and `figures force`
+  (Figure 2, uniformity, ECGrav compare, q=10 figures redrawn). The three
+  committed figures are skipped as "outputs exist" in a fresh clone; that
+  is the skip rule, `figures force` redraws them.
 
 ## Phase 5 PR C: untrack `logs/` and the Betre `.mx` (2026-11-23, Ryzen, branch `claude/phase5-c-untrack`, from main)
 
