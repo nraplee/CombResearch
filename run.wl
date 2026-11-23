@@ -19,7 +19,7 @@
      validate  counts, MH/ECGrav validation, efficiency and comparison
                summaries; warns when one kind of input (e.g. the MH chains)
                mixes ECGrav commits (guarantee 6, from the manifests)
-     figures   the render_*.wl scripts
+     figures   pipeline/60_figures.wl, one process per figure job
      status    the stale report only (no runs)
      all       check, truth, is, mh, ecgrav, validate, figures
 
@@ -160,7 +160,7 @@ $identityKnobs = {"COMB_TRUTH_CELLS", "COMB_TRUTH_PIPELINE", "COMB_N", "COMB_RUN
   "COMB_ECG_SAMPLER", "COMB_ECG_CELLS", "COMB_ECG_TARGETS", "COMB_VAL_SOURCE",
   "COMB_VAL_CELLS", "COMB_VAL_TARGETS", "COMB_EFF_CELLS", "COMB_EFF_TARGETS",
   "COMB_3W_CELLS", "COMB_3W_TARGETS", "COMB_FIG2_N", "COMB_IS_MERGE_PS", "COMB_IS_MERGE_STEMS",
-  "COMB_VAL_JOB"};
+  "COMB_VAL_JOB", "COMB_FIG_JOB"};
 $notInherited = Join[$stripped, $identityKnobs];
 (* drop them from an environment, whatever their case *)
 dropNotInherited[env_Association] := KeySelect[env, !MemberQ[$notInherited, ToUpperCase[#]] &];
@@ -440,35 +440,38 @@ jobsFor["validate"] := Module[{valCells, cells3w, ps, sources, out = {}, restric
   out];
 
 fig[sub_, name_] := FileNameJoin[{$CombFiguresDir, sub, name}];
+$figures = "pipeline/60_figures.wl";
+figJob[name_] := resolveKnobs[<||>, <|"COMB_FIG_JOB" -> {name, "job split"}|>];
 jobsFor["figures"] := If[$cliCells =!= All, {}, {
-  job["Figure 2 (q=3)", "src/render_fig2.wl", resolveKnobs[<||>, <||>],
+  job["Figure 2 (q=3)", $figures, figJob["fig2"],
     {combFile["fig2", 3, 3, 10000], fig["fig2", "p3q3_n10000_fig2_combined.pdf"]}, {}, "render_fig2"],
-  job["truth overlay panels", "src/render_truth_overlay.wl", resolveKnobs[<||>, <||>],
+  job["truth overlay panels", $figures, figJob["truth_overlay"],
     {fig["combined", "combined_truth_overlay.pdf"]}, {truthPath[{3, 5}]}, "render_truth_overlay"],
-  job["3-way grid", "src/render_3way.wl", resolveKnobs[<||>, <||>],
+  job["3-way grid", $figures, figJob["3way"],
     {fig["is_vs_mh", "q5_is_mh_truth_3way.pdf"]},
-    (* render_3way.wl draws (3,5) and (4,5), whatever COMB_3W_CELLS says *)
+    (* the 3way job draws (3,5) and (4,5), whatever COMB_3W_CELLS says *)
     Flatten[Table[{truthPath[c], combFile["mh", c[[1]], c[[2]], t], combFile["isHist", c[[1]], c[[2]], t]},
       {c, {{3, 5}, {4, 5}}}, {t, targets3}]], "render_3way"],
-  job["q=10 IS vs MH grid", "src/render_q10_is_vs_mh.wl", resolveKnobs[<||>, <||>],
+  job["q=10 IS vs MH grid", $figures, figJob["q10_is_vs_mh"],
     {fig["is_vs_mh", "q10_is_vs_mh_grid.pdf"]},
     Flatten[Table[{combFile["isHist", p, 10, t], combFile["mh", p, 10, t]}, {p, {2, 3, 4}}, {t, targets3}]],
     "render_q10_is_vs_mh"],
-  job["q=10 warm vs prod", "src/render_q10_warm_vs_prod.wl", resolveKnobs[<||>, <||>],
+  job["q=10 warm vs prod", $figures, figJob["q10_warm_vs_prod"],
     {fig["is_vs_mh", "q10_warm_vs_prod.pdf"]},
     Flatten[Table[{combFile["isHist", p, 10, t], combFile["mh", p, 10, t],
       combFile["mh", p, 10, t, combMHWarmTag[67890, If[p == 3, 14, 18]]]}, {p, {3, 4}}, {t, {"unlabeled", "facet"}}]],
     "render_q10_warm_vs_prod"],
-  job["sampler MH progress", "src/render_sampler_progress.wl", resolveKnobs[<||>, <||>],
+  job["sampler MH progress", $figures, figJob["sampler_progress"],
     {fig["sampler_diagnostics", "sampler_mh_progress.pdf"]},
-    {combFile["isSamplesCSV", combISStem[4, 10, 500000]]}, "render_sampler_progress"],
-  job["sampler MH uniformity", "src/render_uniformity_check.wl", resolveKnobs[<||>, <||>],
+    {combFile["isStats", combISStem[4, 10, 500000]]}, "render_sampler_progress"],
+  job["sampler MH uniformity", $figures, figJob["uniformity"],
     {fig["sampler_diagnostics", "sampler_mh_uniformity.pdf"]}, {}, "render_uniformity_check"],
-  job["sampler ECGrav compare", "src/render_ecgrav_compare.wl", resolveKnobs[<||>, <||>],
+  job["sampler ECGrav compare", $figures, figJob["ecgrav_compare"],
     {fig["sampler_diagnostics", "sampler_ecgrav_compare.pdf"]}, {}, "render_ecgrav_compare"],
-  job["q=10 manuscript figures", "src/render_all_figures.wl", resolveKnobs[<||>, <||>],
+  (* reads the pre-binned statistic histograms, not the merged stats *)
+  job["q=10 manuscript figures", $figures, figJob["q10_stats"],
     {fig["combined", "combined_all_figures_merged.pdf"]},
-    combFile["isStats", combMergedStem[#, 10]] & /@ {2, 3, 4}, "render_all_figures"]}];
+    combFile["isStatHists", #, 10] & /@ {2, 3, 4}, "render_all_figures"]}];
 
 (* ----- ECGrav commit and the stale report ----- *)
 (* a relative COMB_ECGRAV_DIR is read from the checkout, as the jobs read it

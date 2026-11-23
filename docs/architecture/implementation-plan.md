@@ -420,6 +420,33 @@ formats were left to "whatever simplifies the process"; the choices:
   the store only the three new files are made (it reads the 2.8 GB of
   merged stats once).
 
+**As built, row 7 (`60_figures.wl`, 2026-11-22):**
+
+- `pipeline/60_figures.wl`: one stage file, one job per process, named by
+  `COMB_FIG_JOB` (an identity knob) or a plain word: `fig2`,
+  `truth_overlay`, `3way`, `q10_is_vs_mh`, `q10_warm_vs_prod`,
+  `sampler_progress`, `uniformity`, `ecgrav_compare`, `q10_stats`. Each
+  job is its old script's code with the same knobs, inputs, outputs and
+  panels. The 9 `src/render_*.wl` scripts are now shims. `run.wl figures`
+  keeps its labels and log names.
+- On the package: the numV marginals, sample fractions and L1 come from
+  Compare.wl, and the diagnostic MH chains from `PureComplexMHChain`
+  (same seeds, same random stream).
+- `q10_stats` (was `render_all_figures`) reads
+  `p{p}q10_is_stat_hists.wxf` instead of the merged stats. Each panel is
+  a Histogram of the distinct values, weighted by their fractions. With
+  the same bins, the bars match the raw-sample bars to rounding.
+  `largestCompRatio` gets fixed bins of width 1/20, from the 1/20 below
+  the smallest value to just past the largest. On the stored samples,
+  Automatic chose exactly those bins (1/10 to 21/20) for every p and
+  target. On the distinct values it would choose others.
+- `sampler_progress` panel C reads the first 500k batch's stats WXF (the
+  same rows as `p4q10_n500000_samples.csv`) instead of the legacy CSV.
+- "Reads `results/`" was not done: the CSVs hold summaries (L1, ESS, p
+  values), not the bars a panel draws, so the renders still read the data
+  files and recompute their labels with the same Compare.wl functions.
+- With this row, Phase 4 is done.
+
 ## Phase 5: reorganise and delete
 
 - **One mechanical `git mv` PR** into `CombResearch/`, `pipeline/`,

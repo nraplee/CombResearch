@@ -17,6 +17,7 @@
      - a lock file stops a launch, at plan time;
      - validate with cells: every summary writer is skipped, counts runs;
        validate runs pipeline/50_validate.wl jobs, results tables last;
+       figures runs pipeline/60_figures.wl jobs (COMB_FIG_JOB);
        sampler legacyfacet validates legacyfacet;
      - force on a finished q=10 batch is refused;
      - check: the regression is decided after the update, and skipped at run
@@ -173,6 +174,10 @@ r = runwl[{"validate", "profile", "quick", "dryrun"}];
 has["summary job names its job", r["out"], knob["COMB_VAL_JOB", "q10_is_vs_mh"]];
 r = runwl[{"is", "profile", "quick", "dryrun"}];
 has["q=10 histograms run pipeline/22_is_hists.wl", r["out"], "pipeline/22_is_hists.wl"];
+r = runwl[{"figures", "profile", "quick", "dryrun"}];
+has["figure jobs run pipeline/60_figures.wl", r["out"], "pipeline/60_figures.wl"];
+has["q=10 figures job is COMB_FIG_JOB q10_stats", r["out"], knob["COMB_FIG_JOB", "q10_stats"]];
+has["uniformity figure planned (no inputs)", r["out"], line["run", "sampler MH uniformity"]];
 touch[combFile["ecg", 2, 4, "legacyfacet", "facet"]];
 r = runwl[{"validate", "profile", "quick", "sampler", "legacyfacet", "dryrun"}];
 has["sampler legacyfacet plans an ecglegacyfacet validation", r["out"], line["(run|skip)", "validate ecglegacyfacet"]];
