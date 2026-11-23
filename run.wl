@@ -624,7 +624,8 @@ finishJob[r_] := Module[{j = r["job"], code, bad, logText, written},
   (* a failed job: show the end of its log, so the reason is visible here *)
   If[bad =!= None && StringQ[logText],
     Scan[Print["      | ", #] &,
-      Take[#, -Min[4, Length[#]]] &[Select[StringSplit[logText, "\n"], StringTrim[#] =!= "" &]]]];
+      Take[#, -Min[4, Length[#]]] &[Select[StringSplit[StringDelete[logText, "\r"], "\n"],
+        StringTrim[#] =!= "" &]]]];
   bad === None];
 
 runJobs[jobs_List] := Module[{queue = jobs, running = {}, ok = True, done},
