@@ -566,8 +566,14 @@ Fixed along the way:
   finished job gets a `k/n` count. Real progress bars inside a stage belong
   with the Phase 6 notebook.
 
-Still open: the plan's laptop run (`git clone` + quick profile on the i7-8750H
-laptop), and the ECGrav regression, which needs the full truth grid. It
+Laptop run (i7-8750H, 32 GB, fresh Windows 11, Wolfram 15.0.1, git and gh
+installed, clone on `D:`, no `COMB_*` env): `check`, `all profile quick`
+(about 19 min with check), `golden_quick` and `figures force` all pass, on
+upstream ECGrav `42d6118` (1.19.0), not the `474b5c2` the reference was
+made with. Committed figures are skipped as "outputs exist" in a fresh
+clone; `figures force` redraws them.
+
+Still open: the ECGrav regression, which needs the full truth grid. It
 runs on a later `run.wl check` after a paper-profile run, not on a
 quick-only store.
 
