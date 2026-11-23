@@ -13,17 +13,18 @@ With[{only = Rest[$ScriptCommandLine]},
 If[files === {}, Print["run_tests: no .wlt files selected"]; Exit[2]];
 
 allOk = True;
-Do[Module[{t, rep, failed},
-    Print["running ", FileNameTake[f], " ..."];
+Do[Module[{f = files[[k]], tag, t, rep, failed},
+    tag = "[" <> ToString[k] <> "/" <> ToString[Length[files]] <> "] ";
+    Print[tag, "running ", FileNameTake[f], " ..."];
     {t, rep} = AbsoluteTiming[TestReport[f, ProgressReporting -> False]];
     failed = Select[Values[rep["TestResults"]], #["Outcome"] =!= "Success" &];
-    Print[If[failed === {}, "PASS  ", "FAIL  "], FileNameTake[f], "  ",
-      rep["TestsSucceededCount"], "/", Length[rep["TestResults"]], " in ",
-      ToString[NumberForm[Round[t, 0.1], {Infinity, 1}]], " s"];
+    Print[tag, If[failed === {}, "PASS  ", "FAIL  "], FileNameTake[f], ": ",
+      rep["TestsSucceededCount"], " of ", Length[rep["TestResults"]], " tests pass (",
+      ToString[NumberForm[Round[t, 0.1], {Infinity, 1}]], " s)"];
     Do[Print["      failed: ", tr["TestID"], "  got ", Short[tr["ActualOutput"], 3],
         "  expected ", Short[tr["ExpectedOutput"], 3]], {tr, failed}];
     If[failed =!= {}, allOk = False]],
-  {f, files}];
+  {k, Length[files]}];
 
 Print[If[allOk, "ALL PASS", "FAILURES"]];
 Exit[If[allOk, 0, 1]];
