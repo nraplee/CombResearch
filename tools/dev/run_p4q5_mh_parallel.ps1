@@ -85,6 +85,7 @@ foreach ($target in $targets) {
     -RedirectStandardOutput $logFile `
     -RedirectStandardError  $errFile `
     -PassThru -NoNewWindow
+  Start-Sleep -Seconds 1   # wolframscript can crash at start-up (0xC0000005) when several start at once
   $jobs += [pscustomobject]@{ Target = $target; Process = $p }
 }
 

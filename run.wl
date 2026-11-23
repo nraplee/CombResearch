@@ -588,6 +588,11 @@ startJob[j_] := Module[{env, proc, expect},
   CreateFile /@ {j["log"], j["err"]};
   env = Join[dropNotInherited[Association[GetEnvironment[]]],
     <|"COMB_PROFILE" -> $profileName|>, #[[1]] & /@ j["knobs"]];
+  (* at least 1 s between starts: wolframscript can crash at start-up
+     (exit 0xC0000005, empty log) when several start in the same instant
+     (Phase 7: 1 in 30 simultaneous starts; 0 in 45 with a 1 s gap) *)
+  Pause[Max[0, 1 - (AbsoluteTime[] - $lastStart)]];
+  $lastStart = AbsoluteTime[];
   proc = StartProcess[{"wolframscript", "-file", FileNameJoin[{$code, j["script"]}]},
     ProcessEnvironment -> env, ProcessDirectory -> $code];
   AppendTo[$children, proc];
@@ -600,7 +605,7 @@ releaseLockFile[f_] := With[{l = Quiet @ Get[f]},
   If[AssociationQ[l] && l["runWlPid"] === $ProcessID, DeleteFile[f]];
   $heldLocks = DeleteCases[$heldLocks, f]];
 releaseLock[j_] := releaseLockFile[lockFile[j]];
-$heldLocks = {}; $children = {};
+$heldLocks = {}; $children = {}; $lastStart = 0;
 
 finishJob[r_] := Module[{j = r["job"], code, bad, logText, written},
   (* the process has exited: read both streams to the end *)

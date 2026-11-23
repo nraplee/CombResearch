@@ -1,5 +1,24 @@
 # Current Agent Task
 
+## Phase 7: prove it from outside (2026-11-23, Ryzen, branch `claude/phase7-outside`)
+
+- README quickstart for outside researchers.
+- Three outside scenarios in `C:\scratch\p7\`, with no `COMB_*` env: a
+  fresh GitHub clone, the zip inside an unrelated repo, and the zip without
+  git. Each ran `check`, the quick profile and `golden_quick`; all pass.
+  Details in the plan's Phase 7 as-built note.
+- Fixes: `update_ecgrav.wl` without git; `io.wl` `codeCommit` for a zip
+  inside another repo; `manifest_test.wl`; `run.wl` shows a failed job's
+  log tail.
+- Parallel launches: `wolframscript` can crash at start-up (`0xC0000005`)
+  when several start at once; launchers and `run.wl` now stagger starts by
+  1 s (0 failures in 45 staggered starts).
+- Also on this branch: the Phase 6 deliverable notes
+  (`docs/architecture/phase6-deliverable.md`). The user chose a notebook
+  (Betre is on a Mac, we are on Windows), parallel on by default, with
+  progress bars, and later `FunctionCompile` on profiled hot spots.
+- Open: the laptop run (needs the user at the laptop).
+
 ## Phase 5 PR C: untrack `logs/` and the Betre `.mx` (2026-11-23, Ryzen, branch `claude/phase5-c-untrack`, from main)
 
 - `git rm --cached` of the 98 tracked files in `logs/` and
