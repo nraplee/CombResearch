@@ -215,7 +215,7 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - The worktree may already contain user or agent changes. Do not revert changes you did not make.
 - Inspect `git status --short` and relevant diffs before modifying files, especially when resuming prior work.
 - Do not commit, push, branch, or clean generated files unless the user asks.
-- Any commit or PR whose work wrote outputs must say so: list the files (or globs) written under the main checkout's `data/`, `figures/`, `logs/`, and say they are not in the commit. Figures and logs that should be tracked are committed from the main checkout.
+- Any commit or PR whose work wrote outputs must say so: list the files (or globs) written under the main checkout's `data/`, `figures/`, `logs/`, and say they are not in the commit. Figures that should be tracked are committed from the main checkout; logs are not tracked (Phase 5).
 
 ## Handoff Protocol
 

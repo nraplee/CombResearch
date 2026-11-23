@@ -462,7 +462,10 @@ formats were left to "whatever simplifies the process"; the choices:
 - **Delete:** shims, superseded scripts, `archive/`. Git history and the
   `pre-restructure` tag keep them.
 - **Untrack:** `logs/` and the Betre `.mx` files. They stay in history;
-  no rewrite.
+  no rewrite. *As built (PR C, 2026-11-23):* `git rm --cached` plus
+  `/logs/` and `data/*.mx` in `.gitignore`. Pulling it into the main
+  checkout deletes those files from the store, so back them up first
+  (procedure in `docs/agent-task.md`).
 - **Move into `reference/`:** the `.tex`, the Fig 2 notebooks and the
   related PDFs.
 - **Hook:** the committed `.claude/settings.json` hook runs
