@@ -3,7 +3,7 @@
    after that p's batches, with the batch list from the profile
    (COMB_IS_MERGE_PS = p, COMB_IS_MERGE_STEMS = the batch stems), so the
    merged file is made from a declared list instead of whatever matches the
-   glob. src/concat_samples.wl is a shim that Gets this file; run bare it
+   glob (it replaced src/concat_samples.wl, deleted in Phase 5); run bare it
    still merges every p by the glob, as before.
 
    Knobs:
@@ -28,17 +28,17 @@
      data/p{p}q10_merged_complexes.wxf
 
    Usage:
-     wolframscript -file src/concat_samples.wl
+     wolframscript -file pipeline/21_is_merge.wl
 *)
 
 qVal = 10;
 
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
 dataDir = $CombDataDir;
 
 pList = combSetting["COMB_IS_MERGE_PS", {2, 3, 4}, "intList"];

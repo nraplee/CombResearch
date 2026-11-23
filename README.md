@@ -12,38 +12,39 @@ Wolfram Mathematica research code for probability distributions of pure simplici
 
 ## Quick Start
 
+`run.wl` is the single entry point. It launches the `pipeline/` stages and
+skips any job whose outputs already exist.
+
 ```powershell
-# Exact truth enumeration.
-wolframscript -file src\enumerate_truth.wl
-
-# MH chains.
-wolframscript -file src\run_mh_chains.wl
-
-# Validate MH against truth.
-wolframscript -file src\validate_mh_vs_truth.wl
-
-# Render truth/MH overlay panels.
-wolframscript -file src\render_truth_overlay.wl
+wolframscript -file run.wl check                 # update the ECGrav clone, regression, smoke tests
+wolframscript -file run.wl all profile quick     # small end-to-end run (about 10-20 min)
+wolframscript -file run.wl all dryrun            # every planned job and why it runs or skips
+wolframscript -file run.wl status                # store report
 ```
 
-Older q=10 importance-sampling commands are still available:
+Stages can also be run directly, for example:
 
 ```powershell
-wolframscript -file src\pure_simplicial_compute.wl
-wolframscript -file src\render_all_figures.wl
-powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
+wolframscript -file pipeline\10_truth.wl          # exact truth enumeration
+wolframscript -file pipeline\30_mh.wl             # MH chains
+wolframscript -file pipeline\50_validate.wl samples
+wolframscript -file pipeline\60_figures.wl truth_overlay
 ```
 
 ## Layout
 
 ```text
-src/        Wolfram scripts for compute, rendering, enumeration, MH, probes, checks
-data/       Generated CSV/WXF outputs, gitignored
-figures/    Generated manuscript panels, previews, and combined PDFs
-docs/       Current technical docs and live handoff
-logs/       Generated run logs
-archive/    Old renders, superseded data, and scratch tests
-ECGrav/     Vendored ECGrav snapshots; scripts load one pinned snapshot via src/load_ecgrav.wl
+run.wl                 single entry point (stages, profiles, skip rule, store report)
+config/cells.wl        run profiles: quick, paper
+CombResearch/          the algorithms as a package (Enumeration, Statistics, MHSampler, ISSampler, Compare) + .wlt tests
+pipeline/              the stages run.wl launches (10_truth ... 60_figures)
+pipeline/common/       shared helpers: paths, names, io, config, ecgrav, combresearch
+tests/                 pipeline checks, ECGrav truth-grid regression, golden references
+tools/dev/             .ps1 launchers and monitors, worktree sync, ECGrav update helpers
+reference/             .tex, Figure 2 notebooks, related papers (reference only)
+docs/                  technical docs and live handoff
+data/ figures/ logs/ results/   generated outputs (large data files gitignored)
+ECGrav-upstream/       shared clone of upstream ECGrav (gitignored), updated by run.wl check
 ```
 
 ## Docs

@@ -1,5 +1,5 @@
 (* manifest_test.wl
-   Checks the per-output manifests (src/lib_io.wl) and
+   Checks the per-output manifests (pipeline/common/io.wl) and
    tools/dev/backfill_manifest.wl (Phase 2d), in a fresh temporary
    COMB_ROOT that the test creates and deletes. Never touches the store.
 
@@ -20,9 +20,9 @@ CreateDirectory[$root];
 SetEnvironment["COMB_ROOT" -> $root];
 SetEnvironment[# -> None] & /@ {"COMB_PROFILE", "COMB_MH_SEED", "COMB_FORCE"};
 $code = ParentDirectory[DirectoryName[$InputFileName]];
-Get[FileNameJoin[{$code, "src", "lib_names.wl"}]];
-Get[FileNameJoin[{$code, "src", "lib_config.wl"}]];
-Get[FileNameJoin[{$code, "src", "lib_io.wl"}]];
+Get[FileNameJoin[{$code, "pipeline", "common", "names.wl"}]];
+Get[FileNameJoin[{$code, "pipeline", "common", "config.wl"}]];
+Get[FileNameJoin[{$code, "pipeline", "common", "io.wl"}]];
 
 $fail = 0;
 check[label_, got_, want_] := If[got === want, Null,

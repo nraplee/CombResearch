@@ -1,5 +1,5 @@
 (* config/cells.wl
-   Named run profiles (Phase 2c). Read by src/lib_config.wl when
+   Named run profiles (Phase 2c). Read by pipeline/common/config.wl when
    COMB_PROFILE (later run.wl --profile) names one; bare scripts never read
    this file.
 
@@ -7,9 +7,9 @@
      "settings"    COMB_* knob -> value, for scripts run once per
                    invocation (validate, compare, render, regression).
                    combSetting gives env > profile > script default.
-     "truthRuns"   enumerate_truth.wl invocations: cells, pipeline, parallel
+     "truthRuns"   pipeline/10_truth.wl invocations: cells, pipeline, parallel
      "isBatches"   q=10 IS batches per p: {runTag, N, chunk}
-                   (pure_simplicial_compute.wl via run_p{p}.wl)
+                   (pipeline/20_is_q10.wl, one process per p and batch)
      "mhChains"    pipeline/30_mh.wl groups. "fanOut" -> "target" runs one
                    process per target (the (4,5) launcher); "tag" is
                    COMB_MH_TAG, "initNumV" COMB_MH_INITNUMV
@@ -44,7 +44,7 @@ Module[{grid9, targets3},
       <|"cells" -> {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {3, 4}, {3, 5}, {3, 6}},
         "pipeline" -> "cheap", "parallel" -> True|>,
       <|"cells" -> {{4, 4}, {4, 5}}, "pipeline" -> "mckay", "parallel" -> False|>},
-    (* I1-I3: batch3 has no p=2. Merged by concat_samples.wl. *)
+    (* I1-I3: batch3 has no p=2. Merged by pipeline/21_is_merge.wl. *)
     "isBatches" -> <|
       2 -> {{"", 500000, 25000}, {"batch2", 1500000, 25000}},
       3 -> {{"", 500000, 25000}, {"batch2", 1500000, 25000},

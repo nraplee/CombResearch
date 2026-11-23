@@ -1,6 +1,6 @@
 (* fig2_check.wl
-   Checks src/render_fig2.wl against the reference notebooks (Phase 3):
-   "render_fig2.wl reproduces the notebook's numbers". Reads the numbers the
+   Checks the fig2 job of pipeline/60_figures.wl against the reference notebooks (Phase 3):
+   "the fig2 render reproduces the notebook's numbers". Reads the numbers the
    notebooks saved in their output cells; the notebooks are only read.
 
      $env:COMB_ROOT = "<store with p3q3_n10000_fig2.wxf>"   (optional)
@@ -24,8 +24,8 @@
    Exit 0 pass, 1 fail, 2 missing input. *)
 
 $code = ParentDirectory[DirectoryName[$InputFileName]];
-Get[FileNameJoin[{$code, "src", "lib_names.wl"}]];
-$ref = FileNameJoin[{$code, "src", "reference"}];
+Get[FileNameJoin[{$code, "pipeline", "common", "names.wl"}]];
+$ref = FileNameJoin[{$code, "reference", "fig2"}];
 
 $fail = 0;
 check[label_, ok_, detail_ : ""] := If[TrueQ[ok], Print["ok    ", label, " ", detail],
@@ -49,14 +49,14 @@ nbBars = <|"vertex" -> barHeights["Out[69]="], "facet" -> barHeights["Out[73]="]
 
 (* ----- the script's numbers ----- *)
 f = combFile["fig2", 3, 3, 10000];
-If[!FileExistsQ[f], Print["fig2_check: missing ", f, "; run src/render_fig2.wl"]; Exit[2]];
+If[!FileExistsQ[f], Print["fig2_check: missing ", f, "; run pipeline/60_figures.wl fig2"]; Exit[2]];
 x = Import[f, "WXF"];
 If[!AssociationQ[x] || !AssociationQ[x["ess"]],
   Print["fig2_check: ", FileNameTake[f], " has no ESS (made before Phase 3's fix); rerun ",
-    "src/render_fig2.wl with COMB_FORCE=1"]; Exit[2]];
+    "pipeline/60_figures.wl fig2 with COMB_FORCE=1"]; Exit[2]];
 myTable = Rest[x["classTable"]];
 Print["fig2_check: ", FileNameTake[f], " (ECGrav ", x["ecGravVersion"], ", N=", x["sampleSize"],
-  ", seed ", x["seed"], ") vs src/reference notebooks"];
+  ", seed ", x["seed"], ") vs reference/fig2 notebooks"];
 
 (* ----- exact ----- *)
 check["number of classes", Length[myTable] == Length[nbTable] == 12,

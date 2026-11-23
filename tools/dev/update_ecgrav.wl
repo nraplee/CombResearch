@@ -1,7 +1,7 @@
 (* update_ecgrav.wl
    Keep the shared clone of upstream ECGrav (github.com/kassabetre/ECGrav)
    at $CombRoot/ECGrav-upstream current with origin/main. Every script
-   loads ECGrav from that clone through src/load_ecgrav.wl, so all
+   loads ECGrav from that clone through pipeline/common/ecgrav.wl, so all
    worktrees run the same commit. The folder is gitignored, like data/.
 
    Usage:
@@ -15,10 +15,10 @@
 
    Run this only between runs: kernels that are already running keep the
    code they loaded. After an update, run tests\ecgrav_regression.wl
-   (load_ecgrav.wl warns until the new commit has passed). *)
+   (ecgrav.wl warns until the new commit has passed). *)
 
 Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName], 2],
-  "src", "comb_paths.wl"}]];
+  "pipeline", "common", "paths.wl"}]];
 
 $upstreamURL = "https://github.com/kassabetre/ECGrav.git";
 

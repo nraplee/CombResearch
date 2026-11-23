@@ -7,8 +7,8 @@
      wolframscript -file pipeline\50_validate.wl samples     (COMB_VAL_SOURCE)
      wolframscript -file pipeline\50_validate.wl results
 
-   Jobs (the old script each one was; that script is now a shim that sets
-   the job and Gets this file):
+   Jobs (the old script each one was; those scripts were shims that set
+   the job and Got this file, deleted in Phase 5):
      counts            ECGrav's exact counters vs truth, per vertex count
                        (src/validate_counts_vs_truth.wl). Writes
                        results/counts_vs_truth.csv.
@@ -37,12 +37,12 @@
    summaries reproduce the stored ones. *)
 
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
 dataDir = $CombDataDir;
 
 $validateJobs = {"counts", "samples", "efficiency", "3way", "q10_is_vs_mh",

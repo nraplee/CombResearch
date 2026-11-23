@@ -12,8 +12,56 @@
   `git checkout -- logs`, pull, then copy the backup back without
   overwriting. Worktrees that check out the new main simply lose their
   checked-out copies, which is fine (they never held real logs).
-- Independent of PRs A and B (#39, #40); the only overlap is a line or two
-  of CLAUDE.md and this file.
+- Merged after PRs A (#39) and B (#40).
+
+## Phase 5 PR B: `git mv` into the ideal layout + hook (2026-11-23, Ryzen, branch `claude/phase5-b-move`, stacked on PR A #39)
+
+- `src/` is gone. `pipeline/common/`: `paths.wl` + `paths.ps1` (were
+  `comb_paths.*`), `names.wl`, `io.wl`, `config.wl` (were `lib_*.wl`),
+  `ecgrav.wl`, `combresearch.wl` (were `load_*.wl`); the user chose the
+  ideal.md names. Symbols are unchanged (`combFile`, `combSetting`,
+  `exportWxfAtomic`, `$CombDataDir`, ...); message prefixes and log names
+  (`lib_names:`, `check_lib_names.log`, ...) are unchanged too.
+- `pipeline/23_is_truth_cells.wl` (was `src/run_is_at_truth_cells.wl`).
+- `tools/dev/`: the `.ps1` launchers and monitors, `sync_worktree_data.ps1`,
+  `install_ecgrav_global.wl`.
+- `reference/`: `Pure Clique Complexes.tex`, `fig2/` (the two notebooks,
+  byte-identical), `papers/` (the PDF from `archive/related_pdfs`).
+- Code root: `paths.wl` / `paths.ps1` and every launcher walk up to the
+  folder that holds `run.wl`. Repo marker: a git root counts as the main
+  checkout if it holds `run.wl` and `config/cells.wl` (on main since Phase
+  3), so outputs still go to `C:\CombResearch` while its checkout is older.
+- Hook: `command -v powershell.exe >/dev/null 2>&1 || exit 0; powershell.exe
+  ... tools/dev/sync_worktree_data.ps1 -Quiet`.
+- A read-only review of the patch caught `combresearch.wl` still taking one
+  `ParentDirectory` to the package (every stage would have aborted); fixed
+  before any check ran.
+- Checks: see the PR.
+
+## Phase 5 PR A: delete shims, superseded scripts, `archive/` (2026-11-23, Ryzen, branch `claude/phase5-a-delete`)
+
+Order agreed with the user: A (delete) -> B (`git mv` into the ideal
+layout, helpers renamed to ideal.md names, hook fix; stacked on A) -> C
+(untrack `logs/` and the Betre `.mx`, from main).
+
+- Deleted: the 25 `src/*.wl` shims, `enumerate_truth.wl` (10_truth with
+  `COMB_TRUTH_PIPELINE` in a scratch root does its cross-validation),
+  `run_p{2,3,4}.wl`, `test_streaming{,_bliss,_mckay}.wl` (every check is in
+  `Enumeration.wlt`, already in `run.wl check`), `migrate_csv_to_wxf`,
+  `precompute_is_histogram`, `probe_betre_mx`, `pure_simplicial_figures.nb`,
+  `pure_simplicial_compute_overnight`, `run_q10_mh_pilot.ps1`, and tracked
+  `archive/` except `related_pdfs/` (PR B moves it).
+- `pipeline/20_is_q10.wl` gained `COMB_IS_PS` (p list), `COMB_N` and
+  `COMB_IS_PAR`; `run.wl is` runs it directly (`COMB_IS_PS` is an identity
+  knob), as does `src/run_parallel.ps1`. Bare runs: same defaults.
+- `10_truth.wl` calls `PureComplexStatistics` directly;
+  `tests/ecgrav_regression.wl` uses `PureComplexMHChain`; the MH/ECGrav
+  launchers call `pipeline/30_mh.wl` / `40_ecgrav.wl`; `run.wl check` lost
+  the two `test_streaming` smoke jobs.
+- CLAUDE.md commands rewritten around the stages; README quick start is
+  `run.wl`.
+- Checks (scratch roots only, nothing written to the main checkout's
+  outputs): see the PR.
 
 ## Phase 4 row 7: `pipeline/60_figures.wl` (2026-11-22, Ryzen, branch `claude/phase-4-figures`)
 

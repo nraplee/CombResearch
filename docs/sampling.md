@@ -66,7 +66,7 @@ The ECGrav sampler is not uniform on facet labelings for this project.
 
 ## MH Sampler
 
-`src/sampler_mh.wl` implements a Metropolis-Hastings chain over fixed-ambient vertex-labeled states.
+`PureComplexMHChain` implements a Metropolis-Hastings chain over fixed-ambient vertex-labeled states.
 
 State:
 
@@ -122,12 +122,12 @@ The `(4,5)` MH chains landed and validated:
 Run validation with:
 
 ```powershell
-wolframscript -file src\validate_mh_vs_truth.wl
+wolframscript -file pipeline\50_validate.wl samples
 ```
 
 ## Proposal Kernels
 
-`src/sampler_mh.wl` supports:
+`PureComplexMHChain` (`CombResearch/Kernel/Subpackages/MHSampler.wl`; was `src/sampler_mh.wl`) supports, as `"kernel" -> ...`:
 
 - `global`: replace one whole facet. Default.
 - `local`: change one vertex in one facet.
@@ -140,22 +140,22 @@ Benchmarks at q=10 found higher acceptance rate did not imply better mixing. The
 
 ```powershell
 # Run MH chains.
-wolframscript -file src\run_mh_chains.wl
+wolframscript -file pipeline\30_mh.wl
 
 # Restrict to one cell and target.
 $env:COMB_MH_CELLS = "4,5"
 $env:COMB_MH_TARGETS = "unlabeled"
-wolframscript -file src\run_mh_chains.wl
+wolframscript -file pipeline\30_mh.wl
 
 # Launch all three (4,5) targets in parallel.
-powershell -ExecutionPolicy Bypass -File src\run_p4q5_mh_parallel.ps1
+powershell -ExecutionPolicy Bypass -File tools\dev\run_p4q5_mh_parallel.ps1
 
 # Monitor the parallel run.
-powershell -ExecutionPolicy Bypass -File src\monitor_mh.ps1
+powershell -ExecutionPolicy Bypass -File tools\dev\monitor_mh.ps1
 ```
 
 ## Figure Rendering
 
-- `src/render_all_figures.wl` renders the older q=10 IS figures.
-- `src/render_truth_overlay.wl` renders truth plus MH overlay panels for the enumerated grid.
-- `src/render_sampler_progress.wl`, `src/render_uniformity_check.wl`, and `src/render_ecgrav_compare.wl` are diagnostic renderers.
+- `pipeline/60_figures.wl q10_stats` renders the q=10 IS figures (Figures 3-15).
+- `pipeline/60_figures.wl truth_overlay` renders truth plus MH overlay panels for the enumerated grid.
+- the `sampler_progress`, `uniformity` and `ecgrav_compare` jobs of `pipeline/60_figures.wl` are diagnostic renderers.

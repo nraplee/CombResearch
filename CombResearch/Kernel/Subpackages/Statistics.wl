@@ -5,7 +5,7 @@
    the public symbols are declared there.
 
    Moved verbatim in Phase 4 from src/lib_stats.wl (itself moved verbatim
-   from pure_simplicial_compute.wl in Phase 2), now a shim. The functions and
+   from pure_simplicial_compute.wl in Phase 2; deleted in Phase 5). The functions and
    the column order are unchanged, so existing WXFs stay comparable. *)
 
 $PureComplexStatisticNames = {"numV", "aut", "autF", "connected",

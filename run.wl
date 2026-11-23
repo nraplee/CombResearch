@@ -9,11 +9,11 @@
                if that commit has not passed, run the smoke tests, report
                stale outputs
      truth     pipeline/10_truth.wl, one process per truth run of the profile
-     is        q=10 IS batches (run_p{p}.wl, one process per p and batch),
+     is        q=10 IS batches (pipeline/20_is_q10.wl, one process per p and batch),
                their merge per p (pipeline/21_is_merge.wl, the profile's batch
                list; runs once the batches exist),
-               IS at the truth cells (run_is_at_truth_cells.wl), and the
-               q=10 numV histograms (precompute_is_histograms_q10.wl)
+               IS at the truth cells (23_is_truth_cells.wl), and the
+               q=10 numV and statistic histograms (pipeline/22_is_hists.wl)
      mh        pipeline/30_mh.wl, one process per cell and target
      ecgrav    pipeline/40_ecgrav.wl, one process per sampler and target
      validate  counts, MH/ECGrav validation, efficiency and comparison
@@ -48,7 +48,7 @@
    Settings (guarantee 3): each job's COMB_* knobs come from the command
    line, else the parent environment (a leftover env var wins over the
    profile, with a warning), else the profile's run plan; anything else is
-   left to the driver, which resolves it through lib_config.wl with
+   left to the driver, which resolves it through config.wl with
    COMB_PROFILE set.
 
    Logs go to $CombLogsDir under the launchers' names
@@ -61,7 +61,7 @@
    job started (an Abort[] still exits 0). *)
 
 $code = DirectoryName[$InputFileName];
-$src = FileNameJoin[{$code, "src"}];
+$src = FileNameJoin[{$code, "pipeline", "common"}];
 $args = If[ListQ[$ScriptCommandLine], Rest[$ScriptCommandLine], {}];
 
 usage[msg_String] := (
@@ -112,10 +112,10 @@ With[{known = Quiet @ Get[FileNameJoin[{$code, "config", "cells.wl"}]]},
 SetEnvironment["COMB_PROFILE" -> $profileName];
 
 If[CheckAbort[
-    Get[FileNameJoin[{$src, "lib_names.wl"}]];
-    Get[FileNameJoin[{$src, "lib_config.wl"}]];
-    Get[FileNameJoin[{$src, "lib_io.wl"}]]; True, False] =!= True,
-  Print["run.wl: loading src/lib_*.wl aborted"]; Exit[1]];
+    Get[FileNameJoin[{$src, "names.wl"}]];
+    Get[FileNameJoin[{$src, "config.wl"}]];
+    Get[FileNameJoin[{$src, "io.wl"}]]; True, False] =!= True,
+  Print["run.wl: loading pipeline/common/*.wl aborted"]; Exit[1]];
 
 (* Pad to n characters without ever cutting the text. *)
 pad[s_, n_] := With[{t = ToString[s]}, t <> StringRepeat[" ", Max[1, n - StringLength[t]]]];
@@ -155,7 +155,7 @@ $stripped = {"COMB_FORCE", "COMB_MH_OUTDIR"};
    leaves them unset; a leftover env var cannot change them, or parallel jobs
    would write the same file, or a job would write a name run.wl does not
    check (COMB_NN_FIXED is part of the q=10 IS file name). *)
-$identityKnobs = {"COMB_TRUTH_CELLS", "COMB_TRUTH_PIPELINE", "COMB_N", "COMB_RUNTAG",
+$identityKnobs = {"COMB_TRUTH_CELLS", "COMB_TRUTH_PIPELINE", "COMB_N", "COMB_RUNTAG", "COMB_IS_PS",
   "COMB_NN_FIXED", "COMB_IS_CELLS", "COMB_MH_CELLS", "COMB_MH_TARGETS", "COMB_MH_TAG",
   "COMB_ECG_SAMPLER", "COMB_ECG_CELLS", "COMB_ECG_TARGETS", "COMB_VAL_SOURCE",
   "COMB_VAL_CELLS", "COMB_VAL_TARGETS", "COMB_EFF_CELLS", "COMB_EFF_TARGETS",
@@ -245,7 +245,7 @@ targets3 = {"unlabeled", "facet", "vertex"};
 
 (* pipeline/10_truth.wl always writes the final _truth.wxf, whatever the
    pipeline (Phase 4), so there is no McKay rename step any more. A leftover
-   _truth_<pipeline>.wxf from enumerate_truth.wl is ignored. *)
+   _truth_<pipeline>.wxf from the old enumerate_truth.wl is ignored. *)
 jobsFor["truth"] := Flatten @ Map[Function[r, Module[{cells, pl = r["pipeline"], todo, use},
     cells = pickCells[r["cells"]];
     todo = If[$force, cells, Select[cells, !FileExistsQ[truthPath[#]] &]];
@@ -263,14 +263,15 @@ jobsFor["is"] := Module[{batches = planOf["isBatches"], out = {}, cellsIS},
       Do[With[{runTag = b[[1]], n = b[[2]], chunk = b[[3]],
           stem = combISStem[p, 10, b[[2]], None, b[[1]]]},
         AppendTo[out, job["is q=10 p=" <> ToString[p] <> " " <> If[runTag === "", "batch1", runTag],
-          "src/run_p" <> ToString[p] <> ".wl",
-          resolveKnobs[<|"COMB_N" -> n, "COMB_RUNTAG" -> runTag, "COMB_CHUNK" -> chunk|>, <||>],
+          "pipeline/20_is_q10.wl",
+          resolveKnobs[<|"COMB_IS_PS" -> ToString[p], "COMB_IS_PAR" -> "1", "COMB_N" -> n,
+            "COMB_RUNTAG" -> runTag, "COMB_CHUNK" -> chunk|>, <||>],
           (* skip on the stats file only: batches 1 and 2 were migrated from CSV
              and never had a complexes file *)
           {combFile["isStats", stem]}, {},
           StringDrop[combName["log", "compute", p, If[runTag === "", "", "_" <> runTag]], -4]] ~Join~
           <|"written" -> {combFile["isStats", stem], combFile["isComplexes", stem]},
-            (* pure_simplicial_compute.wl skips a p whose final stats exist and
+            (* pipeline/20_is_q10.wl skips a p whose final stats exist and
                has no force knob *)
             "noForce" -> "force cannot rerun a q=10 batch: the driver skips a finished batch; " <>
               "move " <> FileNameTake[combFile["isStats", stem]] <> " away first"|>]],
@@ -300,7 +301,7 @@ jobsFor["is"] := Module[{batches = planOf["isBatches"], out = {}, cellsIS},
       partial = If[$force, {}, Select[cellsIS, 0 < nHave[#] < 3 &]];
       todo = If[$force, cellsIS, Select[cellsIS, nHave[#] == 0 &]];
       If[cellsIS =!= {},
-        j = job["is at truth cells " <> envString[cellsIS], "src/run_is_at_truth_cells.wl",
+        j = job["is at truth cells " <> envString[cellsIS], "pipeline/23_is_truth_cells.wl",
           resolveKnobs[<||>, <|"COMB_IS_CELLS" -> {If[todo === {}, cellsIS, todo],
             If[$cliCells === All, $CombSettings["COMB_IS_CELLS"]["source"], "cli"]}|>],
           hists[cellsIS], {}, "is_truth_cells"] ~Join~
@@ -481,7 +482,7 @@ ecgravDir[] := With[{e = Environment["COMB_ECGRAV_DIR"]},
     !StringQ[e] || e === "", FileNameJoin[{$CombRoot, "ECGrav-upstream"}],
     StringMatchQ[e, RegularExpression["^([A-Za-z]:|/|\\\\).*"]], ExpandFileName[e],
     True, ExpandFileName[FileNameJoin[{$code, e}]]]];
-(* The same string load_ecgrav.wl records ($CombECGravCommit): "installed",
+(* The same string ecgrav.wl records ($CombECGravCommit): "installed",
    the HEAD sha plus "-dirty" with local edits, or "unknown". It is what the
    regression record and the manifests hold, so the comparisons line up. *)
 ecgravCommit[] := Module[{dir, top, sc, r, sha, dirty},
@@ -539,13 +540,13 @@ jobsFor["check"] := Module[{out = {}, commit},
       truthPath /@ combSetting["COMB_REG_CELLS", {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {3, 4},
         {3, 5}, {3, 6}, {4, 4}, {4, 5}}, "cells"], "check_ecgrav_regression"],
     "when" -> Function[!regressionPassed[ecgravCommit[]]]|>];
+  (* the enumerator smoke tests (old src/test_streaming*.wl) are in the
+     package tests: CombResearch/Tests/Enumeration.wlt (Phase 5) *)
   out = Join[out, MapThread[job[#1, #2, <||>, {}, {}, #3] &, {
-    {"smoke: streaming", "smoke: streaming McKay", "smoke: package tests", "smoke: lib_names",
-      "smoke: lib_config", "smoke: manifests"},
-    {"src/test_streaming.wl", "src/test_streaming_mckay.wl", "CombResearch/Tests/run_tests.wl",
-      "tests/lib_names_test.wl", "tests/lib_config_test.wl", "tests/manifest_test.wl"},
-    {"check_test_streaming", "check_test_streaming_mckay", "check_package_tests", "check_lib_names",
-      "check_lib_config", "check_manifest"}}]];
+    {"smoke: package tests", "smoke: lib_names", "smoke: lib_config", "smoke: manifests"},
+    {"CombResearch/Tests/run_tests.wl", "tests/lib_names_test.wl", "tests/lib_config_test.wl",
+      "tests/manifest_test.wl"},
+    {"check_package_tests", "check_lib_names", "check_lib_config", "check_manifest"}}]];
   out];
 
 (* ----- running jobs ----- *)

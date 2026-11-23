@@ -1,5 +1,5 @@
 (* lib_config_test.wl
-   Checks src/lib_config.wl and config/cells.wl (Phase 2c).
+   Checks pipeline/common/config.wl and config/cells.wl (Phase 2c).
 
    1. Each kind parses an env string exactly as the inline code it replaced
       (old parsers copied below as reference).
@@ -14,7 +14,7 @@
 
      wolframscript -file tests\lib_config_test.wl *)
 
-$src = FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src"}];
+$src = FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "pipeline", "common"}];
 $self = $InputFileName;
 $fail = 0;
 check[label_, got_, want_] := If[got === want, Null,
@@ -26,7 +26,7 @@ $child = Environment["COMB_TEST_CHILD"];
 If[StringQ[$child],
   SetEnvironment["COMB_TEST_CHILD" -> None];
   result = CheckAbort[
-    Get[FileNameJoin[{$src, "lib_config.wl"}]];
+    Get[FileNameJoin[{$src, "config.wl"}]];
     Switch[$child,
       "profile", {$CombProfile,
         combSetting["COMB_VAL_CELLS", {{9, 9}}, "cells"],
@@ -54,7 +54,7 @@ runChild[part_, env_Association] := Module[{res, out},
 (* Clear knobs this test sets, in case the caller's shell has them. *)
 SetEnvironment[# -> None] & /@ {"COMB_PROFILE", "COMB_VAL_CELLS", "COMB_ECG_N",
   "COMB_MH_NUMITER", "COMB_X_TEST"};
-Get[FileNameJoin[{$src, "lib_config.wl"}]];
+Get[FileNameJoin[{$src, "config.wl"}]];
 check["no profile by default", $CombProfile, None];
 
 (* ----- 1. kinds vs the old inline parsers ----- *)

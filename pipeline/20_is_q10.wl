@@ -1,11 +1,16 @@
 (* pipeline/20_is_q10.wl
-   q=10 importance-sampling stage (Phase 4). src/pure_simplicial_compute.wl
-   is now a shim that Gets this file in the same kernel, so run_p{2,3,4}.wl,
-   the *Override variables they set (pListOverride, sampleSizeOverride,
-   useParallelOverride, nnFixedOverride, runTagOverride, chunkSizeOverride),
-   chunk resume and the file names are unchanged. Sampling, statistics and
+   q=10 importance-sampling stage (Phase 4). Sampling, statistics and
    weights come from the CombResearch package (RandomVertexLabeled... via
    ECGrav, PureComplexStatistics, PureComplexISWeights, EffectiveSampleSize).
+
+   Knobs (combSetting; an *Override variable set before Get-ting this file
+   still wins, as in Phase 4):
+     COMB_IS_PS    "2,3,4"  the p values (pListOverride)        default {2,3,4}
+     COMB_N        samples per p (sampleSizeOverride)           default 10000
+     COMB_IS_PAR   1|0  ParallelMap the stats (useParallelOverride) default 0
+     COMB_NN_FIXED, COMB_RUNTAG, COMB_CHUNK  (below)
+   run.wl is launches one process per p and batch with COMB_IS_PS = p,
+   COMB_IS_PAR = 1 (Phase 5: this replaces the run_p{2,3,4}.wl wrappers).
 
    Sampling + per-sample statistics pipeline for Figures 3-16.
    Pure simplicial complexes, q = 10, p in {2, 3, 4}.
@@ -15,14 +20,16 @@
    Independent of histograms_handoff_v2.nb / histograms_paper_figures.nb. *)
 
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
 
 (* ===== Parameters ===== *)
 qVal = 10;
-pList = If[ValueQ[pListOverride], pListOverride, {2, 3, 4}];
-sampleSize = If[ValueQ[sampleSizeOverride], sampleSizeOverride, 10000];
+pList = If[ValueQ[pListOverride], pListOverride,
+  combSetting["COMB_IS_PS", {2, 3, 4}, "intList"]];
+sampleSize = If[ValueQ[sampleSizeOverride], sampleSizeOverride,
+  combSetting["COMB_N", 10000, "expr"]];
 randomSeed = 123456;
 
 (* ===== Optional fixed-numV mode (Betre, 2026-05-05) =====
@@ -40,21 +47,22 @@ nnFixed = If[ValueQ[nnFixedOverride], nnFixedOverride,
    filename becomes p{p}q10_n{N}_{runTag}_samples.csv AND the per-chunk seed is
    offset by a deterministic hash of the tag. This lets a fresh run produce
    fully independent samples that can be concatenated with a prior run via
-   concat_samples.wl, without colliding on seeds. *)
+   pipeline/21_is_merge.wl, without colliding on seeds. *)
 runTag = If[ValueQ[runTagOverride], runTagOverride,
   combSetting["COMB_RUNTAG", ""]];
 runSeedOffset = If[runTag === "", 0,
   Mod[Hash[runTag, "MD5"], 10^7]];
 
-(* Output goes to $CombDataDir (main checkout data/, see comb_paths.wl). *)
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
+(* Output goes to $CombDataDir (main checkout data/, see paths.wl). *)
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
 outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
 (* Optional ParallelMap over the per-sample stats step.
-   Activate by setting useParallelOverride = True before Get'ing this script. *)
-useParallel = If[ValueQ[useParallelOverride], useParallelOverride, False];
+   COMB_IS_PAR=1, or useParallelOverride = True before Get'ing this script. *)
+useParallel = If[ValueQ[useParallelOverride], useParallelOverride,
+  combSetting["COMB_IS_PAR", False, "notZero"]];
 
 Print["sampleSize    = ", sampleSize];
 Print["pList         = ", pList];
@@ -65,7 +73,7 @@ Print["runTag        = ", If[runTag === "", "(none)", runTag]];
 Print["runSeedOffset = ", runSeedOffset];
 
 (* ===== Atomic WXF export (statistics come from the package) ===== *)
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
 
 (* ===== Parallel kernel setup (only when useParallel=True) ===== *)
 If[useParallel,

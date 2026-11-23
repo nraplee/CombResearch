@@ -1,7 +1,7 @@
 (* pipeline/22_is_hists.wl
    q=10 IS histograms (Phase 4 row 6). run.wl's is stage runs it after the
-   merges. src/precompute_is_histograms_q10.wl is a shim that Gets this
-   file.
+   merges (it replaced src/precompute_is_histograms_q10.wl, deleted in
+   Phase 5).
 
    For p in {2, 3, 4}, from data/p{p}q10_merged_stats.wxf it writes
      data/p{p}q10_is_{target}_numv_hist.wxf   numV only, one per target
@@ -30,12 +30,12 @@
    all-samples numV fractions equal the numV hist's up to float rounding. *)
 
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
 dataDir = $CombDataDir;
 
 targetColumn = <|"vertex" -> "wVertex", "unlabeled" -> "wUnlabeled",

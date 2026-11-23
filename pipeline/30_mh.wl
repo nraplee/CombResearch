@@ -1,6 +1,6 @@
 (* pipeline/30_mh.wl
-   MH stage (Phase 4): run.wl's mh stage runs this; src/run_mh_chains.wl is
-   now a shim that Gets it, so bare runs and the .ps1 launchers behave as
+   MH stage (Phase 4): run.wl's mh stage runs this; it replaced
+   src/run_mh_chains.wl (deleted in Phase 5); bare runs and the launchers behave as
    before (same knobs, same defaults, same file names). The sampler and the
    statistics come from the CombResearch package (PureComplexMHChain,
    PureComplexStatistics).
@@ -57,12 +57,12 @@
 
 (* ===== Paths + libraries ===== *)
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
 
 (* COMB_MH_OUTDIR overrides the shared data dir. *)
 outputDir = combSetting["COMB_MH_OUTDIR", $CombDataDir];

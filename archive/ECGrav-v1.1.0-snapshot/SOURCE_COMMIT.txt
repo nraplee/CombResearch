@@ -1,3 +1,0 @@
-cb2dd35 (upstream tag v1.1.0, 2026-01-21)
-https://github.com/kassabetre/ECGrav
-Formerly ECGrav/ECGrav-main; PacletInfo still says 1.0.0. Archived 2026-11-18 when all scripts moved to one pinned dist.

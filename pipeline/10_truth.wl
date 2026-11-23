@@ -1,8 +1,8 @@
 (* pipeline/10_truth.wl
    Truth stage: exact enumeration of the isomorphism classes for each
    requested (p, q), per-class statistics, and the three exact distributions
-   over the classes. Replaces src/enumerate_truth.wl for run.wl (Phase 4);
-   enumerate_truth.wl stays for cross-validation runs (tagged file names).
+   over the classes. Replaced src/enumerate_truth.wl (Phase 4; deleted in
+   Phase 5: cross-validate a pipeline with COMB_TRUTH_PIPELINE in a scratch COMB_ROOT).
 
    Output: data/p{p}q{q}_truth.wxf for every pipeline, so a McKay run needs no
    manual rename any more. Schema (unchanged, plus "pipeline" and
@@ -15,7 +15,7 @@
    "totalFacetLabeled" is the enumerator's "totalEmitted": the facet-labeled
    count for cheap, fewer (pruned leaves) for McKay. Kept as stored so far.
 
-   Knobs (combSetting, src/lib_config.wl):
+   Knobs (combSetting, pipeline/common/config.wl):
      COMB_TRUTH_CELLS     "p,q;p,q"   default: the 9-cell truth grid
      COMB_TRUTH_PIPELINE  auto | cheap | bliss | mckay   default auto
                           (auto = McKay for p >= 4, cheap otherwise)
@@ -25,13 +25,12 @@
    $CombTruthIsoCounts must give its known iso-class count, else Exit 1. *)
 
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_stats.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
 
 If[!DirectoryQ[$CombDataDir], CreateDirectory[$CombDataDir]];
 
@@ -106,7 +105,7 @@ processCell[{p_Integer, q_Integer}] := Module[
     Table[
       With[{cmplx = isoReps[[i]]},
         Module[{statsAssoc},
-          statsAssoc = AssociationThread[$CombStatsHeaders -> statsFor[cmplx, p]];
+          statsAssoc = AssociationThread[$PureComplexStatisticNames -> PureComplexStatistics[cmplx, p]];
           <|"facets" -> cmplx,
             "aut"   -> statsAssoc["aut"],
             "autF"  -> statsAssoc["autF"],

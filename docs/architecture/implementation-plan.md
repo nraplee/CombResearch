@@ -472,6 +472,34 @@ formats were left to "whatever simplifies the process"; the choices:
   `powershell.exe`. Make it skip quietly when that isn't available, so
   Claude Code users on macOS or Linux don't see failures.
 
+**As built, PR A (delete, 2026-11-23):** done first, so the move PR does not
+move files that are about to go. Order: A delete, B move (stacked on A, with
+the `reference/` moves and the hook), C untrack (from main).
+
+- Deleted the 25 shims and `enumerate_truth.wl`, `run_p{2,3,4}.wl`,
+  `test_streaming*.wl` (their checks are all in `Enumeration.wlt`), the
+  superseded scripts of the ideal.md mapping, and tracked `archive/` except
+  `related_pdfs/`.
+- `run_p{p}.wl` set `*Override` variables; `pipeline/20_is_q10.wl` now reads
+  the same settings as knobs (`COMB_IS_PS`, `COMB_N`, `COMB_IS_PAR`; an
+  Override still wins), so `run.wl is` and `run_parallel.ps1` call the stage
+  directly. `COMB_IS_PS` is an identity knob.
+- Callers moved to package symbols: `PureComplexStatistics` (10_truth),
+  `PureComplexMHChain` (ECGrav regression).
+
+**As built, PR B (move, 2026-11-23):**
+
+- Helpers in `pipeline/common/` under the ideal.md names (`paths`, `names`,
+  `io`, `config`, `ecgrav`, `combresearch`); `src/` is gone.
+  `run_is_at_truth_cells.wl` became `pipeline/23_is_truth_cells.wl`.
+- Code root: walk up to the folder that holds `run.wl` (`.wl` and `.ps1`).
+  The repo-marker guard of guarantee 1 now asks for `run.wl` and
+  `config/cells.wl` instead of `src/comb_paths.wl`, so a main checkout that
+  has not pulled this layout yet still receives the outputs.
+- Launchers, monitors and the sync script are in `tools/dev/`; the hook
+  exits 0 when `powershell.exe` is not on PATH.
+- `reference/`: the `.tex`, `fig2/` notebooks (unchanged), `papers/`.
+
 ## Phase 6: upstream to ECGrav (with Dr. Betre)
 
 - Agree with Betre which pieces he wants:
