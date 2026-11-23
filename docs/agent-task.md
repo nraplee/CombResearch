@@ -1,5 +1,35 @@
 # Current Agent Task
 
+## Phase 7: prove it from outside (2026-11-23, Ryzen, branch `claude/phase7-outside`)
+
+- README quickstart for outside researchers.
+- Three outside scenarios in `C:\scratch\p7\`, with no `COMB_*` env: a
+  fresh GitHub clone, the zip inside an unrelated repo, and the zip without
+  git. Each ran `check`, the quick profile and `golden_quick`; all pass.
+  Details in the plan's Phase 7 as-built note.
+- Fixes: `update_ecgrav.wl` without git; `io.wl` `codeCommit` for a zip
+  inside another repo; `manifest_test.wl`; `run.wl` shows a failed job's
+  log tail.
+- Parallel launches: `wolframscript` can crash at start-up (`0xC0000005`)
+  when several start at once; launchers and `run.wl` now stagger starts by
+  1 s (0 failures in 45 staggered starts).
+- Also on this branch: the Phase 6 deliverable notes
+  (`docs/architecture/phase6-deliverable.md`). The user chose a notebook
+  (Betre is on a Mac, we are on Windows), parallel on by default, with
+  progress bars, and later `FunctionCompile` on profiled hot spots.
+- Progress output in `run.wl`: every 60 s (`COMB_TEST_HEARTBEAT` overrides,
+  for tests) a `still running <job> (N min) | <last log line>` line per
+  running job, and a `k/n` count on each finished job. Package test times
+  print as `40.4 s`, not `40.400000000000006 s`.
+- Laptop run (i7-8750H, 32 GB, fresh Windows 11, cloned to `D:\p7test\clone`, branch
+  `claude/phase7-outside`): `check` cloned ECGrav (upstream main is now
+  `42d6118`, 1.19.0, not yet regression-tested). All pass: `check`
+  (package tests 631 s), `all profile quick` (about 8 min after check, 56
+  current outputs), `golden_quick` PASS on 42d6118, and `figures force`
+  (Figure 2, uniformity, ECGrav compare, q=10 figures redrawn). The three
+  committed figures are skipped as "outputs exist" in a fresh clone; that
+  is the skip rule, `figures force` redraws them.
+
 ## Phase 5 PR C: untrack `logs/` and the Betre `.mx` (2026-11-23, Ryzen, branch `claude/phase5-c-untrack`, from main)
 
 - `git rm --cached` of the 98 tracked files in `logs/` and

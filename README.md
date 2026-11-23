@@ -12,15 +12,41 @@ Wolfram Mathematica research code for probability distributions of pure simplici
 
 ## Quick Start
 
-`run.wl` is the single entry point. It launches the `pipeline/` stages and
-skips any job whose outputs already exist.
+You need:
+
+- Wolfram 15.0 or later, with `wolframscript` on `PATH` (Mathematica or
+  the free Wolfram Engine);
+- git, to clone this repository and the ECGrav package. Without git, see
+  the notes below.
 
 ```powershell
-wolframscript -file run.wl check                 # update the ECGrav clone, regression, smoke tests
-wolframscript -file run.wl all profile quick     # small end-to-end run (about 10-20 min)
-wolframscript -file run.wl all dryrun            # every planned job and why it runs or skips
-wolframscript -file run.wl status                # store report
+git clone https://github.com/nraplee/CombResearch.git
+cd CombResearch
+wolframscript -file run.wl check                 # clones ECGrav, runs the smoke tests
+wolframscript -file run.wl all profile quick     # small end-to-end run
+wolframscript -file run.wl status                # what was made, and with which ECGrav
 ```
+
+- `run.wl check` clones [ECGrav](https://github.com/kassabetre/ECGrav)
+  (Dr. Kassahun Betre's package) into `ECGrav-upstream/`. Later runs of
+  `check` update it to the latest `main`.
+- `run.wl all profile quick` computes small versions of everything into
+  `data/`, `figures/`, `results/` and `logs/` inside the clone: exact truth
+  for the small cells, IS, MH and ECGrav samples, validation tables and
+  figures. Every stage resumes: rerunning skips finished jobs.
+- `profile paper` is the full set behind the paper. It takes days.
+- `wolframscript -file run.wl all dryrun` lists every planned job and why
+  it would run or skip.
+
+Notes:
+
+- **No git:** download ECGrav as a zip from GitHub and unpack it as
+  `ECGrav-upstream/` next to `run.wl` (or point `COMB_ECGRAV_DIR` at any
+  ECGrav checkout). `run.wl check` says so when it cannot clone. Outputs go
+  into the folder that holds `run.wl`.
+- **Repository zip:** a GitHub zip works the same way, even when unpacked
+  inside another git repository. Outputs stay in the unpacked folder.
+- `COMB_ROOT=<dir>` sends all outputs somewhere else.
 
 Stages can also be run directly, for example:
 

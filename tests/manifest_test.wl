@@ -49,9 +49,15 @@ check["setting sources", KeyTake[m["settingSources"], {"COMB_MH_SEED", "COMB_MH_
 check["extra merged", m["inputs"], {"x.wxf"}];
 check["profile", m["profile"], None];
 check["wolfram", m["wolframVersion"], $Version];
-check["code commit is a sha or VERSION",
-  StringQ[m["codeCommit"]] && StringMatchQ[m["codeCommit"],
-    RegularExpression["[0-9a-f]{40}|VERSION .*"]], True];
+(* a git checkout records its sha; a zip (no git, or inside another repo)
+   records VERSION or Missing["Unknown"] (Phase 7) *)
+check["code commit is a sha, VERSION or unknown in a zip",
+  If[Quiet @ Check[ToLowerCase[ExpandFileName[StringTrim[RunProcess[{"git", "-C", $CombCodeRoot,
+        "rev-parse", "--show-toplevel"}, "StandardOutput"]]]] ===
+        ToLowerCase[ExpandFileName[$CombCodeRoot]], False],
+    StringQ[m["codeCommit"]] && StringMatchQ[m["codeCommit"], RegularExpression["[0-9a-f]{40}"]],
+    MatchQ[m["codeCommit"], Missing["Unknown"] | _String?(StringStartsQ[#, "VERSION "] &)]],
+  True];
 check["required keys", Complement[{"manifestVersion", "file", "bytes", "sha256",
   "writtenAt", "backfilled", "script", "codeCommit", "codeDirty", "ecgravCommit",
   "ecgravVersion", "wolframVersion", "systemID", "kernelCount", "sessionSec",

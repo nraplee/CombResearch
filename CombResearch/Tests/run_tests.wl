@@ -18,7 +18,7 @@ Do[Module[{t, rep, failed},
     failed = Select[Values[rep["TestResults"]], #["Outcome"] =!= "Success" &];
     Print[If[failed === {}, "PASS  ", "FAIL  "], FileNameTake[f], "  ",
       rep["TestsSucceededCount"], "/", Length[rep["TestResults"]], " in ",
-      Round[t, 0.1], " s"];
+      ToString[NumberForm[Round[t, 0.1], {Infinity, 1}]], " s"];
     Do[Print["      failed: ", tr["TestID"], "  got ", Short[tr["ActualOutput"], 3],
         "  expected ", Short[tr["ExpectedOutput"], 3]], {tr, failed}];
     If[failed =!= {}, allOk = False]],

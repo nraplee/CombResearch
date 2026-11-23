@@ -588,6 +588,11 @@ startJob[j_] := Module[{env, proc, expect},
   CreateFile /@ {j["log"], j["err"]};
   env = Join[dropNotInherited[Association[GetEnvironment[]]],
     <|"COMB_PROFILE" -> $profileName|>, #[[1]] & /@ j["knobs"]];
+  (* at least 1 s between starts: wolframscript can crash at start-up
+     (exit 0xC0000005, empty log) when several start in the same instant
+     (Phase 7: 1 in 30 simultaneous starts; 0 in 45 with a 1 s gap) *)
+  Pause[Max[0, 1 - (AbsoluteTime[] - $lastStart)]];
+  $lastStart = AbsoluteTime[];
   proc = StartProcess[{"wolframscript", "-file", FileNameJoin[{$code, j["script"]}]},
     ProcessEnvironment -> env, ProcessDirectory -> $code];
   AppendTo[$children, proc];
@@ -600,9 +605,9 @@ releaseLockFile[f_] := With[{l = Quiet @ Get[f]},
   If[AssociationQ[l] && l["runWlPid"] === $ProcessID, DeleteFile[f]];
   $heldLocks = DeleteCases[$heldLocks, f]];
 releaseLock[j_] := releaseLockFile[lockFile[j]];
-$heldLocks = {}; $children = {};
+$heldLocks = {}; $children = {}; $lastStart = 0;
 
-finishJob[r_] := Module[{j = r["job"], code, bad, logText, written},
+finishJob[r_, count_String : ""] := Module[{j = r["job"], code, bad, logText, written},
   (* the process has exited: read both streams to the end *)
   appendTo[j["log"], Quiet @ Replace[ReadString[ProcessConnection[r["proc"], "StandardOutput"]],
     Except[_String] -> ""]];
@@ -620,10 +625,42 @@ finishJob[r_] := Module[{j = r["job"], code, bad, logText, written},
     True, None];
   Print["  [", DateString[{"Hour", ":", "Minute", ":", "Second"}], "] ",
     If[bad === None, "done  ", "FAILED"], " ", j["label"], "  (",
-    Round[AbsoluteTime[] - r["t0"]], " s)", If[bad === None, "", "  " <> bad]];
+    Round[AbsoluteTime[] - r["t0"]], " s)", count, If[bad === None, "", "  " <> bad]];
+  (* a failed job: show the end of its log, so the reason is visible here *)
+  If[bad =!= None && StringQ[logText],
+    Scan[Print["      | ", #] &,
+      Take[#, -Min[4, Length[#]]] &[Select[StringSplit[StringDelete[logText, "\r"], "\n"],
+        StringTrim[#] =!= "" &]]]];
   bad === None];
 
-runJobs[jobs_List] := Module[{queue = jobs, running = {}, ok = True, done},
+(* The last non-empty line of a log, read from its last 4 kB only (MH and IS
+   logs grow large), cut to 100 characters. "" when there is none yet. *)
+lastLogLine[file_] := Module[{st, size, txt, lines},
+  If[!FileExistsQ[file], Return[""]];
+  size = FileByteCount[file];
+  st = Quiet @ OpenRead[file, BinaryFormat -> True];
+  If[Head[st] =!= InputStream, Return[""]];
+  SetStreamPosition[st, Max[0, size - 4096]];
+  txt = Quiet @ ReadString[st]; Close[st];
+  If[!StringQ[txt], Return[""]];
+  lines = Select[StringSplit[StringDelete[txt, "\r"], "\n"], StringTrim[#] =!= "" &];
+  If[lines === {}, "", StringTake[StringTrim[Last[lines]], UpTo[100]]]];
+
+(* Progress while jobs run: every $heartbeat seconds, one line per running
+   job with its time so far and the last line of its log. *)
+$heartbeat = With[{e = Environment["COMB_TEST_HEARTBEAT"]},
+  If[StringQ[e] && StringMatchQ[e, DigitCharacter ..], ToExpression[e], 60]];
+heartbeatLine[r_] := Module[{t = Round[AbsoluteTime[] - r["t0"]], last},
+  last = lastLogLine[r["job"]["log"]];
+  Print["  [", DateString[{"Hour", ":", "Minute", ":", "Second"}], "] still running ",
+    r["job"]["label"], "  (", If[t < 120, ToString[t] <> " s", ToString[Round[t / 60]] <> " min"],
+    ")", If[last === "", "", "  | " <> last]]];
+
+(* {before, total}: jobs of the stage finished before this call and in all,
+   for the k/n count when a stage runs its jobs one call at a time (check). *)
+runJobs[jobs_List, Optional[{before_Integer, total_Integer}, {0, -1}]] :=Module[{queue = jobs,
+    running = {}, ok = True, done, finished = before, lastBeat = AbsoluteTime[],
+    outOf = If[total < 0, Length[jobs], total]},
   While[queue =!= {} || running =!= {},
     While[ok && queue =!= {} && Length[running] < $maxJobs,
       Module[{j = First[queue], d, r},
@@ -633,15 +670,20 @@ runJobs[jobs_List] := Module[{queue = jobs, running = {}, ok = True, done},
         d = decide[j];
         r = If[d[[1]] === "skip", d, startJob[j]];
         Which[
-          r === $Failed, Print["  skip  ", j["label"], ": locked by another run.wl (checked at start)"],
-          StringQ[r], Print["  skip  ", j["label"], ": ", r, " (checked at start)"],
-          ListQ[r], Print["  skip  ", j["label"], ": ", r[[2]], " (checked at start)"],
+          r === $Failed, finished++;
+            Print["  skip  ", j["label"], ": locked by another run.wl (checked at start)"],
+          StringQ[r], finished++; Print["  skip  ", j["label"], ": ", r, " (checked at start)"],
+          ListQ[r], finished++; Print["  skip  ", j["label"], ": ", r[[2]], " (checked at start)"],
           True, AppendTo[running, r]]]];
     Pause[1];
     Scan[drain[#["proc"], #["job"]] &, running];
     done = Select[running, ProcessStatus[#["proc"]] =!= "Running" &];
     running = Complement[running, done];
-    Scan[If[!finishJob[#], ok = False] &, done];
+    Scan[(finished++;
+      If[!finishJob[#, If[outOf > 1, "  " <> ToString[finished] <> "/" <> ToString[outOf], ""]],
+        ok = False]) &, done];
+    If[running =!= {} && AbsoluteTime[] - lastBeat >= $heartbeat,
+      lastBeat = AbsoluteTime[]; Scan[heartbeatLine, running]];
     If[!ok && queue =!= {}, Print["  stopping: a job failed; ", Length[queue], " not started"];
       queue = {}]];
   ok];
@@ -689,11 +731,11 @@ runStage[stage_] := Module[{jobs, decided, todo, finals},
   If[$dryrun || (todo === {} && finals === {}), True,
     If[stage === "check",
       (* one at a time, stopping at the first failure *)
-      Catch[Scan[Which[
-          KeyExistsQ[#, "when"] && !#["when"][],
-            Print["  skip  ", #["label"], ": ECGrav ", StringTake[ecgravCommit[], UpTo[7]],
+      Catch[MapIndexed[Which[
+          KeyExistsQ[#1, "when"] && !#1["when"][],
+            Print["  skip  ", #1["label"], ": ECGrav ", StringTake[ecgravCommit[], UpTo[7]],
               " already passed"],
-          !runJobs[{#}], Throw[False]] &, todo]; True],
+          !runJobs[{#1}, {#2[[1]] - 1, Length[todo]}], Throw[False]] &, todo]; True],
       (todo === {} || (runJobs[todo] && laterPasses[stage, decided])) &&
         (finals === {} || runJobs[finals])]]];
 

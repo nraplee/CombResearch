@@ -50,6 +50,7 @@ foreach ($target in $targets) {
     -RedirectStandardOutput $logFile `
     -RedirectStandardError  $errFile `
     -PassThru -NoNewWindow
+  Start-Sleep -Seconds 1   # wolframscript can crash at start-up (0xC0000005) when several start at once
   $jobs += [pscustomobject]@{ Target = $target; Process = $p }
   Write-Host ("  {0,-10} PID {1}  log {2}" -f $target, $p.Id, $logFile)
 }

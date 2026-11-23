@@ -502,6 +502,9 @@ the `reference/` moves and the hook), C untrack (from main).
 
 ## Phase 6: upstream to ECGrav (with Dr. Betre)
 
+Deliverable for the first conversation with Betre (a GUI that shows each
+candidate piece): `phase6-deliverable.md`.
+
 - Agree with Betre which pieces he wants:
   - `Enumeration` (exact unlabeled enumeration with McKay) and `Statistics`
     are the clearest gaps.
@@ -526,6 +529,53 @@ the `reference/` moves and the hook), C untrack (from main).
     and the check stage says so.
 - Optional: CI on `--profile quick`. It needs a Wolfram Engine licence in
   CI.
+
+**As built (2026-11-23, Ryzen, then the laptop):** every
+scenario was run with every `COMB_*` variable cleared, in
+`C:\scratch\p7\`, then `run.wl check`, `run.wl all profile quick` and
+`tests\golden\golden_quick.wl`. All pass:
+
+1. Fresh `git clone` from GitHub: `check` clones ECGrav itself (8 s), and
+   the quick profile takes about 16 min (34 jobs).
+2. The repository zip (`git archive`, laid out like GitHub's) unpacked
+   inside an unrelated git repo: the repo-marker guard picks the unpacked
+   folder, and the outer repo gets nothing but that folder.
+3. The zip with git removed from PATH: `check` fails with instructions,
+   then passes once ECGrav is unpacked as `ECGrav-upstream/`.
+
+Fixed along the way:
+
+- `tools/dev/update_ecgrav.wl` always called git. Without git it now
+  either prints what to download and where, or uses an existing
+  `ECGrav-upstream/` as it is (also when that folder is not a git clone).
+- `pipeline/common/io.wl` recorded the outer repo's HEAD as `codeCommit`
+  for a zip inside another repo. It now uses git only when git's top level
+  is the code root. Otherwise it uses `VERSION` or `Missing["Unknown"]`.
+  `tests/manifest_test.wl` expects the same.
+- `run.wl` prints the last lines of a failed job's log.
+- Parallel starts: `wolframscript` itself sometimes crashes at start-up
+  (exit `0xC0000005`, empty log) when several start in the same instant.
+  This happened to 1 in 30 plain simultaneous starts, and the ECGrav
+  launcher lost a job in 3 of 4 rounds. The `.ps1` launchers now wait 1 s
+  between starts, and `run.wl` keeps at least 1 s between job starts.
+  Measured after the fix: 0 in 45 plain starts and 4 of 4 launcher rounds
+  complete. It is not a license limit.
+- Progress: `run.wl` printed only a job's start and end, so a long job
+  (the package tests take minutes) looked stuck. Every 60 s it now prints
+  each running job's time so far and the last line of its log, and each
+  finished job gets a `k/n` count. Real progress bars inside a stage belong
+  with the Phase 6 notebook.
+
+Laptop run (i7-8750H, 32 GB, fresh Windows 11, Wolfram 15.0.1, git and gh
+installed, clone on `D:`, no `COMB_*` env): `check`, `all profile quick`
+(about 19 min with check), `golden_quick` and `figures force` all pass, on
+upstream ECGrav `42d6118` (1.19.0), not the `474b5c2` the reference was
+made with. Committed figures are skipped as "outputs exist" in a fresh
+clone; `figures force` redraws them.
+
+Still open: the ECGrav regression, which needs the full truth grid. It
+runs on a later `run.wl check` after a paper-profile run, not on a
+quick-only store.
 
 ## Decisions (2026-11-20)
 

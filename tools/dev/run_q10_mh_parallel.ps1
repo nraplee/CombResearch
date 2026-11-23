@@ -52,6 +52,7 @@ wolframscript -file '$(Join-Path (Join-Path $srcDir "pipeline") "30_mh.wl")' *>&
   $proc = Start-Process -FilePath "powershell.exe" `
     -ArgumentList "-NoProfile","-ExecutionPolicy","Bypass","-Command",$envBlock `
     -PassThru -WindowStyle Hidden
+  Start-Sleep -Seconds 1   # wolframscript can crash at start-up (0xC0000005) when several start at once
   $procs += @{proc=$proc; label="p${p}_${target}"}
 }
 
