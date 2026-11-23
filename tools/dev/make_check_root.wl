@@ -10,14 +10,14 @@
 
    Then run the check with COMB_ROOT=<dir> (PowerShell: $env:COMB_ROOT = "<dir>").
 
-   Source store: $CombDataDir from src/comb_paths.wl (the main checkout, or
+   Source store: $CombDataDir from pipeline/common/paths.wl (the main checkout, or
    COMB_ROOT if that is set when this tool runs).
 
    Copy vs hard link. A hard link shares the file with the store, and a plain
    Export to an existing file rewrites it in place, which would change the
    store copy too. So files up to $copyLimitBytes are copied, and only larger
    files are hard-linked. The large files (q=10 merged stats, IS batches) are
-   inputs that no check rewrites; concat_samples.wl is the only script that
+   inputs that no check rewrites; pipeline/21_is_merge.wl is the only script that
    writes merged stats, so never run it against a check root. A hard link
    needs <dir> on the same volume as the store; if linking fails, the file is
    copied instead.
@@ -30,7 +30,7 @@
    family. *)
 
 Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName], 2],
-  "src", "comb_paths.wl"}]];
+  "pipeline", "common", "paths.wl"}]];
 
 $copyLimitBytes = 300*1024^2;
 

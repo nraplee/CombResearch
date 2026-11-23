@@ -7,7 +7,7 @@
    ECGrav as a copy-and-adapt job.
 
    Requires ECGrav` to be loaded first. In this repo every script loads it
-   through src/load_combresearch.wl, which loads ECGrav via src/load_ecgrav.wl
+   through pipeline/common/combresearch.wl, which loads ECGrav via pipeline/common/ecgrav.wl
    and then Gets this file. This file never loads ECGrav itself, so it can
    never pick up a globally installed ECGrav paclet by accident.
 
@@ -19,7 +19,7 @@
      Compare.wl       sampled vs exact distributions, IS histograms *)
 
 If[!MemberQ[$Packages, "ECGrav`"],
-  Print["CombResearch: load ECGrav first (src/load_combresearch.wl does both)."];
+  Print["CombResearch: load ECGrav first (pipeline/common/combresearch.wl does both)."];
   Abort[]];
 
 BeginPackage["CombResearch`", {"ECGrav`"}];
@@ -69,7 +69,7 @@ $CombResearchSubkernelSetup::usage =
 "$CombResearchSubkernelSetup is a function called with no arguments before
 	parallel work that needs ECGrav on the subkernels (the \"Cheap\" enumerator
 	calls IsomorphicSimplicialComplexQ there). The default runs
-	ParallelNeeds[\"ECGrav`\"]. src/load_combresearch.wl sets it to
+	ParallelNeeds[\"ECGrav`\"]. pipeline/common/combresearch.wl sets it to
 	combLoadECGravOnKernels so subkernels load the same ECGrav checkout.";
 
 $CombTruthIsoCounts::usage =

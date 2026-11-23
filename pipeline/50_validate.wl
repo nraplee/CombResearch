@@ -37,12 +37,12 @@
    summaries reproduce the stored ones. *)
 
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
 dataDir = $CombDataDir;
 
 $validateJobs = {"counts", "samples", "efficiency", "3way", "q10_is_vs_mh",

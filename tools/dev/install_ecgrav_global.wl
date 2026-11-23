@@ -1,8 +1,8 @@
 (* install_ecgrav_global.wl
-   Install the ECGrav checkout that scripts load (see load_ecgrav.wl: the
+   Install the ECGrav checkout that scripts load (see ecgrav.wl: the
    shared upstream clone, or COMB_ECGRAV_DIR) as this machine's global
    paclet, replacing any other ECGrav version. This is only for
-   notebooks, src/reference/ and the Wolfram MCP server, which use a plain
+   notebooks, reference/fig2/ and the Wolfram MCP server, which use a plain
    Needs["ECGrav`"]. Scripts never use the global paclet.
 
    Rerun it after tools/dev/update_ecgrav.wl moves the shared clone.
@@ -11,7 +11,7 @@
    1.18.0), not the commit; the commit is printed here and written into the
    installed folder as SOURCE_COMMIT.txt. *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName], 2], "pipeline", "common", "paths.wl"}]];
 
 Module[{env, src, commit, archive, installed},
   env = Environment["COMB_ECGRAV_DIR"];

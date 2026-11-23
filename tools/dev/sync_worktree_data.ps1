@@ -1,5 +1,5 @@
 # sync_worktree_data.ps1
-# Safety net for comb_paths.wl: copy generated files that a git worktree
+# Safety net for paths.wl: copy generated files that a git worktree
 # wrote into its own data/, figures/ or logs/ over to the main checkout
 # ($CombRoot), which holds the one shared copy of all outputs.
 #
@@ -12,16 +12,20 @@
 #     for a person to resolve, and reported as a conflict.
 #
 # Usage (from any checkout):
-#   powershell -ExecutionPolicy Bypass -File src\sync_worktree_data.ps1
+#   powershell -ExecutionPolicy Bypass -File tools\dev\sync_worktree_data.ps1
 #   ... -DryRun    report what would be copied, copy nothing
 #   ... -Quiet     print only when something was copied or conflicted
 #                  (used by the Claude Code SessionStart hook)
-# Env COMB_ROOT overrides the main checkout (see comb_paths.ps1).
+# Env COMB_ROOT overrides the main checkout (see paths.ps1).
 
 param([switch]$DryRun, [switch]$Quiet)
 
 $ErrorActionPreference = "Stop"
-. (Join-Path $PSScriptRoot "comb_paths.ps1")
+# Code root: the folder above this script that holds run.wl.
+$CombCodeRoot = $PSScriptRoot
+while ($CombCodeRoot -and !(Test-Path (Join-Path $CombCodeRoot "run.wl"))) { $CombCodeRoot = Split-Path -Parent $CombCodeRoot }
+if (!$CombCodeRoot) { throw "no run.wl above $PSScriptRoot" }
+. (Join-Path $CombCodeRoot "pipeline\common\paths.ps1")
 $dirs = @("data", "figures", "logs", "results")
 
 function Test-SameFile([string]$a, [string]$b) {

@@ -3,7 +3,7 @@
 # processes (one per target) for a given sampler and cell list.
 #
 # Usage from the worktree root:
-#   powershell -ExecutionPolicy Bypass -File src\run_ecgrav_campaign.ps1
+#   powershell -ExecutionPolicy Bypass -File tools\dev\run_ecgrav_campaign.ps1
 #
 # Env (passed through):
 #   $env:COMB_ECG_SAMPLER = "exact"    # exact | mcmc
@@ -19,13 +19,17 @@
 # Stop early: Get-Process wolfram | Stop-Process
 
 $ErrorActionPreference = "Stop"
-. (Join-Path $PSScriptRoot "comb_paths.ps1")
-$root    = $CombRoot   # outputs: main checkout (comb_paths.ps1)
-$srcDir  = $PSScriptRoot   # code: this checkout
+# Code root: the folder above this script that holds run.wl.
+$CombCodeRoot = $PSScriptRoot
+while ($CombCodeRoot -and !(Test-Path (Join-Path $CombCodeRoot "run.wl"))) { $CombCodeRoot = Split-Path -Parent $CombCodeRoot }
+if (!$CombCodeRoot) { throw "no run.wl above $PSScriptRoot" }
+. (Join-Path $CombCodeRoot "pipeline\common\paths.ps1")
+$root    = $CombRoot   # outputs: main checkout (paths.ps1)
+$srcDir  = $CombCodeRoot   # code: this checkout (folder holding run.wl)
 $logsDir = Join-Path $root "logs"
 if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-Null }
 
-$wrapper = Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "40_ecgrav.wl"
+$wrapper = Join-Path (Join-Path $srcDir "pipeline") "40_ecgrav.wl"
 $targets = @("unlabeled", "facet", "vertex")
 $sampler = if ($env:COMB_ECG_SAMPLER) { $env:COMB_ECG_SAMPLER } else { "exact" }
 $cells   = if ($env:COMB_ECG_CELLS)   { $env:COMB_ECG_CELLS }   else { "2,4;2,5;2,6;2,7;3,4;3,5;3,6;4,4;4,5" }

@@ -1,4 +1,4 @@
-(* load_ecgrav.wl
+(* ecgrav.wl
    The single entry point for ECGrav in this repo. Every script and library
    file loads ECGrav through this file, never through a bare Needs, so the
    master kernel and all subkernels run the same ECGrav checkout.
@@ -21,7 +21,7 @@
    tests/ecgrav_regression.wl.
 
    Idempotent: a second Get with the same source is a no-op, so library
-   files (load_combresearch.wl, the pipeline stages) can load it
+   files (combresearch.wl, the pipeline stages) can load it
    unconditionally.
 
    Subkernels: call combLoadECGravOnKernels[] after LaunchKernels[] instead
@@ -35,9 +35,9 @@
                             "1.18.0-474b5c2", for payload provenance
      $CombECGravKernelFile  Kernel/ECGrav.wl path (None when "installed") *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "paths.wl"}]];
 
-(* Every ECGrav function this repo calls. Keep in sync with src/. *)
+(* Every ECGrav function this repo calls. Keep in sync with pipeline/, tests/ and CombResearch/. *)
 $CombECGravSymbols = {
   "RandomVertexLabeledPureSimplicialComplex",
   "RandomUniformUnlabeledPureSimplicialComplex",
@@ -90,7 +90,7 @@ combECGravCheck[] := Module[{missing, passed},
   If[missing =!= {},
     Print["load_ecgrav: ECGrav ", $CombECGravVersion,
       " lacks functions this repo calls: ", missing,
-      ". Upstream renamed or removed them; update the callers in src/ and ",
+      ". Upstream renamed or removed them; update the callers in pipeline/ and ",
       "$CombECGravSymbols."];
     Abort[]];
   passed = Quiet @ Get[combECGravRegressionFile[]];

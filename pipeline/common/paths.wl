@@ -1,4 +1,4 @@
-(* comb_paths.wl
+(* pipeline/common/paths.wl
    Where generated outputs live. Every script that reads or writes data/,
    figures/ or logs/ takes those directories from here, never from its own
    checkout, so runs from any git worktree share one copy of the data.
@@ -14,7 +14,8 @@
 
    Idempotent: a second Get is a no-op.
 
-   The git root is used only if it holds src/comb_paths.wl; otherwise (no
+   The git root is used only if it is a CombResearch checkout (it holds
+   run.wl and config/cells.wl, both on main since Phase 3); otherwise (no
    git, or this tree unpacked inside an unrelated repo) the output root is
    the code checkout itself.
 
@@ -32,7 +33,8 @@
 
    Defines:
      $CombRoot        output root (main checkout)
-     $CombCodeRoot    checkout this file was loaded from (parent of src/)
+     $CombCodeRoot    checkout this file was loaded from (the folder above it
+                      that holds run.wl)
      $CombDataDir     $CombRoot/data
      $CombFiguresDir  $CombRoot/figures
      $CombLogsDir     $CombRoot/logs
@@ -42,6 +44,12 @@
    .git holds "gitdir: <main>/.git/worktrees/<name>", and that directory's
    commondir file holds the path of <main>/.git (relative to it, normally
    "../.."). Returns None when codeRoot is not a worktree or this fails. *)
+(* A CombResearch checkout: run.wl and config/cells.wl (both on main since
+   Phase 3, so a main checkout that has not pulled the Phase 5 layout still
+   counts). *)
+combPathsCheckoutQ[dir_String] := FileExistsQ[FileNameJoin[{dir, "run.wl"}]] &&
+  FileExistsQ[FileNameJoin[{dir, "config", "cells.wl"}]];
+
 combPathsMainFromGitFile[codeRoot_String] := Module[{gitFile, line, gitdir,
     cdFile, common},
   gitFile = FileNameJoin[{codeRoot, ".git"}];
@@ -66,7 +74,12 @@ If[!ValueQ[$CombRoot],
   Module[{here, env, common, gitCommon, fromFile},
     here = If[ValueQ[$InputFileName] && $InputFileName =!= "",
       DirectoryName[$InputFileName], Directory[]];
-    $CombCodeRoot = ParentDirectory[here];
+    (* code root: walk up to the folder that holds run.wl *)
+    $CombCodeRoot = NestWhile[ParentDirectory, here,
+      !FileExistsQ[FileNameJoin[{#, "run.wl"}]] && ParentDirectory[#] =!= # &];
+    If[!FileExistsQ[FileNameJoin[{$CombCodeRoot, "run.wl"}]],
+      Print["paths: ERROR: no run.wl above ", here];
+      If[TrueQ[$Notebooks], Abort[], Exit[3]]];
     env = Environment["COMB_ROOT"];
     $CombRoot = If[StringQ[env] && StringLength[env] > 0,
       env,
@@ -91,22 +104,22 @@ If[!ValueQ[$CombRoot],
             !DirectoryQ[FileNameJoin[{$CombCodeRoot, ".git"}]],
           fromFile = combPathsMainFromGitFile[$CombCodeRoot];
           If[StringQ[fromFile] &&
-              FileExistsQ[FileNameJoin[{fromFile, "src", "comb_paths.wl"}]],
-            Print["comb_paths: git rev-parse failed; main checkout ",
+              combPathsCheckoutQ[fromFile],
+            Print["paths: git rev-parse failed; main checkout ",
               fromFile, " from ", FileNameJoin[{$CombCodeRoot, ".git"}]];
             fromFile,
-            Print["comb_paths: ERROR: git rev-parse failed in worktree ",
+            Print["paths: ERROR: git rev-parse failed in worktree ",
               $CombCodeRoot, " and its .git file does not lead to a ",
               "CombResearch main checkout. Refusing to write outputs into ",
               "the worktree. Fix git or set COMB_ROOT to the main checkout."];
             If[TrueQ[$Notebooks], Abort[], Exit[3]]],
         common === None,
-          Print["comb_paths: git not available; using ", $CombCodeRoot];
+          Print["paths: git not available; using ", $CombCodeRoot];
           $CombCodeRoot,
         (* Repo-marker guard: a zip of this repo unpacked inside some other
            git repo would otherwise send outputs to that repo's root. *)
-        !FileExistsQ[FileNameJoin[{common, "src", "comb_paths.wl"}]],
-          Print["comb_paths: git root ", common,
+        !combPathsCheckoutQ[common],
+          Print["paths: git root ", common,
             " is not a CombResearch checkout; using ", $CombCodeRoot];
           $CombCodeRoot,
         True, common]];
@@ -120,5 +133,5 @@ If[!ValueQ[$CombRoot],
     Scan[If[!DirectoryQ[#], CreateDirectory[#]] &,
       {$CombDataDir, $CombFiguresDir, $CombLogsDir, $CombResultsDir}];
     If[ExpandFileName[$CombCodeRoot] =!= $CombRoot,
-      Print["comb_paths: code from ", ExpandFileName[$CombCodeRoot],
+      Print["paths: code from ", ExpandFileName[$CombCodeRoot],
         "; outputs to ", $CombRoot]]]];

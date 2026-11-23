@@ -20,9 +20,9 @@
    Independent of histograms_handoff_v2.nb / histograms_paper_figures.nb. *)
 
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
 
 (* ===== Parameters ===== *)
 qVal = 10;
@@ -53,9 +53,9 @@ runTag = If[ValueQ[runTagOverride], runTagOverride,
 runSeedOffset = If[runTag === "", 0,
   Mod[Hash[runTag, "MD5"], 10^7]];
 
-(* Output goes to $CombDataDir (main checkout data/, see comb_paths.wl). *)
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
+(* Output goes to $CombDataDir (main checkout data/, see paths.wl). *)
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
 outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
@@ -73,7 +73,7 @@ Print["runTag        = ", If[runTag === "", "(none)", runTag]];
 Print["runSeedOffset = ", runSeedOffset];
 
 (* ===== Atomic WXF export (statistics come from the package) ===== *)
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
 
 (* ===== Parallel kernel setup (only when useParallel=True) ===== *)
 If[useParallel,

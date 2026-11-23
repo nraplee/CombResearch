@@ -4,18 +4,22 @@
 # stats step, and writes data and logs to the standard layout.
 #
 # Usage from the repo root:
-#   powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
+#   powershell -ExecutionPolicy Bypass -File tools\dev\run_parallel.ps1
 # Optional: pass a sample size override (default 500000) as $env:N
-#   $env:N = 100000; powershell -ExecutionPolicy Bypass -File src\run_parallel.ps1
+#   $env:N = 100000; powershell -ExecutionPolicy Bypass -File tools\dev\run_parallel.ps1
 #
 # Each process runs pipeline\20_is_q10.wl with COMB_IS_PS = its p,
 # COMB_IS_PAR = 1 and COMB_N (inherited environment). run.wl is does the same
 # from the profile's batch list; this launcher stays for ad-hoc batches.
 
 $ErrorActionPreference = "Stop"
-. (Join-Path $PSScriptRoot "comb_paths.ps1")
-$root    = $CombRoot   # outputs: main checkout (comb_paths.ps1)
-$srcDir  = $PSScriptRoot   # code: this checkout
+# Code root: the folder above this script that holds run.wl.
+$CombCodeRoot = $PSScriptRoot
+while ($CombCodeRoot -and !(Test-Path (Join-Path $CombCodeRoot "run.wl"))) { $CombCodeRoot = Split-Path -Parent $CombCodeRoot }
+if (!$CombCodeRoot) { throw "no run.wl above $PSScriptRoot" }
+. (Join-Path $CombCodeRoot "pipeline\common\paths.ps1")
+$root    = $CombRoot   # outputs: main checkout (paths.ps1)
+$srcDir  = $CombCodeRoot   # code: this checkout (folder holding run.wl)
 $logsDir = Join-Path $root "logs"
 if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-Null }
 
@@ -43,7 +47,7 @@ $plistSpec = if ($env:COMB_PLIST) { $env:COMB_PLIST } else { "3,4" }
 $pList = @($plistSpec.Split(",") | ForEach-Object { [int]$_.Trim() })
 Write-Host "  pList = $($pList -join ', ')"
 
-$wrapper = Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "20_is_q10.wl"
+$wrapper = Join-Path (Join-Path $srcDir "pipeline") "20_is_q10.wl"
 $env:COMB_IS_PAR = "1"
 $jobs = @()
 foreach ($p in $pList) {

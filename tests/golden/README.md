@@ -59,7 +59,7 @@ $env:COMB_ROOT = "C:\scratch\combcheck"; wolframscript -file tests\golden\golden
 
 `make_check_root.wl` copies files up to 300 MB. It hard-links larger ones
 (the q=10 merged stats), which are inputs that nothing rewrites. Never run
-`concat_samples.wl` against a check root.
+`pipeline/21_is_merge.wl` (`run.wl is`) against a check root.
 
 A check root has no `ECGrav-upstream`, so any script that loads ECGrav
 aborts there, and wolframscript still exits 0. Point it at the shared clone

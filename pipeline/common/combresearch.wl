@@ -1,8 +1,8 @@
-(* load_combresearch.wl
+(* combresearch.wl
    Loads the CombResearch package (CombResearch/Kernel/CombResearch.wl in the
-   checkout this file lives in) after ECGrav (src/load_ecgrav.wl). Scripts get
+   checkout this file lives in) after ECGrav (pipeline/common/ecgrav.wl). Scripts get
    the package's algorithms through this file, the same way they get ECGrav
-   through load_ecgrav.wl.
+   through ecgrav.wl.
 
    Idempotent: a second Get is a no-op once the package is loaded from the
    same file.
@@ -16,9 +16,9 @@
    so the package's parallel code loads the same ECGrav checkout on the
    subkernels instead of a globally installed paclet. *)
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "ecgrav.wl"}]];
 
-With[{file = FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]],
+With[{file = FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName], 2],
     "CombResearch", "Kernel", "CombResearch.wl"}]},
   If[!(ValueQ[$CombResearchKernelFile] && $CombResearchKernelFile === file &&
       MemberQ[$Packages, "CombResearch`"]),

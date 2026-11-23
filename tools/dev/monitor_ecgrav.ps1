@@ -1,10 +1,10 @@
 # monitor_ecgrav.ps1
 # Live dashboard for an ECGrav sampler campaign launched with
-# src\run_ecgrav_campaign.ps1. Pure observer: reads logs and data/, never
+# tools\dev\run_ecgrav_campaign.ps1. Pure observer: reads logs and data/, never
 # writes anything.
 #
 # Usage from the worktree root:
-#   powershell -ExecutionPolicy Bypass -File src\monitor_ecgrav.ps1
+#   powershell -ExecutionPolicy Bypass -File tools\dev\monitor_ecgrav.ps1
 #
 # Optional env overrides:
 #   $env:COMB_MON_SAMPLER  = "mcmc"   # which campaign to watch (default mcmc)
@@ -21,8 +21,12 @@
 
 $ErrorActionPreference = "Continue"
 
-. (Join-Path $PSScriptRoot "comb_paths.ps1")
-$root    = $CombRoot   # outputs: main checkout (comb_paths.ps1)
+# Code root: the folder above this script that holds run.wl.
+$CombCodeRoot = $PSScriptRoot
+while ($CombCodeRoot -and !(Test-Path (Join-Path $CombCodeRoot "run.wl"))) { $CombCodeRoot = Split-Path -Parent $CombCodeRoot }
+if (!$CombCodeRoot) { throw "no run.wl above $PSScriptRoot" }
+. (Join-Path $CombCodeRoot "pipeline\common\paths.ps1")
+$root    = $CombRoot   # outputs: main checkout (paths.ps1)
 $logsDir = Join-Path $root "logs"
 $dataDir = Join-Path $root "data"
 

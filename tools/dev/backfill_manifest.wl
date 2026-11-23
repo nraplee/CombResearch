@@ -1,5 +1,5 @@
 (* backfill_manifest.wl
-   Writes a manifest (see src/lib_io.wl) for every existing output in the
+   Writes a manifest (see pipeline/common/io.wl) for every existing output in the
    data store that has none, from the metadata embedded in the file and the
    provenance table in docs/architecture/provenance.md (Phase 2d).
 
@@ -31,8 +31,8 @@
    chains), "negativeControl", "usesKnownBad" (derived from knownBad
    inputs), "external" (Betre). Phase 3 reads it for the stale report. *)
 
-Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName], 2], "src",
-  "lib_io.wl"}]];
+Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName], 2], "pipeline", "common",
+  "io.wl"}]];
 
 $args = If[ListQ[$ScriptCommandLine], Rest[$ScriptCommandLine], {}];
 $write = MemberQ[$args, "write"];

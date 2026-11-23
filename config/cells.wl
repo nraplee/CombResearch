@@ -1,5 +1,5 @@
 (* config/cells.wl
-   Named run profiles (Phase 2c). Read by src/lib_config.wl when
+   Named run profiles (Phase 2c). Read by pipeline/common/config.wl when
    COMB_PROFILE (later run.wl --profile) names one; bare scripts never read
    this file.
 

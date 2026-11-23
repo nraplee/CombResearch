@@ -42,7 +42,7 @@ $ecgDir = Module[{c = StringTrim @ Quiet @ RunProcess[{"git", "-C", $code, "rev-
     FileNameJoin[{ParentDirectory[ExpandFileName[c]], "ECGrav-upstream"}]]];
 If[!FileExistsQ[FileNameJoin[{$ecgDir, "Kernel", "ECGrav.wl"}]],
   Print["run_wl_test: no ECGrav at ", $ecgDir, "; set COMB_ECGRAV_DIR"]; Exit[1]];
-(* the commit string the way run.wl and load_ecgrav.wl compute it: git only
+(* the commit string the way run.wl and ecgrav.wl compute it: git only
    when the folder is itself a repo root *)
 $ecgCommit = Module[{top, sha, dirty, sc},
   top = Quiet @ RunProcess[{"git", "-C", $ecgDir, "rev-parse", "--show-toplevel"}, "StandardOutput"];
@@ -58,7 +58,7 @@ $ecgCommit = Module[{top, sha, dirty, sc},
 $root = FileNameJoin[{$TemporaryDirectory, "comb_runwl_test_" <> ToString[RandomInteger[10^9]]}];
 CreateDirectory[$root];
 SetEnvironment["COMB_ROOT" -> $root];
-If[CheckAbort[Get[FileNameJoin[{$code, "src", "lib_names.wl"}]]; True, False] =!= True ||
+If[CheckAbort[Get[FileNameJoin[{$code, "pipeline", "common", "names.wl"}]]; True, False] =!= True ||
     !StringStartsQ[$CombDataDir, $root],
   Print["run_wl_test: could not set up the temp root"];
   DeleteDirectory[$root, DeleteContents -> True]; Exit[1]];

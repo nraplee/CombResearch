@@ -484,6 +484,19 @@ the `reference/` moves and the hook), C untrack (from main).
 - Callers moved to package symbols: `PureComplexStatistics` (10_truth),
   `PureComplexMHChain` (ECGrav regression).
 
+**As built, PR B (move, 2026-11-23):**
+
+- Helpers in `pipeline/common/` under the ideal.md names (`paths`, `names`,
+  `io`, `config`, `ecgrav`, `combresearch`); `src/` is gone.
+  `run_is_at_truth_cells.wl` became `pipeline/23_is_truth_cells.wl`.
+- Code root: walk up to the folder that holds `run.wl` (`.wl` and `.ps1`).
+  The repo-marker guard of guarantee 1 now asks for `run.wl` and
+  `config/cells.wl` instead of `src/comb_paths.wl`, so a main checkout that
+  has not pulled this layout yet still receives the outputs.
+- Launchers, monitors and the sync script are in `tools/dev/`; the hook
+  exits 0 when `powershell.exe` is not on PATH.
+- `reference/`: the `.tex`, `fig2/` notebooks (unchanged), `papers/`.
+
 ## Phase 6: upstream to ECGrav (with Dr. Betre)
 
 - Agree with Betre which pieces he wants:

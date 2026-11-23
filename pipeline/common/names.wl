@@ -1,9 +1,9 @@
-(* lib_names.wl
+(* names.wl
    One place for the names of generated files (Phase 2). Every name it
    produces is the flat name the scripts used before Phase 2, so existing
    WXFs stay valid: no file is renamed or moved.
 
-   Loads comb_paths.wl. Idempotent.
+   Loads paths.wl. Idempotent.
 
    combName[family, args...]   bare file name
    combFile[family, args...]   full path: combName under $CombDataDir, or
@@ -59,7 +59,7 @@
    match the "log" family. *)
 
 If[!ValueQ[$CombRoot],
-  Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]]];
+  Get[FileNameJoin[{DirectoryName[$InputFileName], "paths.wl"}]]];
 
 combCell[p_Integer, q_Integer] := "p" <> ToString[p] <> "q" <> ToString[q];
 

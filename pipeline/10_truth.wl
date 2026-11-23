@@ -15,7 +15,7 @@
    "totalFacetLabeled" is the enumerator's "totalEmitted": the facet-labeled
    count for cheap, fewer (pruned leaves) for McKay. Kept as stored so far.
 
-   Knobs (combSetting, src/lib_config.wl):
+   Knobs (combSetting, pipeline/common/config.wl):
      COMB_TRUTH_CELLS     "p,q;p,q"   default: the 9-cell truth grid
      COMB_TRUTH_PIPELINE  auto | cheap | bliss | mckay   default auto
                           (auto = McKay for p >= 4, cheap otherwise)
@@ -25,12 +25,12 @@
    $CombTruthIsoCounts must give its known iso-class count, else Exit 1. *)
 
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
 
 If[!DirectoryQ[$CombDataDir], CreateDirectory[$CombDataDir]];
 

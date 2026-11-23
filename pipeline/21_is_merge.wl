@@ -34,11 +34,11 @@
 qVal = 10;
 
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
 dataDir = $CombDataDir;
 
 pList = combSetting["COMB_IS_MERGE_PS", {2, 3, 4}, "intList"];

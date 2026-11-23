@@ -1,5 +1,5 @@
 (* lib_names_test.wl
-   Checks src/lib_names.wl (Phase 2b) produces today's flat file names.
+   Checks pipeline/common/names.wl (Phase 2b) produces today's flat file names.
 
    1. Literal cases: combName[...] === the name scripts built by hand
       before Phase 2b.
@@ -13,8 +13,8 @@
 
      wolframscript -file tests\lib_names_test.wl *)
 
-Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
-  "lib_names.wl"}]];
+Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "pipeline", "common",
+  "names.wl"}]];
 
 $fail = 0;
 check[label_, got_, want_] := If[got === want, Null,
@@ -122,7 +122,7 @@ logRules = {
     combName[e, "compute", int[p], sfx]};
 
 roundTrip[dir_, rules_] := Module[{names, hit = 0, other = {}, rebuilt},
-  (* manifests (lib_io.wl) and tmp files are not outputs *)
+  (* manifests (io.wl) and tmp files are not outputs *)
   names = FileNameTake /@ Select[FileNames["*", dir],
     !DirectoryQ[#] && !StringEndsQ[#, ".manifest.wl" | ".tmp"] &];
   Do[

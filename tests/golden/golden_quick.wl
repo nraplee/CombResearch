@@ -29,8 +29,8 @@
    Exit 0 pass, 1 fail, 2 missing inputs. *)
 
 $code = ParentDirectory[DirectoryName[$InputFileName], 2];
-Get[FileNameJoin[{$code, "src", "lib_names.wl"}]];
-Get[FileNameJoin[{$code, "src", "lib_io.wl"}]];
+Get[FileNameJoin[{$code, "pipeline", "common", "names.wl"}]];
+Get[FileNameJoin[{$code, "pipeline", "common", "io.wl"}]];
 
 $frozen = FileNameJoin[{DirectoryName[$InputFileName], "quick", "truth.wxf"}];
 $cells = {{2, 4}, {3, 4}};

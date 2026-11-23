@@ -10,9 +10,13 @@
 # Output: data/p{p}q10_mh_{target}.wxf  (overwrites pilot results)
 
 $ErrorActionPreference = "Stop"
-. (Join-Path $PSScriptRoot "comb_paths.ps1")
+# Code root: the folder above this script that holds run.wl.
+$CombCodeRoot = $PSScriptRoot
+while ($CombCodeRoot -and !(Test-Path (Join-Path $CombCodeRoot "run.wl"))) { $CombCodeRoot = Split-Path -Parent $CombCodeRoot }
+if (!$CombCodeRoot) { throw "no run.wl above $PSScriptRoot" }
+. (Join-Path $CombCodeRoot "pipeline\common\paths.ps1")
 $repoRoot = $CombRoot        # outputs: main checkout
-$srcDir   = $PSScriptRoot    # code: this checkout
+$srcDir   = $CombCodeRoot    # code: this checkout (folder holding run.wl)
 $logDir   = Join-Path $repoRoot "logs"
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
 
@@ -42,7 +46,7 @@ foreach ($j in $jobs) {
 `$env:COMB_MH_BURNIN  = '$burnIn'
 `$env:COMB_MH_THIN    = '$thin'
 `$env:COMB_FORCE      = '1'
-wolframscript -file '$(Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "30_mh.wl")' *>&1 |
+wolframscript -file '$(Join-Path (Join-Path $srcDir "pipeline") "30_mh.wl")' *>&1 |
   Out-File -FilePath '$logFile' -Encoding utf8
 "@
   $proc = Start-Process -FilePath "powershell.exe" `
