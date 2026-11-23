@@ -42,7 +42,8 @@
    missing; outputs that exist are never rerun without force, whatever their
    manifest says. Jobs that write no data file (checks, renders without a
    tracked output) always run. A job whose inputs are missing is skipped
-   with that reason.
+   with that reason; when the stage's other jobs write those inputs, it runs
+   in a later pass of the same run (laterPasses).
 
    Settings (guarantee 3): each job's COMB_* knobs come from the command
    line, else the parent environment (a leftover env var wins over the
@@ -274,8 +275,8 @@ jobsFor["is"] := Module[{batches = planOf["isBatches"], out = {}, cellsIS},
               "move " <> FileNameTake[combFile["isStats", stem]] <> " away first"|>]],
         {b, bs}];
       (* the merge of this p's batches, from the declared list (Phase 4 row 5b).
-         Decided at plan time like every job: on a fresh store it runs on the
-         next run.wl is, once the batches exist. force remerges. *)
+         On a fresh store it waits for the batches and runs in a later pass
+         of the same run.wl is (laterPasses). force remerges. *)
       With[{stems = Sort[combISStem[p, 10, #[[2]], None, #[[1]]] & /@ bs],
           merged = combMergedStem[p, 10]},
         AppendTo[out, job["is merge q=10 p=" <> ToString[p], "pipeline/21_is_merge.wl",
@@ -632,6 +633,30 @@ runJobs[jobs_List] := Module[{queue = jobs, running = {}, ok = True, done},
       queue = {}]];
   ok];
 
+(* Labels of the jobs decided "skip" only because inputs are missing. *)
+waitingOnInputs[decided_] := #[[1]]["label"] & /@ Select[decided,
+  #[[2, 1]] === "skip" && StringStartsQ[#[[2, 2]], "inputs missing"] &];
+
+(* Later passes of a stage: jobs whose inputs are other jobs' outputs in the
+   same stage (q=10 batches -> merge per p -> q=10 histograms). After a pass
+   that ran cleanly, the stage is planned again and the jobs that waited on
+   inputs are decided again; those now "run" are run. Planned again, not
+   re-decided from the old plan, so plan-time fields ("written") see the new
+   files. Stops when nothing new runs, a job fails, or after $maxPasses. *)
+$maxPasses = 4;
+laterPasses[stage_, decided0_] := Module[{waiting = waitingOnInputs[decided0], ok = True,
+    pass = 1, fresh, now},
+  While[ok && waiting =!= {} && pass < $maxPasses,
+    pass++;
+    fresh = {#, decide[#]} & /@ Select[jobsFor[stage], MemberQ[waiting, #["label"]] &];
+    now = Select[fresh, #[[2, 1]] === "run" &];
+    If[now === {}, Break[]];
+    Print["  -- pass ", pass, ": inputs written by the pass before"];
+    Scan[printJob @@ # &, now];
+    ok = runJobs[now[[All, 1]]];
+    waiting = waitingOnInputs[fresh]];
+  ok];
+
 runStage[stage_] := Module[{jobs, decided, todo},
   Print[""]; Print["== ", stage, "  (profile ", $profileName, If[$force, ", force", ""], ")"];
   jobs = jobsFor[stage];
@@ -653,7 +678,7 @@ runStage[stage_] := Module[{jobs, decided, todo},
             Print["  skip  ", #["label"], ": ECGrav ", StringTake[ecgravCommit[], UpTo[7]],
               " already passed"],
           !runJobs[{#}], Throw[False]] &, todo]; True],
-      runJobs[todo]]]];
+      runJobs[todo] && laterPasses[stage, decided]]]];
 
 (* ----- main ----- *)
 Print["run.wl ", $stage, "  profile ", $profileName, "  store ", $CombRoot,
