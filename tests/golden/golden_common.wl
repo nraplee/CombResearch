@@ -21,7 +21,7 @@
 
 If[!ValueQ[$GoldenDir],
   Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName], 2],
-    "src", "comb_paths.wl"}]];
+    "pipeline", "common", "paths.wl"}]];
   $GoldenDir = FileNameJoin[{$CombCodeRoot, "tests", "golden"}];
   $GoldenDerivedDir = FileNameJoin[{$GoldenDir, "derived"}];
   $GoldenSectionsDir = FileNameJoin[{$GoldenDir, "sections"}];

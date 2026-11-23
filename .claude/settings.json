@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/src/sync_worktree_data.ps1\" -Quiet",
+            "command": "command -v powershell.exe >/dev/null 2>&1 || exit 0; powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/tools/dev/sync_worktree_data.ps1\" -Quiet",
             "timeout": 300,
             "statusMessage": "Syncing worktree outputs to the main checkout"
           }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/src/sync_worktree_data.ps1\" -Quiet",
+            "command": "command -v powershell.exe >/dev/null 2>&1 || exit 0; powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/tools/dev/sync_worktree_data.ps1\" -Quiet",
             "timeout": 300
           }
         ]

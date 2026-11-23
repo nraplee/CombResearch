@@ -1,5 +1,29 @@
 # Current Agent Task
 
+## Phase 5 PR B: `git mv` into the ideal layout + hook (2026-11-23, Ryzen, branch `claude/phase5-b-move`, stacked on PR A #39)
+
+- `src/` is gone. `pipeline/common/`: `paths.wl` + `paths.ps1` (were
+  `comb_paths.*`), `names.wl`, `io.wl`, `config.wl` (were `lib_*.wl`),
+  `ecgrav.wl`, `combresearch.wl` (were `load_*.wl`); the user chose the
+  ideal.md names. Symbols are unchanged (`combFile`, `combSetting`,
+  `exportWxfAtomic`, `$CombDataDir`, ...); message prefixes and log names
+  (`lib_names:`, `check_lib_names.log`, ...) are unchanged too.
+- `pipeline/23_is_truth_cells.wl` (was `src/run_is_at_truth_cells.wl`).
+- `tools/dev/`: the `.ps1` launchers and monitors, `sync_worktree_data.ps1`,
+  `install_ecgrav_global.wl`.
+- `reference/`: `Pure Clique Complexes.tex`, `fig2/` (the two notebooks,
+  byte-identical), `papers/` (the PDF from `archive/related_pdfs`).
+- Code root: `paths.wl` / `paths.ps1` and every launcher walk up to the
+  folder that holds `run.wl`. Repo marker: a git root counts as the main
+  checkout if it holds `run.wl` and `config/cells.wl` (on main since Phase
+  3), so outputs still go to `C:\CombResearch` while its checkout is older.
+- Hook: `command -v powershell.exe >/dev/null 2>&1 || exit 0; powershell.exe
+  ... tools/dev/sync_worktree_data.ps1 -Quiet`.
+- A read-only review of the patch caught `combresearch.wl` still taking one
+  `ParentDirectory` to the package (every stage would have aborted); fixed
+  before any check ran.
+- Checks: see the PR.
+
 ## Phase 5 PR A: delete shims, superseded scripts, `archive/` (2026-11-23, Ryzen, branch `claude/phase5-a-delete`)
 
 Order agreed with the user: A (delete) -> B (`git mv` into the ideal

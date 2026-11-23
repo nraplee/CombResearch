@@ -34,13 +34,17 @@ wolframscript -file pipeline\60_figures.wl truth_overlay
 ## Layout
 
 ```text
-src/        Wolfram scripts for compute, rendering, enumeration, MH, probes, checks
-data/       Generated CSV/WXF outputs, gitignored
-figures/    Generated manuscript panels, previews, and combined PDFs
-docs/       Current technical docs and live handoff
-logs/       Generated run logs
-archive/    Old renders, superseded data, and scratch tests
-ECGrav/     Vendored ECGrav snapshots; scripts load one pinned snapshot via src/load_ecgrav.wl
+run.wl                 single entry point (stages, profiles, skip rule, store report)
+config/cells.wl        run profiles: quick, paper
+CombResearch/          the algorithms as a package (Enumeration, Statistics, MHSampler, ISSampler, Compare) + .wlt tests
+pipeline/              the stages run.wl launches (10_truth ... 60_figures)
+pipeline/common/       shared helpers: paths, names, io, config, ecgrav, combresearch
+tests/                 pipeline checks, ECGrav truth-grid regression, golden references
+tools/dev/             .ps1 launchers and monitors, worktree sync, ECGrav update helpers
+reference/             .tex, Figure 2 notebooks, related papers (reference only)
+docs/                  technical docs and live handoff
+data/ figures/ logs/ results/   generated outputs (large data files gitignored)
+ECGrav-upstream/       shared clone of upstream ECGrav (gitignored), updated by run.wl check
 ```
 
 ## Docs

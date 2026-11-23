@@ -12,7 +12,7 @@
      is        q=10 IS batches (pipeline/20_is_q10.wl, one process per p and batch),
                their merge per p (pipeline/21_is_merge.wl, the profile's batch
                list; runs once the batches exist),
-               IS at the truth cells (run_is_at_truth_cells.wl), and the
+               IS at the truth cells (23_is_truth_cells.wl), and the
                q=10 numV and statistic histograms (pipeline/22_is_hists.wl)
      mh        pipeline/30_mh.wl, one process per cell and target
      ecgrav    pipeline/40_ecgrav.wl, one process per sampler and target
@@ -48,7 +48,7 @@
    Settings (guarantee 3): each job's COMB_* knobs come from the command
    line, else the parent environment (a leftover env var wins over the
    profile, with a warning), else the profile's run plan; anything else is
-   left to the driver, which resolves it through lib_config.wl with
+   left to the driver, which resolves it through config.wl with
    COMB_PROFILE set.
 
    Logs go to $CombLogsDir under the launchers' names
@@ -61,7 +61,7 @@
    job started (an Abort[] still exits 0). *)
 
 $code = DirectoryName[$InputFileName];
-$src = FileNameJoin[{$code, "src"}];
+$src = FileNameJoin[{$code, "pipeline", "common"}];
 $args = If[ListQ[$ScriptCommandLine], Rest[$ScriptCommandLine], {}];
 
 usage[msg_String] := (
@@ -112,10 +112,10 @@ With[{known = Quiet @ Get[FileNameJoin[{$code, "config", "cells.wl"}]]},
 SetEnvironment["COMB_PROFILE" -> $profileName];
 
 If[CheckAbort[
-    Get[FileNameJoin[{$src, "lib_names.wl"}]];
-    Get[FileNameJoin[{$src, "lib_config.wl"}]];
-    Get[FileNameJoin[{$src, "lib_io.wl"}]]; True, False] =!= True,
-  Print["run.wl: loading src/lib_*.wl aborted"]; Exit[1]];
+    Get[FileNameJoin[{$src, "names.wl"}]];
+    Get[FileNameJoin[{$src, "config.wl"}]];
+    Get[FileNameJoin[{$src, "io.wl"}]]; True, False] =!= True,
+  Print["run.wl: loading pipeline/common/*.wl aborted"]; Exit[1]];
 
 (* Pad to n characters without ever cutting the text. *)
 pad[s_, n_] := With[{t = ToString[s]}, t <> StringRepeat[" ", Max[1, n - StringLength[t]]]];
@@ -301,7 +301,7 @@ jobsFor["is"] := Module[{batches = planOf["isBatches"], out = {}, cellsIS},
       partial = If[$force, {}, Select[cellsIS, 0 < nHave[#] < 3 &]];
       todo = If[$force, cellsIS, Select[cellsIS, nHave[#] == 0 &]];
       If[cellsIS =!= {},
-        j = job["is at truth cells " <> envString[cellsIS], "src/run_is_at_truth_cells.wl",
+        j = job["is at truth cells " <> envString[cellsIS], "pipeline/23_is_truth_cells.wl",
           resolveKnobs[<||>, <|"COMB_IS_CELLS" -> {If[todo === {}, cellsIS, todo],
             If[$cliCells === All, $CombSettings["COMB_IS_CELLS"]["source"], "cli"]}|>],
           hists[cellsIS], {}, "is_truth_cells"] ~Join~
@@ -482,7 +482,7 @@ ecgravDir[] := With[{e = Environment["COMB_ECGRAV_DIR"]},
     !StringQ[e] || e === "", FileNameJoin[{$CombRoot, "ECGrav-upstream"}],
     StringMatchQ[e, RegularExpression["^([A-Za-z]:|/|\\\\).*"]], ExpandFileName[e],
     True, ExpandFileName[FileNameJoin[{$code, e}]]]];
-(* The same string load_ecgrav.wl records ($CombECGravCommit): "installed",
+(* The same string ecgrav.wl records ($CombECGravCommit): "installed",
    the HEAD sha plus "-dirty" with local edits, or "unknown". It is what the
    regression record and the manifests hold, so the comparisons line up. *)
 ecgravCommit[] := Module[{dir, top, sc, r, sha, dirty},

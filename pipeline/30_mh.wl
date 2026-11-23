@@ -57,12 +57,12 @@
 
 (* ===== Paths + libraries ===== *)
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
 
 (* COMB_MH_OUTDIR overrides the shared data dir. *)
 outputDir = combSetting["COMB_MH_OUTDIR", $CombDataDir];

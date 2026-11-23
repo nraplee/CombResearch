@@ -1,4 +1,4 @@
-(* lib_config.wl
+(* config.wl
    One place that resolves a script's settings (Phase 2c).
 
    combSetting[name, default, kind] returns, in this order:
@@ -22,7 +22,7 @@
      "notZero"   False only for "0"           (COMB_IS_PAR)
    For "flag", "notFalse" and "notZero" an unset env gives the default.
 
-   Loads comb_paths.wl. Idempotent: a second Get keeps the recorded
+   Loads paths.wl. Idempotent: a second Get keeps the recorded
    settings.
 
    Defines:
@@ -37,7 +37,7 @@
      combLoadProfiles[]      the Association in config/cells.wl *)
 
 If[!ValueQ[$CombRoot],
-  Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]]];
+  Get[FileNameJoin[{DirectoryName[$InputFileName], "paths.wl"}]]];
 
 If[!ValueQ[$CombSettings],
   $CombSettings = <||>;

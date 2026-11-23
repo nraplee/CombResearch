@@ -1,8 +1,8 @@
 (* ecgrav_regression.wl
-   Re-validate the loaded ECGrav (see src/load_ecgrav.wl) against the exact
+   Re-validate the loaded ECGrav (see pipeline/common/ecgrav.wl) against the exact
    truth grid. Run it whenever the ECGrav commit changes: after
    tools/dev/update_ecgrav.wl, or with COMB_ECGRAV_DIR pointing at a fork.
-   load_ecgrav.wl warns until the loaded commit has passed.
+   ecgrav.wl warns until the loaded commit has passed.
 
    Checks, on the 9 truth cells (2,4) (2,5) (2,6) (2,7) (3,4) (3,5) (3,6)
    (4,4) (4,5):
@@ -28,14 +28,14 @@
      COMB_REG_N       exact-sampler draws per cell x target (default 20000)
      COMB_REG_CELLS   restrict cells, "p,q;p,q" (a restricted run is not
                       recorded as a pass)
-     COMB_ECGRAV_DIR  see load_ecgrav.wl *)
+     COMB_ECGRAV_DIR  see ecgrav.wl *)
 
-Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
-  "load_combresearch.wl"}]];   (* loads load_ecgrav.wl and comb_paths.wl *)
-Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
-  "lib_names.wl"}]];
-Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
-  "lib_config.wl"}]];
+Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "pipeline", "common",
+  "combresearch.wl"}]];   (* loads ecgrav.wl and paths.wl *)
+Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "pipeline", "common",
+  "names.wl"}]];
+Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "pipeline", "common",
+  "config.wl"}]];
 
 $allCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {3, 4}, {3, 5}, {3, 6}, {4, 4}, {4, 5}};
 $targets = {"vertex", "unlabeled", "facet"};

@@ -1,4 +1,4 @@
-(* run_is_at_truth_cells.wl
+(* 23_is_truth_cells.wl
    Draw vertex-labeled IS samples at (3,5) and (4,5) and aggregate into
    per-target numV histograms matching the q=10 hist schema. Lets us
    compare IS against MH and truth at cells where all three exist.
@@ -26,13 +26,13 @@
 
 (* Always read/write to the canonical main checkout data dir, since
    truth/MH WXFs and the q=10 IS hists live there. *)
-Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]];
-Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_names.wl"}]];
-Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_io.wl"}]];
-Get[FileNameJoin[{DirectoryName[$InputFileName], "lib_config.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "common", "paths.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "common", "names.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "common", "io.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "common", "config.wl"}]];
 dataDir = $CombDataDir;
 
-Get[FileNameJoin[{DirectoryName[$InputFileName], "load_ecgrav.wl"}]];
+Get[FileNameJoin[{DirectoryName[$InputFileName], "common", "ecgrav.wl"}]];
 
 cells = combSetting["COMB_IS_CELLS", {{3, 5}, {4, 5}}, "cells"];
 nSamples = combSetting["COMB_IS_N", 100000, "expr"];

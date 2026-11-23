@@ -1,8 +1,8 @@
-(* lib_io.wl
+(* io.wl
    Output-file helpers shared by the drivers (Phase 2a), plus one sidecar
    manifest per output (Phase 2d).
 
-   Loads comb_paths.wl if needed. Idempotent.
+   Loads paths.wl if needed. Idempotent.
 
    Defines:
      exportWxfAtomic[path, expr]          write WXF to path.tmp, then rename
@@ -30,12 +30,12 @@
      profile, settings (name -> value), settingSources (name -> source),
      plus the extra keys (seed, inputs, ...).
    Settings are every combSetting resolved so far in this kernel
-   (lib_config.wl); empty when lib_config is not loaded.
+   (config.wl); empty when config.wl is not loaded.
    A manifest written by tools/dev/backfill_manifest.wl has backfilled ->
    <|...|> and Missing["Unknown"] for what nobody recorded. *)
 
 If[!ValueQ[$CombRoot],
-  Get[FileNameJoin[{DirectoryName[$InputFileName], "comb_paths.wl"}]]];
+  Get[FileNameJoin[{DirectoryName[$InputFileName], "paths.wl"}]]];
 
 combManifestFile[path_String] := path <> ".manifest.wl";
 

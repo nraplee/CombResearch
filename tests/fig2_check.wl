@@ -24,8 +24,8 @@
    Exit 0 pass, 1 fail, 2 missing input. *)
 
 $code = ParentDirectory[DirectoryName[$InputFileName]];
-Get[FileNameJoin[{$code, "src", "lib_names.wl"}]];
-$ref = FileNameJoin[{$code, "src", "reference"}];
+Get[FileNameJoin[{$code, "pipeline", "common", "names.wl"}]];
+$ref = FileNameJoin[{$code, "reference", "fig2"}];
 
 $fail = 0;
 check[label_, ok_, detail_ : ""] := If[TrueQ[ok], Print["ok    ", label, " ", detail],
@@ -56,7 +56,7 @@ If[!AssociationQ[x] || !AssociationQ[x["ess"]],
     "pipeline/60_figures.wl fig2 with COMB_FORCE=1"]; Exit[2]];
 myTable = Rest[x["classTable"]];
 Print["fig2_check: ", FileNameTake[f], " (ECGrav ", x["ecGravVersion"], ", N=", x["sampleSize"],
-  ", seed ", x["seed"], ") vs src/reference notebooks"];
+  ", seed ", x["seed"], ") vs reference/fig2 notebooks"];
 
 (* ----- exact ----- *)
 check["number of classes", Length[myTable] == Length[nbTable] == 12,

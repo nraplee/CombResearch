@@ -3,7 +3,7 @@
 # at cell (p, q) = (4, 5). Each process writes its own log and WXF.
 #
 # Usage from the worktree root:
-#   powershell -ExecutionPolicy Bypass -File src\run_p4q5_mh_parallel.ps1
+#   powershell -ExecutionPolicy Bypass -File tools\dev\run_p4q5_mh_parallel.ps1
 #
 # Optional env overrides (passed through to pipeline/30_mh.wl):
 #   $env:COMB_MH_NUMITER = "500000"   # default 200000 in pipeline/30_mh.wl
@@ -17,18 +17,22 @@
 #   data/p4q5_mh_{unlabeled,facet,vertex}.wxf
 #   logs/mh_p4q5_{unlabeled,facet,vertex}.{log,err}
 #
-# Monitor with: powershell -ExecutionPolicy Bypass -File src\monitor_mh.ps1
+# Monitor with: powershell -ExecutionPolicy Bypass -File tools\dev\monitor_mh.ps1
 # Stop early by killing the wolfram.exe processes via Task Manager or:
 #   Get-Process wolfram | Stop-Process
 
 $ErrorActionPreference = "Stop"
-. (Join-Path $PSScriptRoot "comb_paths.ps1")
-$root    = $CombRoot   # outputs: main checkout (comb_paths.ps1)
-$srcDir  = $PSScriptRoot   # code: this checkout
+# Code root: the folder above this script that holds run.wl.
+$CombCodeRoot = $PSScriptRoot
+while ($CombCodeRoot -and !(Test-Path (Join-Path $CombCodeRoot "run.wl"))) { $CombCodeRoot = Split-Path -Parent $CombCodeRoot }
+if (!$CombCodeRoot) { throw "no run.wl above $PSScriptRoot" }
+. (Join-Path $CombCodeRoot "pipeline\common\paths.ps1")
+$root    = $CombRoot   # outputs: main checkout (paths.ps1)
+$srcDir  = $CombCodeRoot   # code: this checkout (folder holding run.wl)
 $logsDir = Join-Path $root "logs"
 if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-Null }
 
-$wrapper = Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "30_mh.wl"
+$wrapper = Join-Path (Join-Path $srcDir "pipeline") "30_mh.wl"
 $targets = @("unlabeled", "facet", "vertex")
 
 # Pinning settings printed for the log.
@@ -96,7 +100,7 @@ Write-Host "(Ctrl-C) - the wolframscript children are detached and will"
 Write-Host "continue running."
 Write-Host ""
 Write-Host "Monitor live with:"
-Write-Host "  powershell -ExecutionPolicy Bypass -File src\monitor_mh.ps1"
+Write-Host "  powershell -ExecutionPolicy Bypass -File tools\dev\monitor_mh.ps1"
 Write-Host ""
 
 $jobs.Process | Wait-Process

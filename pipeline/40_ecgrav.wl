@@ -40,22 +40,22 @@
      COMB_ECG_SEED      default 24680
      COMB_ECG_TRACE_STEPS  mcmc trace length in MH proposals
                         (default 200000, matching run_mh_chains.wl numIter)
-     COMB_ECGRAV_DIR      see load_ecgrav.wl (default: shared upstream clone;
+     COMB_ECGRAV_DIR      see ecgrav.wl (default: shared upstream clone;
                           Phase 5a ran ECGrav 1.17.0, upstream d15739c)
      COMB_FORCE=1       overwrite existing WXF
 *)
 
 (* ===== Paths + libraries (ECGrav and the package via load_combresearch) ===== *)
 $pipelineDir = DirectoryName[$InputFileName];
-$srcDir = FileNameJoin[{ParentDirectory[$pipelineDir], "src"}];
-Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
+$commonDir = FileNameJoin[{$pipelineDir, "common"}];
+Get[FileNameJoin[{$commonDir, "paths.wl"}]];
+Get[FileNameJoin[{$commonDir, "names.wl"}]];
+Get[FileNameJoin[{$commonDir, "config.wl"}]];
 outputDir = $CombDataDir;
 If[!DirectoryQ[outputDir], CreateDirectory[outputDir]];
 
-Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
+Get[FileNameJoin[{$commonDir, "combresearch.wl"}]];
+Get[FileNameJoin[{$commonDir, "io.wl"}]];
 
 (* ===== Defaults ===== *)
 defaultCells = {{2, 4}, {2, 5}, {2, 6}, {2, 7},

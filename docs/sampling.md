@@ -148,10 +148,10 @@ $env:COMB_MH_TARGETS = "unlabeled"
 wolframscript -file pipeline\30_mh.wl
 
 # Launch all three (4,5) targets in parallel.
-powershell -ExecutionPolicy Bypass -File src\run_p4q5_mh_parallel.ps1
+powershell -ExecutionPolicy Bypass -File tools\dev\run_p4q5_mh_parallel.ps1
 
 # Monitor the parallel run.
-powershell -ExecutionPolicy Bypass -File src\monitor_mh.ps1
+powershell -ExecutionPolicy Bypass -File tools\dev\monitor_mh.ps1
 ```
 
 ## Figure Rendering

@@ -17,18 +17,22 @@
 #
 # Total estimated wall: ~30 min restore + ~4-5 hr parallel = ~5 hr.
 #
-# All chains write to the main checkout's data/ (comb_paths.ps1) via
+# All chains write to the main checkout's data/ (paths.ps1) via
 # COMB_MH_OUTDIR.
 
 $ErrorActionPreference = "Continue"
-. (Join-Path $PSScriptRoot "comb_paths.ps1")
+# Code root: the folder above this script that holds run.wl.
+$CombCodeRoot = $PSScriptRoot
+while ($CombCodeRoot -and !(Test-Path (Join-Path $CombCodeRoot "run.wl"))) { $CombCodeRoot = Split-Path -Parent $CombCodeRoot }
+if (!$CombCodeRoot) { throw "no run.wl above $PSScriptRoot" }
+. (Join-Path $CombCodeRoot "pipeline\common\paths.ps1")
 $repoRoot   = $CombRoot        # outputs: main checkout
-$srcDir     = $PSScriptRoot    # code: this checkout
+$srcDir     = $CombCodeRoot    # code: this checkout (folder holding run.wl)
 $dataDir    = Join-Path $repoRoot "data"
 $logDir     = Join-Path $repoRoot "logs"
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
 
-$runScript  = Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "30_mh.wl"
+$runScript  = Join-Path (Join-Path $srcDir "pipeline") "30_mh.wl"
 Write-Host "using sampler driver: $runScript"
 
 # --- Step 1: restore p4q10_mh_unlabeled.wxf (production 200k) ---
