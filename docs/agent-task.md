@@ -1,5 +1,19 @@
 # Current Agent Task
 
+## Phase 5 PR C: untrack `logs/` and the Betre `.mx` (2026-11-23, Ryzen, branch `claude/phase5-c-untrack`, from main)
+
+- `git rm --cached` of the 98 tracked files in `logs/` and
+  `data/p4q{4,5}SX{FacetLabeled,Unlabeled}.mx`; `.gitignore` gains `/logs/`
+  and `data/*.mx`. History keeps them (no rewrite).
+- **Pulling this into the main checkout (`C:\CombResearch`, the data
+  store):** git deletes files that a pulled commit removes from the index,
+  and the store's locally modified tracked logs block the pull. Before
+  pulling: copy `logs\` and the four `.mx` to a backup folder,
+  `git checkout -- logs`, pull, then copy the backup back without
+  overwriting. Worktrees that check out the new main simply lose their
+  checked-out copies, which is fine (they never held real logs).
+- Merged after PRs A (#39) and B (#40).
+
 ## Phase 5 PR B: `git mv` into the ideal layout + hook (2026-11-23, Ryzen, branch `claude/phase5-b-move`, stacked on PR A #39)
 
 - `src/` is gone. `pipeline/common/`: `paths.wl` + `paths.ps1` (were

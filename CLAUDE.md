@@ -21,7 +21,7 @@ Current summary: Wolfram Mathematica research project for probability distributi
 - `data/` - generated CSV/WXF compute outputs; generally do not edit by hand. One shared copy lives in the main checkout (`C:\CombResearch\data` on the Ryzen PC), never in a worktree; see "Generated outputs" below.
 - `figures/` - generated manuscript panels, previews, and review PDFs.
 - `docs/` - consolidated technical docs, manuscript draft, and live handoff.
-- `logs/` - generated run logs.
+- `logs/` - generated run logs, untracked since Phase 5 (gitignored; git history keeps the old ones). The Betre `data/p4q{4,5}SX*.mx` files are untracked the same way.
 - `archive/` - deleted in Phase 5 (git history and tag `pre-restructure` keep it). An ignored `archive/superseded_data` may still sit on disk in the main checkout.
 
 This is a single-project repo rooted at `C:\CombResearch`; there are no major independent subprojects that need nested `CLAUDE.md` files right now.
@@ -166,7 +166,7 @@ No lint or typecheck command is configured. Use targeted Wolfram scripts as chec
 - The worktree may already contain user or agent changes. Do not revert changes you did not make.
 - Inspect `git status --short` and relevant diffs before modifying files, especially when resuming prior work.
 - Do not commit, push, branch, or clean generated files unless the user asks.
-- Any commit or PR whose work wrote outputs must say so: list the files (or globs) written under the main checkout's `data/`, `figures/`, `logs/`, and say they are not in the commit. Figures and logs that should be tracked are committed from the main checkout.
+- Any commit or PR whose work wrote outputs must say so: list the files (or globs) written under the main checkout's `data/`, `figures/`, `logs/`, and say they are not in the commit. Figures that should be tracked are committed from the main checkout; logs are not tracked (Phase 5).
 
 ## Handoff Protocol
 

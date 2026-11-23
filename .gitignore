@@ -9,6 +9,10 @@ data/*_chunk_*.wxf
 data/**/*.manifest.wl
 archive/superseded_data/*.wxf
 
+# --- Untracked in Phase 5 (history keeps the old copies; no rewrite) ---
+/logs/
+data/*.mx
+
 # --- Compute checkpoint artifacts ---
 *.tmp
 

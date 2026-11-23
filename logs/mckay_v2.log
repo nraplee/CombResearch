@@ -1,8 +1,0 @@
-Profiling cells (sequential mode): {{2, 4}, {3, 4}}
-Expected |iso|: {11, 66}
-
------ cell (2,4)   expected |iso|=11 -----
-  cheap     |iso|=11      totalEmitted=70        time=1.06s         peakDelta=0. MB
-  bliss     |iso|=11      totalEmitted=70        time=0.99s         peakDelta=0. MB
-$Aborted  mckay     |iso|=5       totalEmitted=130       time=1.67s         peakDelta=0. MB
-  *** MISMATCH at (2,4): {cheap -> 11, bliss -> 11, mckay -> 5} ***
