@@ -43,9 +43,16 @@ combManifest[path_String] := With[{m = combManifestFile[path]},
   If[FileExistsQ[m], Get[m], Missing["NoManifest"]]];
 
 (* Code version of the checkout running this script: git HEAD and whether
-   tracked files are modified, else a VERSION file, else unknown. Cached. *)
-combCodeVersion[] := combCodeVersion[] = Module[{head, dirty, vfile},
-  head = Quiet @ RunProcess[{"git", "-C", $CombCodeRoot, "rev-parse", "HEAD"}];
+   tracked files are modified, else a VERSION file, else unknown. Cached.
+   Git counts only when its top level is the code root itself: a zip of
+   this repo unpacked inside another git repo would otherwise record that
+   repo's HEAD (found in Phase 7). *)
+combCodeVersion[] := combCodeVersion[] = Module[{top, head, dirty, vfile,
+    norm = ToLowerCase[ExpandFileName[#]] &},
+  top = Quiet @ RunProcess[{"git", "-C", $CombCodeRoot, "rev-parse", "--show-toplevel"}];
+  head = If[AssociationQ[top] && top["ExitCode"] === 0 &&
+      norm[StringTrim[top["StandardOutput"]]] === norm[$CombCodeRoot],
+    Quiet @ RunProcess[{"git", "-C", $CombCodeRoot, "rev-parse", "HEAD"}], $Failed];
   If[AssociationQ[head] && head["ExitCode"] === 0,
     dirty = Quiet @ RunProcess[{"git", "-C", $CombCodeRoot, "status",
       "--porcelain", "--untracked-files=no"}];

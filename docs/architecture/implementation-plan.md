@@ -502,6 +502,9 @@ the `reference/` moves and the hook), C untrack (from main).
 
 ## Phase 6: upstream to ECGrav (with Dr. Betre)
 
+Deliverable for the first conversation with Betre (a GUI that shows each
+candidate piece): `phase6-deliverable.md`.
+
 - Agree with Betre which pieces he wants:
   - `Enumeration` (exact unlabeled enumeration with McKay) and `Statistics`
     are the clearest gaps.

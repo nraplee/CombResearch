@@ -29,8 +29,21 @@ git[dir_, args__] := Module[{r = RunProcess[Join[{"git", "-C", dir}, {args}]]},
       r["StandardError"]]; Exit[2]];
   StringTrim[r["StandardOutput"]]];
 
-Module[{dir, before, after, branch, dirty},
+Module[{dir, before, after, branch, dirty, haveGit},
   dir = FileNameJoin[{$CombRoot, "ECGrav-upstream"}];
+  haveGit = AssociationQ[Quiet @ RunProcess[{"git", "--version"}]];
+  (* Without git, or with an unpacked zip instead of a clone, ECGrav is
+     managed by hand (Phase 7): use what is there, or say how to get it. *)
+  If[!haveGit || (DirectoryQ[dir] && !DirectoryQ[FileNameJoin[{dir, ".git"}]]),
+    If[DirectoryQ[dir],
+      Print["update_ecgrav: ", If[haveGit, dir <> " is not a git clone",
+        "git not available"], "; using ", dir,
+        " as it is (not updated, commit unknown)."]; Exit[0],
+      Print["update_ecgrav: git not available, so ECGrav cannot be cloned.\n",
+        "  Download https://github.com/kassabetre/ECGrav/archive/refs/heads/main.zip,\n",
+        "  unpack it and rename the folder to ", dir, "\n",
+        "  (or set COMB_ECGRAV_DIR to any ECGrav checkout), then rerun run.wl check."];
+      Exit[2]]];
   If[!DirectoryQ[dir],
     Print["update_ecgrav: cloning ", $upstreamURL, " -> ", dir];
     git[$CombRoot, "clone", "--branch", "main", $upstreamURL, dir]];
