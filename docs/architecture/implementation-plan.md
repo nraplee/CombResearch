@@ -560,8 +560,13 @@ Fixed along the way:
   between starts, and `run.wl` keeps at least 1 s between job starts.
   Measured after the fix: 0 in 45 plain starts and 4 of 4 launcher rounds
   complete. It is not a license limit.
+- Progress: `run.wl` printed only a job's start and end, so a long job
+  (the package tests take minutes) looked stuck. Every 60 s it now prints
+  each running job's time so far and the last line of its log, and each
+  finished job gets a `k/n` count. Real progress bars inside a stage belong
+  with the Phase 6 notebook.
 
-Still open: the plan's laptop run (`git clone` + quick profile on the i5
+Still open: the plan's laptop run (`git clone` + quick profile on the i7-8750H
 laptop), and the ECGrav regression, which needs the full truth grid. It
 runs on a later `run.wl check` after a paper-profile run, not on a
 quick-only store.

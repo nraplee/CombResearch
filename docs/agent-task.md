@@ -17,7 +17,13 @@
   (`docs/architecture/phase6-deliverable.md`). The user chose a notebook
   (Betre is on a Mac, we are on Windows), parallel on by default, with
   progress bars, and later `FunctionCompile` on profiled hot spots.
-- Open: the laptop run (needs the user at the laptop).
+- Progress output in `run.wl`: every 60 s (`COMB_TEST_HEARTBEAT` overrides,
+  for tests) a `still running <job> (N min) | <last log line>` line per
+  running job, and a `k/n` count on each finished job. Package test times
+  print as `40.4 s`, not `40.400000000000006 s`.
+- Laptop run (i7-8750H, 32 GB, fresh Windows 11, cloned to `D:\p7test\clone`, branch
+  `claude/phase7-outside`): `check` cloned ECGrav (upstream main is now
+  `42d6118`, 1.19.0, not yet regression-tested); in progress.
 
 ## Phase 5 PR C: untrack `logs/` and the Betre `.mx` (2026-11-23, Ryzen, branch `claude/phase5-c-untrack`, from main)
 
