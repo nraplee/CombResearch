@@ -1,5 +1,28 @@
 # Current Agent Task
 
+## Phase 4 row 7: `pipeline/60_figures.wl` (2026-11-22, Ryzen, branch `claude/phase-4-figures`)
+
+Phase 4 is done. Next: Phase 5 (one `git mv` PR, then delete the shims).
+
+- `pipeline/60_figures.wl`: jobs `fig2`, `truth_overlay`, `3way`,
+  `q10_is_vs_mh`, `q10_warm_vs_prod`, `sampler_progress`, `uniformity`,
+  `ecgrav_compare`, `q10_stats` (set by `COMB_FIG_JOB`, an identity knob,
+  or by a plain word). The 9 `src/render_*.wl` scripts are shims. `run.wl
+  figures` keeps the same labels and logs.
+- `q10_stats` reads `p{p}q10_is_stat_hists.wxf` (2.8 GB less to load).
+  `largestCompRatio` has fixed bins of width 1/20, the same bins Automatic
+  chose on the stored samples.
+- `sampler_progress` reads the 500k batch WXF, not the legacy CSV.
+- On the real store, the stat hists do not exist until `run.wl is` runs.
+  Until then the q=10 figures job is held back ("inputs missing").
+- Checks (scratch roots only): old vs new render of all 9 jobs: 54 PNGs, 51
+  pixel-identical, 3 with rasterization noise (old code rerun shows the same),
+  365 PDFs same set, printed numbers identical; q=10 bar heights from stat
+  hists vs merged samples: same bins, max diff 1.4e-14; quick store
+  `run.wl all profile quick` + `golden_quick` PASS; `run_wl_test`,
+  `lib_names_test`, `golden_derived check` (11/11) PASS; real-store
+  `run.wl figures dryrun`: all skip, q=10 figures "inputs missing".
+
 ## Phase 4 row 6: Compare.wl + `pipeline/50_validate.wl` (2026-11-22, Ryzen, branch `claude/phase-4-compare`)
 
 Next: row 7 (`60_figures.wl`): the renders read `results/` and the new
