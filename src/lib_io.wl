@@ -12,6 +12,8 @@
                                           Aborts if the WXF is not written.
        extra: Association merged into the manifest (seed, inputs, ...), or
        None for no manifest (temporary files such as IS chunks).
+     exportCsvAtomic[path, table, extra]  the same for a CSV (table: header row
+                                          first), with its manifest
      combWriteManifest[path, extra]       write path's manifest on its own
      combManifestFile[path]               path <> ".manifest.wl"
      combManifest[path]                   the manifest Association, or
@@ -107,6 +109,20 @@ exportWxfAtomic[path_String, expr_, extra : (_Association | None)] :=
     tmp = path <> ".tmp";
     If[FileExistsQ[tmp], DeleteFile[tmp]];
     Export[tmp, expr, "WXF"];
+    If[! FileExistsQ[tmp],
+      Print["    ERROR: tmp file not written: ", tmp]; Abort[]];
+    If[FileExistsQ[path], DeleteFile[path]];
+    res = RenameFile[tmp, path];
+    If[res === $Failed,
+      Print["    ERROR: rename failed ", tmp, " -> ", path]; Abort[]];
+    If[extra =!= None, combWriteManifest[path, extra]];
+    path];
+
+exportCsvAtomic[path_String, table_List, extra : (_Association | None)] :=
+  Module[{tmp, res},
+    tmp = path <> ".tmp";
+    If[FileExistsQ[tmp], DeleteFile[tmp]];
+    Export[tmp, table, "CSV"];
     If[! FileExistsQ[tmp],
       Print["    ERROR: tmp file not written: ", tmp]; Abort[]];
     If[FileExistsQ[path], DeleteFile[path]];

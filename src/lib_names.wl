@@ -23,6 +23,8 @@
      "samples", p, q, source, target   p3q5_{source}_{target}.wxf: source is
                                        "mh" or "ecg<sampler>" (validate / efficiency)
      "isHist", p, q, target            p4q10_is_facet_numv_hist.wxf
+     "isStatHists", p, q               p4q10_is_stat_hists.wxf (every statistic,
+                                       pipeline/22_is_hists.wl)
      "isStats", stem                   {stem}_stats.wxf
      "isComplexes", stem               {stem}_complexes.wxf
      "isChunkStats", stem, k           {stem}_chunk_{k}_stats.wxf
@@ -30,6 +32,8 @@
      "isSamplesCSV", stem              {stem}_samples.csv (legacy)
      "validationSummary", source       validation_{source}_summary.wxf
      "summary", name                   {name}_summary.wxf
+     "results", name                   {name}.csv, under $CombResultsDir
+                                       (pipeline/50_validate.wl results)
      "fig2", p, q, n                   p3q3_n10000_fig2.wxf (render_fig2.wl)
      "log" | "err", "mh", p, q, target        mh_p4q5_vertex.log
      "log" | "err", "mh", p, q, target, tag   mh_p3q10_facet_seed67890_warm14.log
@@ -93,6 +97,9 @@ combName["samples", p_Integer, q_Integer, source_String, target_String] :=
 combName["isHist", p_Integer, q_Integer, target_String] :=
   combCell[p, q] <> "_is_" <> target <> "_numv_hist.wxf";
 
+combName["isStatHists", p_Integer, q_Integer] :=
+  combCell[p, q] <> "_is_stat_hists.wxf";
+
 combName["isStats", stem_String]      := stem <> "_stats.wxf";
 combName["isComplexes", stem_String]  := stem <> "_complexes.wxf";
 combName["isChunkStats", stem_String, k_Integer] :=
@@ -104,6 +111,7 @@ combName["isSamplesCSV", stem_String] := stem <> "_samples.csv";
 combName["validationSummary", source_String] :=
   "validation_" <> source <> "_summary.wxf";
 combName["summary", name_String] := name <> "_summary.wxf";
+combName["results", name_String] := name <> ".csv";
 
 (* Figure 2 (q=3): all distributions behind the four panels, render_fig2.wl *)
 combName["fig2", p_Integer, q_Integer, n_Integer] :=
@@ -139,5 +147,7 @@ combName[args___] := (
 
 combFile[kind : ("log" | "err"), args__] :=
   FileNameJoin[{$CombLogsDir, combName[kind, args]}];
+combFile["results", name_String] :=
+  FileNameJoin[{$CombResultsDir, combName["results", name]}];
 combFile[family_String, args___] :=
   FileNameJoin[{$CombDataDir, combName[family, args]}];

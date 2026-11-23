@@ -159,7 +159,8 @@ $identityKnobs = {"COMB_TRUTH_CELLS", "COMB_TRUTH_PIPELINE", "COMB_N", "COMB_RUN
   "COMB_NN_FIXED", "COMB_IS_CELLS", "COMB_MH_CELLS", "COMB_MH_TARGETS", "COMB_MH_TAG",
   "COMB_ECG_SAMPLER", "COMB_ECG_CELLS", "COMB_ECG_TARGETS", "COMB_VAL_SOURCE",
   "COMB_VAL_CELLS", "COMB_VAL_TARGETS", "COMB_EFF_CELLS", "COMB_EFF_TARGETS",
-  "COMB_3W_CELLS", "COMB_3W_TARGETS", "COMB_FIG2_N", "COMB_IS_MERGE_PS", "COMB_IS_MERGE_STEMS"};
+  "COMB_3W_CELLS", "COMB_3W_TARGETS", "COMB_FIG2_N", "COMB_IS_MERGE_PS", "COMB_IS_MERGE_STEMS",
+  "COMB_VAL_JOB"};
 $notInherited = Join[$stripped, $identityKnobs];
 (* drop them from an environment, whatever their case *)
 dropNotInherited[env_Association] := KeySelect[env, !MemberQ[$notInherited, ToUpperCase[#]] &];
@@ -309,12 +310,14 @@ jobsFor["is"] := Module[{batches = planOf["isBatches"], out = {}, cellsIS},
               envString[partial]},
             If[todo === {}, j["skipReason"] = msg, Print["  note: ", msg]]]];
         AppendTo[out, j]]]];
-  (* q=10 numV histograms from the merged stats; here, not in validate, so the
-     q=10 comparisons there always see them finished. *)
+  (* q=10 histograms from the merged stats (numV per target, and every
+     statistic); here, not in validate, so the q=10 comparisons there always
+     see them finished. The driver skips the files that exist. *)
   If[$cliCells === All,
-    AppendTo[out, job["q=10 IS histograms", "src/precompute_is_histograms_q10.wl",
+    AppendTo[out, job["q=10 IS histograms", "pipeline/22_is_hists.wl",
       resolveKnobs[<||>, <||>],
-      Flatten[Table[combFile["isHist", p, 10, t], {p, {2, 3, 4}}, {t, targets3}]],
+      Join[Flatten[Table[combFile["isHist", p, 10, t], {p, {2, 3, 4}}, {t, targets3}]],
+        combFile["isStatHists", #, 10] & /@ {2, 3, 4}],
       combFile["isStats", combMergedStem[#, 10]] & /@ {2, 3, 4}, "precompute_is_q10"]]];
   out];
 
@@ -375,6 +378,8 @@ mixedCommits[groups_Association] := Select[
 withInputs[j_, groups_] := Append[j, "commitGroups" -> groups];
 samplesOf[src_, cells_] := Flatten[Table[combFile["samples", c[[1]], c[[2]], src, t], {c, cells}, {t, targets3}]];
 
+$validate = "pipeline/50_validate.wl";
+valJob[name_] := <|"COMB_VAL_JOB" -> {name, "job split"}|>;
 jobsFor["validate"] := Module[{valCells, cells3w, ps, sources, out = {}, restricted, summaryJob},
   restricted = $cliCells =!= All || $cliTargets =!= All;
   summaryJob[j_] := If[restricted,
@@ -394,40 +399,44 @@ jobsFor["validate"] := Module[{valCells, cells3w, ps, sources, out = {}, restric
       Print["  note: sampler ", $cliSampler, " is not a validation source (mh, exact, mcmc, legacyfacet)"],
     $cliSampler =!= All && sources === {},
       Print["  note: no ", samplerSource[$cliSampler], " sample files for these cells; nothing to validate"]];
-  AppendTo[out, job["counts vs truth", "src/validate_counts_vs_truth.wl",
-    resolveKnobs[<||>, If[$cliCells === All, <||>, <|"COMB_VAL_CELLS" -> {valCells, "cli"}|>]], {},
+  AppendTo[out, job["counts vs truth", $validate,
+    resolveKnobs[<||>, Join[valJob["counts"],
+      If[$cliCells === All, <||>, <|"COMB_VAL_CELLS" -> {valCells, "cli"}|>]]], {},
     truthPath /@ valCells, "validate_counts"]];
-  Do[AppendTo[out, summaryJob @ withInputs[job["validate " <> s, "src/validate_mh_vs_truth.wl",
-      resolveKnobs[<||>, <|"COMB_VAL_SOURCE" -> {s, "job split"}|>],
+  Do[AppendTo[out, summaryJob @ withInputs[job["validate " <> s, $validate,
+      resolveKnobs[<||>, Join[valJob["samples"], <|"COMB_VAL_SOURCE" -> {s, "job split"}|>]],
       {combFile["validationSummary", s]}, truthPath /@ valCells, "validate_" <> s],
       <|s -> samplesOf[s, valCells]|>]],
     {s, sources}];
   If[$cliSampler === All,
-    AppendTo[out, summaryJob @ job["sampler efficiency", "src/compare_samplers_efficiency.wl",
-      resolveKnobs[<||>, <||>],
+    AppendTo[out, summaryJob @ job["sampler efficiency", $validate,
+      resolveKnobs[<||>, valJob["efficiency"]],
       {combFile["summary", "sampler_efficiency"]}, truthPath /@ valCells, "compare_efficiency"] //
       withInputs[#, AssociationMap[samplesOf[#, valCells] &, {"mh", "ecgexact", "ecgmcmc"}]] &];
     If[cells3w =!= {},
-      AppendTo[out, summaryJob @ job["3-way IS/MH/truth " <> envString[cells3w], "src/compare_3way.wl",
-        resolveKnobs[<||>, <||>],
+      AppendTo[out, summaryJob @ job["3-way IS/MH/truth " <> envString[cells3w], $validate,
+        resolveKnobs[<||>, valJob["3way"]],
         {combFile["summary", "is_mh_truth_3way"]},
         Flatten[Table[{truthPath[c], combFile["mh", c[[1]], c[[2]], t], combFile["isHist", c[[1]], c[[2]], t]},
           {c, cells3w}, {t, targets3}]], "compare_3way"] //
         withInputs[#, <|"mh" -> samplesOf["mh", cells3w],
           "isHist" -> Flatten[Table[combFile["isHist", c[[1]], c[[2]], t], {c, cells3w}, {t, targets3}]]|>] &]];
-    AppendTo[out, summaryJob @ job["q=10 IS vs MH", "src/compare_is_mh_q10.wl", resolveKnobs[<||>, <||>],
+    AppendTo[out, summaryJob @ job["q=10 IS vs MH", $validate, resolveKnobs[<||>, valJob["q10_is_vs_mh"]],
       {combFile["summary", "q10_is_vs_mh"]},
       Flatten[Table[{combFile["isHist", p, 10, t], combFile["mh", p, 10, t]}, {p, ps}, {t, targets3}]],
       "compare_is_mh_q10"] // withInputs[#, <|
         "isHist" -> Flatten[Table[combFile["isHist", p, 10, t], {p, ps}, {t, targets3}]],
         "mh" -> Flatten[Table[combFile["mh", p, 10, t], {p, ps}, {t, targets3}]]|>] &];
-    AppendTo[out, summaryJob @ job["q=10 warm vs prod", "src/compare_q10_warm_vs_prod.wl", resolveKnobs[<||>, <||>],
+    AppendTo[out, summaryJob @ job["q=10 warm vs prod", $validate, resolveKnobs[<||>, valJob["q10_warm_vs_prod"]],
       {combFile["summary", "q10_warm_vs_prod"]},
       Flatten[Table[{combFile["mh", p, 10, t], combFile["mh", p, 10, t, combMHWarmTag[67890, If[p == 3, 14, 18]]]},
         {p, {3, 4}}, {t, {"unlabeled", "facet"}}]], "compare_q10_warm_vs_prod"] //
       withInputs[#, <|"mh" -> Flatten[Table[{combFile["mh", p, 10, t],
         combFile["mh", p, 10, t, combMHWarmTag[67890, If[p == 3, 14, 18]]]},
         {p, {3, 4}}, {t, {"unlabeled", "facet"}}]]|>] &]];
+  (* the summaries above as results/*.csv; "final": after the other jobs *)
+  AppendTo[out, Append[job["results tables", $validate, resolveKnobs[<||>, valJob["results"]],
+    {}, {}, "validate_results"], "final" -> True]];
   out];
 
 fig[sub_, name_] := FileNameJoin[{$CombFiguresDir, sub, name}];
@@ -657,7 +666,7 @@ laterPasses[stage_, decided0_] := Module[{waiting = waitingOnInputs[decided0], o
     waiting = waitingOnInputs[fresh]];
   ok];
 
-runStage[stage_] := Module[{jobs, decided, todo},
+runStage[stage_] := Module[{jobs, decided, todo, finals},
   Print[""]; Print["== ", stage, "  (profile ", $profileName, If[$force, ", force", ""], ")"];
   jobs = jobsFor[stage];
   If[jobs === {}, Print["  nothing planned for this stage and these cells"]; Return[True]];
@@ -670,7 +679,10 @@ runStage[stage_] := Module[{jobs, decided, todo},
     Print["  note: check ignores cells and targets (the regression uses COMB_REG_CELLS)"]];
   Scan[printJob @@ # &, decided];
   todo = Select[decided, #[[2, 1]] === "run" &][[All, 1]];
-  If[$dryrun || todo === {}, True,
+  (* "final" jobs (validate's results tables) read what the others write *)
+  finals = Select[todo, TrueQ[Lookup[#, "final", False]] &];
+  todo = Select[todo, !TrueQ[Lookup[#, "final", False]] &];
+  If[$dryrun || (todo === {} && finals === {}), True,
     If[stage === "check",
       (* one at a time, stopping at the first failure *)
       Catch[Scan[Which[
@@ -678,7 +690,8 @@ runStage[stage_] := Module[{jobs, decided, todo},
             Print["  skip  ", #["label"], ": ECGrav ", StringTake[ecgravCommit[], UpTo[7]],
               " already passed"],
           !runJobs[{#}], Throw[False]] &, todo]; True],
-      runJobs[todo] && laterPasses[stage, decided]]]];
+      (todo === {} || (runJobs[todo] && laterPasses[stage, decided])) &&
+        (finals === {} || runJobs[finals])]]];
 
 (* ----- main ----- *)
 Print["run.wl ", $stage, "  profile ", $profileName, "  store ", $CombRoot,
