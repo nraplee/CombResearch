@@ -1,8 +1,8 @@
 (* pipeline/10_truth.wl
    Truth stage: exact enumeration of the isomorphism classes for each
    requested (p, q), per-class statistics, and the three exact distributions
-   over the classes. Replaces src/enumerate_truth.wl for run.wl (Phase 4);
-   enumerate_truth.wl stays for cross-validation runs (tagged file names).
+   over the classes. Replaced src/enumerate_truth.wl (Phase 4; deleted in
+   Phase 5: cross-validate a pipeline with COMB_TRUTH_PIPELINE in a scratch COMB_ROOT).
 
    Output: data/p{p}q{q}_truth.wxf for every pipeline, so a McKay run needs no
    manual rename any more. Schema (unchanged, plus "pipeline" and
@@ -30,7 +30,6 @@ Get[FileNameJoin[{$srcDir, "load_combresearch.wl"}]];
 Get[FileNameJoin[{$srcDir, "comb_paths.wl"}]];
 Get[FileNameJoin[{$srcDir, "lib_names.wl"}]];
 Get[FileNameJoin[{$srcDir, "lib_config.wl"}]];
-Get[FileNameJoin[{$srcDir, "lib_stats.wl"}]];
 Get[FileNameJoin[{$srcDir, "lib_io.wl"}]];
 
 If[!DirectoryQ[$CombDataDir], CreateDirectory[$CombDataDir]];
@@ -106,7 +105,7 @@ processCell[{p_Integer, q_Integer}] := Module[
     Table[
       With[{cmplx = isoReps[[i]]},
         Module[{statsAssoc},
-          statsAssoc = AssociationThread[$CombStatsHeaders -> statsFor[cmplx, p]];
+          statsAssoc = AssociationThread[$PureComplexStatisticNames -> PureComplexStatistics[cmplx, p]];
           <|"facets" -> cmplx,
             "aut"   -> statsAssoc["aut"],
             "autF"  -> statsAssoc["autF"],

@@ -17,7 +17,7 @@
                    RandomUniformFacetLabeled… and RandomUniformUnlabeled…
                    give a numV marginal within L1 < 0.05 of truth
                    (N = COMB_REG_N draws per cell x target, seed 24680).
-     4. mh         MH smoke: runMHChain from src/sampler_mh.wl at (2,4),
+     4. mh         MH smoke: PureComplexMHChain (CombResearch package) at (2,4),
                    3 targets, 50k iterations, numV L1 < 0.1 (a smoke test: it
 
    Exit 0 when everything passes, and records the commit in
@@ -30,9 +30,8 @@
                       recorded as a pass)
      COMB_ECGRAV_DIR  see load_ecgrav.wl *)
 
-$smokeTestSkip = True;
 Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
-  "sampler_mh.wl"}]];   (* loads comb_paths.wl and load_ecgrav.wl *)
+  "load_combresearch.wl"}]];   (* loads load_ecgrav.wl and comb_paths.wl *)
 Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
   "lib_names.wl"}]];
 Get[FileNameJoin[{ParentDirectory[DirectoryName[$InputFileName]], "src",
@@ -111,8 +110,9 @@ Do[Module[{d, secs, v},
 Print["== MH smoke (2,4), 50k iterations =="];
 If[MemberQ[$cells, {2, 4}],
   Do[Module[{r, v},
-      r = runMHChain[2, 4, target, 50000, burnIn -> 5000];
-      v = l1[sampleMarginal[numActive /@ r["trace"]], truthMarginal[2, 4, target]];
+      r = PureComplexMHChain[2, 4, target, 50000, "burnIn" -> 5000];
+      v = l1[sampleMarginal[Length[DeleteDuplicates[Flatten[#]]] & /@ r["trace"]],
+        truthMarginal[2, 4, target]];
       If[v < $mhThreshold,
         Print["  ", target, " L1 = ", Round[v, 0.0001]],
         fail["MH (2,4) ", target, " L1 = ", v]]],

@@ -1,7 +1,7 @@
 (* pipeline/22_is_hists.wl
    q=10 IS histograms (Phase 4 row 6). run.wl's is stage runs it after the
-   merges. src/precompute_is_histograms_q10.wl is a shim that Gets this
-   file.
+   merges (it replaced src/precompute_is_histograms_q10.wl, deleted in
+   Phase 5).
 
    For p in {2, 3, 4}, from data/p{p}q10_merged_stats.wxf it writes
      data/p{p}q10_is_{target}_numv_hist.wxf   numV only, one per target

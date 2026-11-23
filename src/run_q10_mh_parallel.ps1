@@ -42,7 +42,7 @@ foreach ($j in $jobs) {
 `$env:COMB_MH_BURNIN  = '$burnIn'
 `$env:COMB_MH_THIN    = '$thin'
 `$env:COMB_FORCE      = '1'
-wolframscript -file '$(Join-Path $srcDir "run_mh_chains.wl")' *>&1 |
+wolframscript -file '$(Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "30_mh.wl")' *>&1 |
   Out-File -FilePath '$logFile' -Encoding utf8
 "@
   $proc = Start-Process -FilePath "powershell.exe" `

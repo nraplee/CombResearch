@@ -1,5 +1,30 @@
 # Current Agent Task
 
+## Phase 5 PR A: delete shims, superseded scripts, `archive/` (2026-11-23, Ryzen, branch `claude/phase5-a-delete`)
+
+Order agreed with the user: A (delete) -> B (`git mv` into the ideal
+layout, helpers renamed to ideal.md names, hook fix; stacked on A) -> C
+(untrack `logs/` and the Betre `.mx`, from main).
+
+- Deleted: the 25 `src/*.wl` shims, `enumerate_truth.wl` (10_truth with
+  `COMB_TRUTH_PIPELINE` in a scratch root does its cross-validation),
+  `run_p{2,3,4}.wl`, `test_streaming{,_bliss,_mckay}.wl` (every check is in
+  `Enumeration.wlt`, already in `run.wl check`), `migrate_csv_to_wxf`,
+  `precompute_is_histogram`, `probe_betre_mx`, `pure_simplicial_figures.nb`,
+  `pure_simplicial_compute_overnight`, `run_q10_mh_pilot.ps1`, and tracked
+  `archive/` except `related_pdfs/` (PR B moves it).
+- `pipeline/20_is_q10.wl` gained `COMB_IS_PS` (p list), `COMB_N` and
+  `COMB_IS_PAR`; `run.wl is` runs it directly (`COMB_IS_PS` is an identity
+  knob), as does `src/run_parallel.ps1`. Bare runs: same defaults.
+- `10_truth.wl` calls `PureComplexStatistics` directly;
+  `tests/ecgrav_regression.wl` uses `PureComplexMHChain`; the MH/ECGrav
+  launchers call `pipeline/30_mh.wl` / `40_ecgrav.wl`; `run.wl check` lost
+  the two `test_streaming` smoke jobs.
+- CLAUDE.md commands rewritten around the stages; README quick start is
+  `run.wl`.
+- Checks (scratch roots only, nothing written to the main checkout's
+  outputs): see the PR.
+
 ## Phase 4 row 7: `pipeline/60_figures.wl` (2026-11-22, Ryzen, branch `claude/phase-4-figures`)
 
 Phase 4 is done. Next: Phase 5 (one `git mv` PR, then delete the shims).

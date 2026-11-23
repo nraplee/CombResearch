@@ -28,7 +28,7 @@ $dataDir    = Join-Path $repoRoot "data"
 $logDir     = Join-Path $repoRoot "logs"
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
 
-$runScript  = Join-Path $srcDir "run_mh_chains.wl"
+$runScript  = Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "30_mh.wl"
 Write-Host "using sampler driver: $runScript"
 
 # --- Step 1: restore p4q10_mh_unlabeled.wxf (production 200k) ---

@@ -6,8 +6,8 @@
      wolframscript -file pipeline\60_figures.wl q10_stats
      wolframscript -file pipeline\60_figures.wl fig2          (COMB_FIG2_N, COMB_FIG2_SEED)
 
-   Jobs (the old script each one was; that script is now a shim that sets
-   the job and Gets this file):
+   Jobs (the old script each one was; those scripts were shims that set
+   the job and Got this file, deleted in Phase 5):
      fig2              Figure 2 at q=3 (src/render_fig2.wl) ->
                        data/p3q3_n{N}_fig2.wxf, figures/fig2/
      truth_overlay     truth vs MH panels at the 9 truth cells

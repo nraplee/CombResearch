@@ -1,5 +1,5 @@
 # run_ecgrav_campaign.ps1
-# Launch src\run_ecgrav_samplers.wl as three parallel wolframscript
+# Launch pipeline/40_ecgrav.wl as three parallel wolframscript
 # processes (one per target) for a given sampler and cell list.
 #
 # Usage from the worktree root:
@@ -25,7 +25,7 @@ $srcDir  = $PSScriptRoot   # code: this checkout
 $logsDir = Join-Path $root "logs"
 if (!(Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir | Out-Null }
 
-$wrapper = Join-Path $srcDir "run_ecgrav_samplers.wl"
+$wrapper = Join-Path (Join-Path (Split-Path -Parent $srcDir) "pipeline") "40_ecgrav.wl"
 $targets = @("unlabeled", "facet", "vertex")
 $sampler = if ($env:COMB_ECG_SAMPLER) { $env:COMB_ECG_SAMPLER } else { "exact" }
 $cells   = if ($env:COMB_ECG_CELLS)   { $env:COMB_ECG_CELLS }   else { "2,4;2,5;2,6;2,7;3,4;3,5;3,6;4,4;4,5" }
