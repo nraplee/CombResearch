@@ -14,6 +14,7 @@ If[files === {}, Print["run_tests: no .wlt files selected"]; Exit[2]];
 
 allOk = True;
 Do[Module[{t, rep, failed},
+    Print["running ", FileNameTake[f], " ..."];
     {t, rep} = AbsoluteTiming[TestReport[f, ProgressReporting -> False]];
     failed = Select[Values[rep["TestResults"]], #["Outcome"] =!= "Success" &];
     Print[If[failed === {}, "PASS  ", "FAIL  "], FileNameTake[f], "  ",
