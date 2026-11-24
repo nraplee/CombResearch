@@ -120,9 +120,8 @@ caveat. It stays optional until Betre says IS is in scope.
 - Scope for the first meeting: panels 1-3 only (decided 2026-11-23).
 - `demo/` is tracked in this repo (decided 2026-11-23: it is private and
   Betre is a collaborator).
-- Whether to send Betre the 9 truth files (about 3 MB, gitignored). Panel 1
-  compares with them and panel 3 reads them. Dropped into `data/`, or into
-  a folder `data` next to the notebook, they are found.
+- The 9 truth files (3 MB) are tracked in `demo/data/` (decided
+  2026-11-23), byte copies of the store's.
 
 ## As built: panels 1-3 (2026-11-23)
 
@@ -139,7 +138,8 @@ Differences from the plan above:
   `ecgrav.wl` needed no change: `explorer_core.wl` sets `COMB_ECGRAV_DIR`
   for its own kernel when ECGrav is only next to `run.wl` or only installed
   as a paclet.
-- The truth files are not shipped (see "Open choices").
+- The truth files ship in `demo/data/`, but `data/` of the main checkout wins
+  when it has the cell.
 - Enumerations above 3 million facet-labeled complexes are refused, above
   30,000 they need a checkbox. (4,5) with the Cheap method is refused.
 - Panels 1 and 3 are plain controls with a button, not `Manipulate`: a job

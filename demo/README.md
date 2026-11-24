@@ -28,10 +28,10 @@ repository, and ECGrav. Keep the notebook in `demo/`.
    installed paclet. The Status box shows which one is loaded.
 2. Open `demo/CombResearchExplorer.nb` and choose Evaluation, Evaluate
    Notebook.
-3. Optional: the truth files are not in git (`p{p}q{q}_truth.wxf`, 9 files,
-   about 3 MB). Put them into `data/`, or into a folder `data` next to the
-   notebook. Without them panel 1 compares with ECGrav only, and panel 3
-   enumerates small cells on the spot.
+
+The truth files of the 9 cells (`p{p}q{q}_truth.wxf`, 3 MB) come with the
+notebook in `demo/data/`, copied from the main store on 2026-11-23. If the
+checkout's own `data/` has one, that one is used instead.
 
 ## How long things take (Ryzen 7 5800X, 16 kernels)
 
@@ -57,6 +57,7 @@ complexes only start with "Allow long runs", and above 3 million never.
 |---|---|
 | `CombResearchExplorer.nb` | generated; do not edit |
 | `build_explorer.wl` | writes the notebook: text and one line per panel |
+| `data/` | copies of the 9 truth files; refresh them if a truth cell is ever recomputed |
 | `explorer_core.wl` | loading, kernels, progress, all computing |
 | `explorer_panels.wl` | controls and displays |
 | `explorer_check.wl` | headless check; words `quick`, `full` |

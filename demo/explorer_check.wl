@@ -260,6 +260,17 @@ Module[{bad = CreateFile[], other = CreateFile[]},
       ExplorerTruthFile[2, 4] === other]];
   DeleteFile[{bad, other}]];
 
+section["truth files that come with the notebook (demo/data)"];
+Block[{combFile = ("none" &)},
+  check["all 9 cells found there", Sort[ExplorerTruthCells[]] === Sort[Keys[$CombTruthIsoCounts]]];
+  check["with the known numbers of classes", AllTrue[Keys[$CombTruthIsoCounts],
+    Import[ExplorerTruthFile @@ #, "WXF"]["numIsoClasses"] === $CombTruthIsoCounts[#] &]]];
+check["same bytes as the store's", AllTrue[Keys[$CombTruthIsoCounts], Function[c,
+  With[{name = combName["truth", Sequence @@ c]},
+    !FileExistsQ[combFile["truth", Sequence @@ c]] ||
+      FileHash[combFile["truth", Sequence @@ c]] ===
+        FileHash[FileNameJoin[{dir, "data", name}]]]]]];
+
 section["drawing: no vertex on a foreign edge"];
 Do[check[ToString[c] <> ": every class drawn clearly", AllTrue[
     Lookup[ExplorerTruth[Sequence @@ c]["complexes"], "facets"],

@@ -51,9 +51,9 @@ at the same cell are fast."],
     text["PureComplexTruthMarginal[truth, target, statistic] gives the exact distribution \
 of a statistic when the complex is uniform over unlabeled, facet-labeled or \
 vertex-labeled complexes. A good start is (3, 5) with numV: the vertex-labeled \
-distribution sits at much larger numbers of vertices than the other two. Cells marked stored are read from the truth files of the \
-repository (data/p{p}q{q}_truth.wxf, or a data folder next to this notebook); the \
-others are enumerated when you press Show."],
+distribution sits at much larger numbers of vertices than the other two. Cells marked \
+stored are read from our truth files (data/ of the main checkout, else the copies in \
+demo/data); the others are enumerated when you press Show."],
     code["ExplorerDistributionPanel[]"]};
 
   nb = Notebook[cells,

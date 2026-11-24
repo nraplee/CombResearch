@@ -14,8 +14,8 @@
 - Next: the user clicks through it (list in `demo/README.md`), then Betre
   opens it on the Mac with the questions in `phase6-deliverable.md`. Panels
   4-5 wait for his feedback.
-- Open: whether to send Betre the 9 truth files (drop-in folder
-  `demo/data/` is read if present; nothing is shipped).
+- The 9 truth files (3 MB) are tracked in `demo/data/` (user's decision,
+  2026-11-23), so Betre's clone has them. `data/` wins if it has the file.
 - Checks: `explorer_check.wl` (default and, before the last review fixes,
   `full`), `explorer_fe_check.wl`, all package tests: pass.
 

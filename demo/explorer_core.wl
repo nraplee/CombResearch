@@ -136,7 +136,7 @@ ExplorerExamples::usage =
 
 ExplorerTruthFile::usage =
 "ExplorerTruthFile[p, q] is the stored truth file: data/ of the main checkout,
-	else data/ next to the notebook, else None.";
+	else the copy in data/ next to the notebook, else None.";
 ExplorerTruthCells::usage = "ExplorerTruthCells[] lists the cells with a truth file.";
 $ExplorerLiveCells::usage = "Small cells panel 3 can enumerate on the spot.";
 ExplorerTruth::usage =
