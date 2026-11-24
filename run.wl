@@ -204,9 +204,41 @@ job[label_, script_, knobs_, outputs_, requires_, logStem_] := <|
   "err" -> FileNameJoin[{$CombLogsDir, logStem <> ".err"}]|>;
 
 (* A job's lock file: there while run.wl runs that job, so a second run.wl
-   (another shell) does not start it again. A crash can leave one behind;
-   delete it by hand then. *)
+   (another shell) does not start it again. A run.wl killed mid-job leaves
+   its locks behind; the next run removes a lock whose run.wl process is
+   gone (lockOwnerGone). A lock it cannot read, or from another machine,
+   stays: delete it by hand then. *)
 lockFile[j_] := j["log"] <> ".lock";
+
+(* True only when the lock's run.wl is surely gone: its PID is not running,
+   or now belongs to a program that is not Wolfram (PID reuse). Anything
+   unclear (unreadable lock, another host, the OS cannot be asked, a live
+   Wolfram process with that PID) keeps the lock. *)
+lockOwnerGone[f_] := Module[{l = Quiet @ Get[f], pid, out},
+  If[!AssociationQ[l] || !MatchQ[l["runWlPid"], _Integer?Positive], Return[False]];
+  If[KeyExistsQ[l, "host"] && l["host"] =!= $MachineName, Return[False]];
+  pid = l["runWlPid"];
+  If[pid === $ProcessID, Return[False]];
+  out = Quiet @ If[$OperatingSystem === "Windows",
+    RunProcess[{"tasklist", "/FI", "PID eq " <> ToString[pid], "/FO", "CSV", "/NH"}],
+    RunProcess[{"ps", "-p", ToString[pid], "-o", "comm="}]];
+  Which[
+    !AssociationQ[out] || !StringQ[out["StandardOutput"]], False,
+    StringContainsQ[out["StandardOutput"], "wolfram", IgnoreCase -> True], False,
+    (* Windows: tasklist ran and listed nothing for the PID; ps: exit 1 = no such PID *)
+    $OperatingSystem === "Windows", out["ExitCode"] === 0,
+    True, MemberQ[{0, 1}, out["ExitCode"]]]];
+
+(* A lock whose run.wl is gone: removed (a dry run only says so). True when
+   the job is no longer locked. *)
+clearStaleLock[j_] := With[{f = lockFile[j], pid = Quiet[Get[lockFile[j]]["runWlPid"]]},
+  Which[
+    !lockOwnerGone[f], False,
+    $dryrun, Print["  note  ", FileNameTake[f], " is stale (run.wl pid ", pid,
+      " is gone); a real run removes it"]; True,
+    True, Quiet[DeleteFile[f]];
+      If[FileExistsQ[f], False,
+        Print["  note  removed stale ", FileNameTake[f], " (run.wl pid ", pid, " is gone)"]; True]]];
 
 (* {action, reason}. Order: a planned skip reason, a lock, missing inputs,
    then the outputs (guarantee 2). *)
@@ -218,7 +250,7 @@ decide[j_Association] := Module[{missingIn, missingOut},
     !$force && KeyExistsQ[j, "doneWhen"] && AllTrue[j["doneWhen"], FileExistsQ],
       {"skip", "outputs present as " <> StringRiffle[FileNameTake /@ j["doneWhen"], ", "] <>
         " (rename to the canonical name)"},
-    FileExistsQ[lockFile[j]], {"skip", "locked: " <> FileNameTake[lockFile[j]] <>
+    FileExistsQ[lockFile[j]] && !clearStaleLock[j], {"skip", "locked: " <> FileNameTake[lockFile[j]] <>
       " exists (another run.wl on this job? delete it if stale)"},
     missingIn =!= {}, {"skip", "inputs missing: " <>
       StringRiffle[FileNameTake /@ Take[missingIn, UpTo[3]], ", "] <>
@@ -574,7 +606,7 @@ drain[proc_, j_] := (
 startJob[j_] := Module[{env, proc, expect},
   If[!DirectoryQ[$CombLogsDir], CreateDirectory[$CombLogsDir]];
   If[Quiet[CreateFile[lockFile[j], OverwriteTarget -> False]] === $Failed, Return[$Failed]];
-  Put[<|"label" -> j["label"], "runWlPid" -> $ProcessID, "started" -> DateString["ISODateTime"]|>,
+  Put[<|"label" -> j["label"], "runWlPid" -> $ProcessID, "host" -> $MachineName, "started" -> DateString["ISODateTime"]|>,
     lockFile[j]];
   AppendTo[$heldLocks, lockFile[j]];
   (* with the lock held, check once more: another run.wl may have finished

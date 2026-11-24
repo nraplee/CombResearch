@@ -153,11 +153,37 @@ has["ecgrav job runs pipeline/40_ecgrav.wl", r["out"], "pipeline/40_ecgrav.wl"];
 (* ----- lock file ----- *)
 touch[combFile["truth", 2, 4]];
 lock = FileNameJoin[{$CombLogsDir, "mh_p2q4_facet.log.lock"}];
-Put[<|"label" -> "test", "runWlPid" -> -1|>, lock];
+(* held by a live Wolfram process (this test's kernel): kept *)
+Put[<|"label" -> "test", "runWlPid" -> $ProcessID|>, lock];
 r = runwl[{"mh", "profile", "quick", "cells", "2,4", "targets", "facet", "dryrun"}];
 has["lock stops a launch", r["out"], "locked: mh_p2q4_facet.log.lock"];
-check["a foreign lock is left in place", FileExistsQ[lock], True];
+check["a live run.wl's lock is left in place", FileExistsQ[lock], True];
+(* unreadable PID or another machine: kept *)
+Put[<|"label" -> "test", "runWlPid" -> -1|>, lock];
+r = runwl[{"mh", "profile", "quick", "cells", "2,4", "targets", "facet", "dryrun"}];
+has["a lock with no usable PID stops a launch", r["out"], "locked: mh_p2q4_facet.log.lock"];
+deadPid = Module[{p = StartProcess[If[$OperatingSystem === "Windows", {"cmd", "/c", "exit"}, {"true"}]], id},
+  id = p["PID"]; While[ProcessStatus[p] === "Running", Pause[0.1]]; id];
+Put[<|"label" -> "test", "runWlPid" -> deadPid, "host" -> "some-other-machine"|>, lock];
+r = runwl[{"mh", "profile", "quick", "cells", "2,4", "targets", "facet", "dryrun"}];
+has["another machine's lock stops a launch", r["out"], "locked: mh_p2q4_facet.log.lock"];
+(* the PID of a process that has exited: stale; a dry run only says so *)
+Put[<|"label" -> "test", "runWlPid" -> deadPid|>, lock];
+r = runwl[{"mh", "profile", "quick", "cells", "2,4", "targets", "facet", "dryrun"}];
+has["dry run: stale lock reported", r["out"], "mh_p2q4_facet.log.lock is stale"];
+check["dry run: stale lock kept", FileExistsQ[lock], True];
+hasNot["dry run: stale lock does not stop the job", r["out"], "locked: mh_p2q4_facet.log.lock"];
+r = runwl[{"status"}];
+check["status leaves a stale lock alone", FileExistsQ[lock], True];
 DeleteFile[lock];
+(* a real run removes it; the truth job's outputs exist (touched above), so
+   after the lock is gone it is skipped and nothing is computed *)
+lock = FileNameJoin[{$CombLogsDir, "truth_cheap.log.lock"}];
+Put[<|"label" -> "test", "runWlPid" -> deadPid|>, lock];
+r = runwl[{"truth", "profile", "quick", "cells", "2,4"}];
+has["real run: stale lock removed", r["out"], "removed stale truth_cheap.log.lock"];
+check["real run: stale lock file gone", FileExistsQ[lock], False];
+hasNot["real run: job not reported locked", r["out"], "locked: truth_cheap.log.lock"];
 
 (* ----- validate restricted / sampler ----- *)
 touch[combFile["mh", 2, 4, "facet"]];
