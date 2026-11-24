@@ -5,7 +5,7 @@
    CombResearch`Private`; the public symbols are declared there.
 
    Three enumerators, all the same DFS over "complexes in progress" (moved
-   verbatim in Phase 4 from src/streaming_enumerator.wl, _bliss.wl and
+   in Phase 4 from src/streaming_enumerator.wl, _bliss.wl and
    _mckay.wl, deleted in Phase 5):
 
      cheap  (streamingEnumeratePure)       cheap invariant key, then
@@ -16,13 +16,13 @@
                                            Correct, not faster than cheap.
      mckay  (streamingEnumeratePureMcKay)  McKay canonical augmentation:
                                            prunes the DFS at every step, BLISS
-                                           key dedup across starts. The
+                                           key dedup across jobs. The
                                            production path at p = 4.
 
    The DFS matches ECGrav's GenerateAllFacetLabeledPureSimplicialComplexes:
      * Each complex in progress is a list of vertex membership subsets (each
        subset of {1..q} names the facets the vertex belongs to).
-     * addOneVertex marks a subset i unavailable when adding a vertex with
+     * extendingSubsets marks a subset i unavailable when adding a vertex with
        membership containing i would fill a facet past purity p
        (Length[i] == 1) or make all facets in i share p common vertices
        (Length[i] > 1, which would force two facets to coincide).
@@ -107,118 +107,179 @@ ChooseNonIsomorphicPureComplexesBucketed[allLab_List] := chooseNonIsoBucketed[al
 
 
 (* ============================================================
-   Running the starts, with optional progress reports
+   The DFS: extending a state, and cutting the tree into jobs
+   ============================================================ *)
+
+(* Membership subsets that a vertex added to state may have. *)
+extendingSubsets[state_List, p_Integer, facetSubsets_List] := Module[
+  {vertexDegree, unavail},
+  vertexDegree = Association @ Table[
+    i -> Count[state, _List?(SubsetQ[#, i] &)],
+    {i, facetSubsets}];
+  unavail = Cases[facetSubsets,
+    i_ /; (Length[i] == 1 && vertexDegree[i] == p)
+       || (Length[i] > 1 && vertexDegree[i] == p - 1)];
+  Fold[
+    Function[{x, y}, Select[x, ! SubsetQ[#, y] &]],
+    facetSubsets, unavail]
+];
+
+stateToFacets[state_List, q_Integer] := With[{n = Length[state]},
+  Reverse @ Table[
+    Select[Range[n], MemberQ[state[[#]], f] &],
+    {f, q}]
+];
+
+(* Children of a state in the cheap and bliss DFS (lex constraint). *)
+lexChildren[state_List, p_Integer, q_Integer, facetSubsets_List] :=
+  Append[state, #] & /@ With[{lastV = Last[state]},
+    Select[extendingSubsets[state, p, facetSubsets], Order[#, lastV] >= 0 &]];
+
+(* All leaves below state, in DFS order: emit[leaf]. *)
+enumerationDFS[children_, emit_, args : {p_, q_, facetSubsets_}][state_List] :=
+  If[Total[Length /@ state] == p q,
+    emit[state],
+    Scan[enumerationDFS[children, emit, args], children[state, p, q, facetSubsets]]];
+
+(* A job is a list of DFS states; a worker visits all leaves below them.
+   Serial runs have one job per start. The starts are very unequal (at (3,4)
+   87% of McKay's tree hangs off {{4}}), so parallel runs cut the tree into
+   about $enumerationJobsPerKernel jobs per kernel: while there are fewer, the
+   states with the largest (vertex slots left) * Log[1 + children], an estimate
+   of the subtree, are replaced by their children. The children a state was
+   weighed with are the job's states, so nothing is computed twice. Jobs stay
+   in DFS order, so the merged result is the same for every cut. *)
+$enumerationJobsPerKernel = 32;
+
+(* {state, its children} for each state; a leaf has none *)
+enumerationExpand[children_, states_List, {p_, q_, facetSubsets_}] :=
+  Transpose[{states, ParallelMap[
+    If[Total[Length /@ #] == p q, {}, children[#, p, q, facetSubsets]] &, states,
+    DistributedContexts -> Automatic]}];
+
+enumerationJobs[children_, starts_List, args : {p_, q_, _}] := Module[
+  {nodes, weight, target, big, cut, new},
+  weight[{state_, kids_}] := (p q - Total[Length /@ state]) Log[1. + Length[kids]];
+  DistributeDefinitions[children];
+  nodes = enumerationExpand[children, List /@ starts, args];
+  target = $enumerationJobsPerKernel Max[1, $KernelCount];
+  While[Length[nodes] < target,
+    big = Select[Ordering[weight /@ nodes, All, Greater], nodes[[#, 2]] =!= {} &];
+    If[big === {}, Break[]];
+    (* about half of the missing jobs in one go, so few parallel rounds *)
+    cut = Max[1, LengthWhile[Accumulate[Length[nodes[[#, 2]]] & /@ big],
+      # <= (target - Length[nodes])/2 &]];
+    big = Sort[Take[big, cut]];
+    new = enumerationExpand[children, Join @@ nodes[[big, 2]], args];
+    nodes = Join @@ ReplacePart[List /@ nodes,
+      Thread[big -> TakeList[new, Length /@ nodes[[big, 2]]]]]];
+  (* a leaf stays as it is; a dead end (no children) gives no job *)
+  DeleteCases[If[Total[Length /@ #[[1]]] == p q, {#[[1]]}, #[[2]]] & /@ nodes, {}]];
+
+
+(* ============================================================
+   Running the jobs, with optional progress reports
    ============================================================ *)
 
 (* Called by the workers at each leaf as $enumerationReport[leaves, keys]
    when it is not None (only inside enumerationReported). *)
 $enumerationReport = None;
 
-(* One start with reports: report[i, leaves, keys, done] at most every half
-   second, plus once when the start is done. job = {start, index}. *)
-enumerationReported[worker_, {start_, i_}, args_List, report_] := Module[
+(* One job with reports: report[i, leaves, keys, done] at most every half
+   second, plus once when the job is done. *)
+enumerationReported[worker_, {job_, i_}, args_List, report_] := Module[
   {last = AbsoluteTime[], r},
   r = Block[{$enumerationReport = Function[{leaves, keys},
       If[AbsoluteTime[] - last > 0.5,
         last = AbsoluteTime[];
         report[i, leaves, keys, 0]]]},
-    worker[start, Sequence @@ args]];
+    worker[job, Sequence @@ args]];
   report[i, r["count"], Length[r["map"]], 1];
   r];
 
-(* Subkernels report through small files in a temporary directory (one per
-   start), and the master reads them twice a second. Not through a shared
-   function: an abort that finds a subkernel inside a shared call breaks its
-   link, and Parallel then spends minutes replacing kernels. *)
-enumerationFileReport[dir_][i_, leaves_, keys_, done_] := Quiet @ AbortProtect @ Module[
-  {s = OpenWrite[FileNameJoin[{dir, ToString[i] <> ".txt"}]]},
-  WriteString[s, StringRiffle[{leaves, keys, done}, " "], "\n"];
-  Close[s];];
+(* Subkernels report through small files in a temporary directory, one per
+   subkernel with the sums over its jobs, written at most twice a second; the
+   master reads them twice a second. Not through a shared function: an abort
+   that finds a subkernel inside a shared call breaks its link, and Parallel
+   then spends minutes replacing kernels.
+   $enumerationSums: {dir, leaves, keys, jobs done, time last written}. *)
+$enumerationSums = {None, 0, 0, 0, 0};
+
+enumerationFileReport[dir_][_, leaves_, keys_, done_] := Quiet @ AbortProtect @ Module[
+  {d, l, k, n, t, s},
+  {d, l, k, n, t} = $enumerationSums;
+  If[d =!= dir, {l, k, n, t} = {0, 0, 0, 0}];
+  If[AbsoluteTime[] - t > 0.5,
+    t = AbsoluteTime[];
+    s = OpenWrite[FileNameJoin[{dir, ToString[$KernelID] <> ".txt"}]];
+    WriteString[s, StringRiffle[{l + leaves, Max[k, keys], n + done}, " "], "\n"];
+    Close[s]];
+  $enumerationSums = If[done === 1,
+    {dir, l + leaves, Max[k, keys], n + 1, t}, {dir, l, k, n, t}];];
 
 (* file -> {leaves, keys, done}; a file caught while being written is left out *)
 enumerationReadReports[dir_] := Select[
   AssociationMap[Quiet[ReadList[#, Number]] &, FileNames["*.txt", dir]],
   MatchQ[{_Integer, _Integer, _Integer}]];
 
-enumerationProgressRow[nStarts_, rows_] := <|"starts" -> nStarts,
+enumerationProgressRow[nJobs_, rows_] := <|"starts" -> nJobs,
   "startsDone" -> Total[rows[[All, 3]]], "leaves" -> Total[rows[[All, 1]]],
   "classesSeen" -> Max[0, rows[[All, 2]]]|>;
 
-(* worker[start, args...] over the starts, results in start order.
+(* worker[job, args...] over the jobs below the starts, results in DFS order.
    progress: None, or a function called on the master with
    <|"starts", "startsDone", "leaves", "classesSeen"|>. *)
-enumerationMap[worker_, starts_List, args_List, par_, None] := If[par,
-  ParallelMap[worker[#, Sequence @@ args] &, starts,
-    Method -> "FinestGrained", DistributedContexts -> Automatic],
-  worker[#, Sequence @@ args] & /@ starts];
+enumerationMap[worker_, _, starts_List, args_List, False, None] :=
+  worker[{{#}}, Sequence @@ args] & /@ starts;
 
-enumerationMap[worker_, starts_List, args_List, False, progress_] := Module[
+enumerationMap[worker_, _, starts_List, args_List, False, progress_] := Module[
   {rows = <||>, n = Length[starts]},
   MapIndexed[
-    enumerationReported[worker, {#1, First[#2]}, args,
+    enumerationReported[worker, {{{#1}}, First[#2]}, args,
       Function[{i, leaves, keys, done},
         rows[i] = {leaves, keys, done};
         progress[enumerationProgressRow[n, Values[rows]]]]] &,
     starts]];
 
-enumerationMap[worker_, starts_List, args_List, True, progress_] := Module[
-  {dir = CreateDirectory[], n = Length[starts], rows = <||>, tick, task, result},
+enumerationMap[worker_, children_, starts_List, args_List, True, None] :=
+  ParallelMap[worker[#, Sequence @@ args] &, enumerationJobs[children, starts, args],
+    Method -> "FinestGrained", DistributedContexts -> Automatic];
+
+enumerationMap[worker_, children_, starts_List, args_List, True, progress_] := Module[
+  {dir = CreateDirectory[], jobs, n, rows = <||>, tick, task, result},
   tick[] := (
     rows = Join[rows, enumerationReadReports[dir]];
     If[rows =!= <||>, progress[enumerationProgressRow[n, Values[rows]]]]);
-  task = SessionSubmit[ScheduledTask[tick[], Quantity[0.5, "Seconds"]]];
   WithCleanup[
+    jobs = enumerationJobs[children, starts, args];
+    n = Length[jobs];
     DistributeDefinitions[enumerationReported, enumerationFileReport];
+    task = SessionSubmit[ScheduledTask[tick[], Quantity[0.5, "Seconds"]]];
     result = With[{dir = dir},
       ParallelMap[enumerationReported[worker, #, args, enumerationFileReport[dir]] &,
-        MapIndexed[{#1, First[#2]} &, starts],
+        MapIndexed[{#1, First[#2]} &, jobs],
         Method -> "FinestGrained", DistributedContexts -> Automatic]];
     TaskRemove[task];
-    tick[];
+    (* the files may miss the last half second: end with the exact numbers *)
+    progress[enumerationProgressRow[n, {#["count"], Length[#["map"]], 1} & /@ result]];
     result,
     Quiet[TaskRemove[task]];
     Quiet[DeleteDirectory[dir, DeleteContents -> True]]]];
 
 
 (* ============================================================
-   Cheap enumerator: single-start worker + driver
+   Cheap enumerator: worker + driver
    ============================================================ *)
 
-(* DFS from one starting vertex membership set v0 with a local bucket map.
-   Returns <|"map" -> localMap, "count" -> localCount|>. Pure in
-   (v0, p, q, target, facetSubsets) so it can run on subkernels. *)
-streamingFromStart[v0_List, p_Integer, q_Integer, target_Integer,
-                   facetSubsets_List] := Module[
-  {localMap, localCount, addOneVertex, convertToFacets, emit, dfs},
-
+(* DFS below the states of one job with a local bucket map. Returns
+   <|"map" -> localMap, "count" -> localCount|>. Pure in (job, p, q,
+   facetSubsets) so it can run on subkernels. *)
+streamingJob[job_List, p_Integer, q_Integer, facetSubsets_List] := Module[
+  {localMap = <||>, localCount = 0, emit},
   Block[{$RecursionLimit = Infinity, $IterationLimit = Infinity},
-    localMap = <||>;
-    localCount = 0;
-
-    addOneVertex[state_List] := Module[
-      {vertexDegree, unavail, avail, lastV},
-      vertexDegree = Association @ Table[
-        i -> Count[state, _List?(SubsetQ[#, i] &)],
-        {i, facetSubsets}];
-      unavail = Cases[facetSubsets,
-        i_ /; (Length[i] == 1 && vertexDegree[i] == p)
-           || (Length[i] > 1 && vertexDegree[i] == p - 1)];
-      avail = Fold[
-        Function[{x, y}, Select[x, ! SubsetQ[#, y] &]],
-        facetSubsets, unavail];
-      lastV = Last[state];
-      Select[avail, Order[#, lastV] >= 0 &]
-    ];
-
-    convertToFacets[state_List] := With[{n = Length[state]},
-      Reverse @ Table[
-        Select[Range[n], MemberQ[state[[#]], f] &],
-        {f, q}]
-    ];
-
     emit[finishedState_] := Module[
       {cmplx, key, bucket, isoFound},
-      cmplx = convertToFacets[finishedState];
+      cmplx = stateToFacets[finishedState, q];
       key = canonicalKey[cmplx];
       (* Key[...] wrapper required: canonicalKey returns a List, and
          Lookup[assoc, list, default] otherwise treats list as a
@@ -231,48 +292,42 @@ streamingFromStart[v0_List, p_Integer, q_Integer, target_Integer,
       If[$enumerationReport =!= None,
         $enumerationReport[localCount, Length[localMap]]];
     ];
-
-    dfs[state_List, currTotal_Integer] := If[
-      currTotal == target,
-      emit[state],
-      Do[dfs[Append[state, v], currTotal + Length[v]],
-        {v, addOneVertex[state]}]
-    ];
-
-    dfs[{v0}, Length[v0]];
-
+    Scan[enumerationDFS[lexChildren, emit, {p, q, facetSubsets}], job];
     <|"map" -> localMap, "count" -> localCount|>
   ]
 ];
 
-(* Merge bucket-rep lists for the same canonical key (Merge combiner). *)
+(* Representatives with the same key from all jobs, in DFS order: keep the
+   first of each class. *)
 mergeBucketReps[lists_List] := chooseNonIsoBucketWithin[Flatten[lists, 1]];
 
 Options[streamingEnumeratePure] = {"Parallel" -> True, "Progress" -> None};
 
 streamingEnumeratePure[purity_Integer, facetOrder_Integer,
                        OptionsPattern[]] := Module[
-  {p = purity, q = facetOrder, target, facetSubsets, starts,
-   useParallel = OptionValue["Parallel"],
-   localResults, mergedMap, totalEmitted},
+  {p = purity, q = facetOrder, facetSubsets, starts,
+   useParallel = TrueQ[OptionValue["Parallel"]],
+   localResults, candidates, mergedMap, totalEmitted},
 
-  target = p * q;
   facetSubsets = Subsets[Range[q]][[2;;-1]];
   starts = facetSubsets[[q;;-1]];
 
-  If[TrueQ[useParallel],
-    (* Subkernels need ECGrav (for IsomorphicSimplicialComplexQ) and the
-       canonicalKey + streamingFromStart definitions. *)
+  If[useParallel,
+    (* Subkernels need ECGrav (for IsomorphicSimplicialComplexQ) and our
+       definitions. *)
     $CombResearchSubkernelSetup[];
     ParallelEvaluate[ClearSystemCache[]];
-    DistributeDefinitions[
-      canonicalKey, streamingFromStart, chooseNonIsoBucketWithin]];
+    DistributeDefinitions[streamingJob, mergeBucketReps]];
 
-  localResults = enumerationMap[streamingFromStart, starts,
-    {p, q, target, facetSubsets}, TrueQ[useParallel], OptionValue["Progress"]];
+  localResults = enumerationMap[streamingJob, lexChildren, starts,
+    {p, q, facetSubsets}, useParallel, OptionValue["Progress"]];
 
   totalEmitted = Total[#["count"] & /@ localResults];
-  mergedMap = Merge[#["map"] & /@ localResults, mergeBucketReps];
+  candidates = Merge[#["map"] & /@ localResults, Identity];
+  mergedMap = If[useParallel,
+    AssociationThread[Keys[candidates], ParallelMap[mergeBucketReps, Values[candidates],
+      Method -> "FinestGrained", DistributedContexts -> Automatic]],
+    mergeBucketReps /@ candidates];
 
   <|"isoReps"     -> Flatten[Values[mergedMap], 1],
     "totalEmitted" -> totalEmitted,
@@ -323,86 +378,52 @@ PureComplexCanonicalKey[complex_List] := blissCanonicalKey[complex];
 
 
 (* ============================================================
-   BLISS enumerator: single-start worker + driver
+   BLISS enumerator: worker + driver
    ============================================================ *)
 
-(* Same DFS as streamingFromStart; the emit step keeps ONE representative
-   per canonical key (keys are unique by construction). *)
-streamingFromStartBLISS[v0_List, p_Integer, q_Integer,
-                       target_Integer, facetSubsets_List] := Module[
-  {localMap, localCount, addOneVertex, convertToFacets, emit, dfs},
+(* DFS below the states of one job, keeping ONE representative (the first
+   seen) per canonical key; keys are unique by construction. Used by bliss
+   and mckay, which differ in children. *)
+blissKeyJob[children_, job_List, p_Integer, q_Integer, facetSubsets_List] := Module[
+  {localMap = <||>, localCount = 0, emit},
   Block[{$RecursionLimit = Infinity, $IterationLimit = Infinity},
-    localMap = <||>;
-    localCount = 0;
-
-    addOneVertex[state_List] := Module[
-      {vertexDegree, unavail, avail, lastV},
-      vertexDegree = Association @ Table[
-        i -> Count[state, _List?(SubsetQ[#, i] &)],
-        {i, facetSubsets}];
-      unavail = Cases[facetSubsets,
-        i_ /; (Length[i] == 1 && vertexDegree[i] == p)
-           || (Length[i] > 1 && vertexDegree[i] == p - 1)];
-      avail = Fold[
-        Function[{x, y}, Select[x, !SubsetQ[#, y] &]],
-        facetSubsets, unavail];
-      lastV = Last[state];
-      Select[avail, Order[#, lastV] >= 0 &]
-    ];
-
-    convertToFacets[state_List] := With[{n = Length[state]},
-      Reverse @ Table[
-        Select[Range[n], MemberQ[state[[#]], f] &],
-        {f, q}]
-    ];
-
-    (* First-seen rep wins per canonical key. *)
     emit[finishedState_] := Module[{cmplx, key},
-      cmplx = convertToFacets[finishedState];
+      cmplx = stateToFacets[finishedState, q];
       key = blissCanonicalKey[cmplx];
       If[!KeyExistsQ[localMap, key], localMap[key] = cmplx];
       localCount++;
       If[$enumerationReport =!= None,
         $enumerationReport[localCount, Length[localMap]]];
     ];
-
-    dfs[state_List, currTotal_Integer] := If[
-      currTotal == target,
-      emit[state],
-      Do[dfs[Append[state, v], currTotal + Length[v]],
-        {v, addOneVertex[state]}]
-    ];
-
-    dfs[{v0}, Length[v0]];
-
+    Scan[enumerationDFS[children, emit, {p, q, facetSubsets}], job];
     <|"map" -> localMap, "count" -> localCount|>
   ]
 ];
+
+streamingJobBLISS[job_List, p_Integer, q_Integer, facetSubsets_List] :=
+  blissKeyJob[lexChildren, job, p, q, facetSubsets];
 
 Options[streamingEnumeratePureBLISS] = {"Parallel" -> True, "Progress" -> None};
 
 streamingEnumeratePureBLISS[purity_Integer, facetOrder_Integer,
                             OptionsPattern[]] := Module[
-  {p = purity, q = facetOrder, target, facetSubsets, starts,
-   useParallel = OptionValue["Parallel"],
+  {p = purity, q = facetOrder, facetSubsets, starts,
+   useParallel = TrueQ[OptionValue["Parallel"]],
    localResults, mergedMap, totalEmitted},
 
-  target = p * q;
   facetSubsets = Subsets[Range[q]][[2;;-1]];
   starts = facetSubsets[[q;;-1]];
 
-  If[TrueQ[useParallel],
+  If[useParallel,
     (* CanonicalGraph is built in; ECGrav is not needed on the workers. *)
-    DistributeDefinitions[
-      bipartiteIncidenceGraph, blissCanonicalKey,
-      streamingFromStartBLISS]];
+    DistributeDefinitions[streamingJobBLISS]];
 
-  localResults = enumerationMap[streamingFromStartBLISS, starts,
-    {p, q, target, facetSubsets}, TrueQ[useParallel], OptionValue["Progress"]];
+  localResults = enumerationMap[streamingJobBLISS, lexChildren, starts,
+    {p, q, facetSubsets}, useParallel, OptionValue["Progress"]];
 
   totalEmitted = Total[#["count"] & /@ localResults];
-  (* A key may appear in several kernels (same class from different
-     starts). Pick any rep. *)
+  (* A key may appear in several jobs (same class from different states).
+     Merge keeps the rep seen first. *)
   mergedMap = Merge[#["map"] & /@ localResults, First];
 
   <|"isoReps"      -> Values[mergedMap],
@@ -448,88 +469,34 @@ isInCanonicalRemovalOrbit[cmplx_List, candidate_Integer] := Module[
   MemberQ[hostOrbit, candidate]
 ];
 
-streamingFromStartMcKay[v0_List, p_Integer, q_Integer,
-                       target_Integer, facetSubsets_List] := Module[
-  {localMap, localCount, addOneVertex, convertToFacets, isMcKayValid,
-   emit, dfs},
-  Block[{$RecursionLimit = Infinity, $IterationLimit = Infinity},
-    localMap = <||>;
-    localCount = 0;
+(* Children of a state in McKay's DFS. No lex constraint: lex's canonical
+   choice conflicts with McKay's canonical removal vertex; McKay alone enforces
+   canonicity. Strict equality: the added vertex must BE the canonical removal
+   vertex. *)
+mckayChildren[state_List, p_Integer, q_Integer, facetSubsets_List] :=
+  Select[Append[state, #] & /@ extendingSubsets[state, p, facetSubsets],
+    canonicalRemovalVSide[stateToFacets[#, q]] === Length[#] &];
 
-    (* No lex constraint: lex's canonical choice conflicts with McKay's
-       canonical removal vertex. McKay alone enforces canonicity. *)
-    addOneVertex[state_List] := Module[
-      {vertexDegree, unavail, avail},
-      vertexDegree = Association @ Table[
-        i -> Count[state, _List?(SubsetQ[#, i] &)],
-        {i, facetSubsets}];
-      unavail = Cases[facetSubsets,
-        i_ /; (Length[i] == 1 && vertexDegree[i] == p)
-           || (Length[i] > 1 && vertexDegree[i] == p - 1)];
-      Fold[
-        Function[{x, y}, Select[x, !SubsetQ[#, y] &]],
-        facetSubsets, unavail]
-    ];
-
-    convertToFacets[state_List] := With[{n = Length[state]},
-      Reverse @ Table[
-        Select[Range[n], MemberQ[state[[#]], f] &],
-        {f, q}]
-    ];
-
-    (* State of size 1 trivially passes. Strict equality: the just-added
-       vertex must BE the canonical removal vertex. *)
-    isMcKayValid[state_List] := If[
-      Length[state] <= 1,
-      True,
-      canonicalRemovalVSide[convertToFacets[state]] === Length[state]
-    ];
-
-    emit[finishedState_] := Module[{cmplx, key},
-      cmplx = convertToFacets[finishedState];
-      key = blissCanonicalKey[cmplx];
-      If[!KeyExistsQ[localMap, key], localMap[key] = cmplx];
-      localCount++;
-      If[$enumerationReport =!= None,
-        $enumerationReport[localCount, Length[localMap]]];
-    ];
-
-    dfs[state_List, currTotal_Integer] := If[
-      currTotal == target,
-      emit[state],
-      Do[
-        With[{newState = Append[state, v]},
-          If[isMcKayValid[newState],
-            dfs[newState, currTotal + Length[v]]]],
-        {v, addOneVertex[state]}]
-    ];
-
-    dfs[{v0}, Length[v0]];
-
-    <|"map" -> localMap, "count" -> localCount|>
-  ]
-];
+streamingJobMcKay[job_List, p_Integer, q_Integer, facetSubsets_List] :=
+  blissKeyJob[mckayChildren, job, p, q, facetSubsets];
 
 Options[streamingEnumeratePureMcKay] = {"Parallel" -> True, "Progress" -> None};
 
 streamingEnumeratePureMcKay[purity_Integer, facetOrder_Integer,
                             OptionsPattern[]] := Module[
-  {p = purity, q = facetOrder, target, facetSubsets, starts,
-   useParallel = OptionValue["Parallel"],
+  {p = purity, q = facetOrder, facetSubsets, starts,
+   useParallel = TrueQ[OptionValue["Parallel"]],
    localResults, mergedMap, totalEmitted},
 
-  target = p * q;
   facetSubsets = Subsets[Range[q]][[2;;-1]];
   starts = facetSubsets[[q;;-1]];
 
-  If[TrueQ[useParallel],
-    DistributeDefinitions[
-      bipartiteIncidenceGraph, blissCanonicalKey,
-      canonicalRemovalVSide, isInCanonicalRemovalOrbit,
-      streamingFromStartMcKay]];
+  If[useParallel,
+    (* CanonicalGraph is built in; ECGrav is not needed on the workers. *)
+    DistributeDefinitions[streamingJobMcKay]];
 
-  localResults = enumerationMap[streamingFromStartMcKay, starts,
-    {p, q, target, facetSubsets}, TrueQ[useParallel], OptionValue["Progress"]];
+  localResults = enumerationMap[streamingJobMcKay, mckayChildren, starts,
+    {p, q, facetSubsets}, useParallel, OptionValue["Progress"]];
 
   totalEmitted = Total[#["count"] & /@ localResults];
   mergedMap = Merge[#["map"] & /@ localResults, First];

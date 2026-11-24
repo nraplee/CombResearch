@@ -32,22 +32,26 @@ Do[With[{m = method, par = parallel},
       Module[{log = {}, opts = {Method -> m, "Parallel" -> par}, r},
         r = EnumerateUnlabeledPureComplexes[2, 4, opts, "Progress" -> (AppendTo[log, #] &)];
         {r === EnumerateUnlabeledPureComplexes[2, 4, opts],
-         Lookup[Last[log], {"starts", "startsDone"}] === {12, 12},
+         Last[log]["starts"] === Last[log]["startsDone"] &&
+           If[par, Last[log]["starts"] > 12, Last[log]["starts"] === 12],
          Last[log]["leaves"] === r["totalEmitted"],
          OrderedQ[Lookup[log, "leaves"]]}],
       {True, True, True, True},
       TestID -> "progress-" <> m <> If[par, "-parallel", "-serial"]]],
   {method, {"Cheap", "BLISS", "McKay"}}, {parallel, {False, True}}];
 
-(* reports also come from inside a start, not only when one is done
-   (McKay: one start runs for most of the time); no task is left behind *)
+(* serial: reports also come from inside a start, not only when one is done
+   (McKay: one start runs for most of the time). Parallel: the starts are cut
+   into many jobs, so reports come while some are done and some are not. No
+   task is left behind. *)
 Do[With[{par = parallel},
     VerificationTest[
       Module[{log = {}},
         EnumerateUnlabeledPureComplexes[3, 4, Method -> "McKay", "Parallel" -> par,
           "Progress" -> (AppendTo[log, #] &)];
-        {MemberQ[Partition[log, 2, 1], {a_, b_} /; a["startsDone"] === b["startsDone"] &&
-            a["leaves"] < b["leaves"]],
+        {MemberQ[Partition[log, 2, 1], {a_, b_} /; a["leaves"] < b["leaves"] &&
+            If[par, 0 < a["startsDone"] < b["startsDone"] < b["starts"],
+              a["startsDone"] === b["startsDone"]]],
          Last[log]["leaves"], Tasks[]}],
       {True, 417, {}},
       TestID -> "progress-inside-starts" <> If[par, "-parallel", "-serial"]]],
@@ -108,6 +112,17 @@ VerificationTest[
   {11, 11}, TestID -> "bucketed-vs-ecgrav-24"];
 
 (* ----- parallel path ----- *)
+(* the same result, in the same order, for every way to cut the tree *)
+Do[With[{m = method, k = jobs},
+    VerificationTest[
+      Block[{CombResearch`Private`$enumerationJobsPerKernel = k},
+        EnumerateUnlabeledPureComplexes[#1, #2, Method -> m, "Parallel" -> True] ===
+          EnumerateUnlabeledPureComplexes[#1, #2, Method -> m, "Parallel" -> False]] & @@@
+        {{2, 4}, {3, 3}, {4, 2}, {2, 1}},
+      {True, True, True, True},
+      TestID -> "parallel-same-as-serial-" <> m <> "-" <> ToString[k]]],
+  {method, {"Cheap", "BLISS", "McKay"}}, {jobs, {1, 4, 1000}}];
+
 VerificationTest[
   Length[EnumerateUnlabeledPureComplexes[2, 5, Method -> #, "Parallel" -> True]["isoReps"]] & /@
     {"Cheap", "McKay"},

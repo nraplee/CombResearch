@@ -42,13 +42,14 @@ EnumerateUnlabeledPureComplexes::usage =
 	  Method -> Automatic | \"Cheap\" | \"BLISS\" | \"McKay\". Automatic picks
 	    \"McKay\" for p >= 4 and \"Cheap\" otherwise (the cheap pipeline runs out
 	    of memory at (4,5)).
-	  \"Parallel\" -> True | False: spread the DFS starting states over
-	    subkernels. Use False for memory-bound cells (p = 4).
+	  \"Parallel\" -> True | False: cut the DFS into about 32 jobs per
+	    subkernel, with the same result as False.
 	  \"Progress\" -> None | f: f is called on the master about twice a second
 	    (it should be fast, and cannot stop the run), with <|\"starts\", \"startsDone\", \"leaves\",
-	    \"classesSeen\"|>: DFS starting states in all and finished, leaves
-	    visited so far, and a lower bound for the classes found. For \"Cheap\"
-	    and \"BLISS\", leaves ends at the number of facet-labeled complexes.
+	    \"classesSeen\"|>: jobs in all and finished (one job per DFS starting
+	    state, many more in parallel), leaves visited so far, and a lower bound
+	    for the classes found. For \"Cheap\" and \"BLISS\", leaves ends at the
+	    number of facet-labeled complexes.
 	\"totalEmitted\" counts DFS leaves visited. For \"Cheap\" and \"BLISS\" that is
 	the number of facet-labeled complexes; for \"McKay\" it is smaller (pruned).
 	\"numBuckets\" is the number of distinct keys used for bucketing.";

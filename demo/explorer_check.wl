@@ -109,12 +109,14 @@ Do[If[KeyExistsQ[results, {c, True}] && KeyExistsQ[results, {c, False}],
       results[{c, True}]["reps"] === results[{c, False}]["reps"]]],
   {c, cells}];
 Do[Module[{log = {}},
-    (* McKay: one branch runs for most of the time *)
+    (* McKay: serially, one branch runs for most of the time; in parallel the
+       branches are cut into many jobs *)
     EnumerateUnlabeledPureComplexes[3, 4, Method -> "McKay", "Parallel" -> par,
       "Progress" -> (AppendTo[log, #] &)];
     check["(3,4): progress also inside branches, " <> If[par, "parallel", "serial"],
-      MemberQ[Partition[log, 2, 1], {a_, b_} /; a["startsDone"] === b["startsDone"] &&
-        a["leaves"] < b["leaves"]]]],
+      MemberQ[Partition[log, 2, 1], {a_, b_} /; a["leaves"] < b["leaves"] &&
+        If[par, 0 < a["startsDone"] < b["startsDone"] < b["starts"],
+          a["startsDone"] === b["startsDone"]]]]],
   {par, {True, False}}];
 Do[With[{r = ExplorerEnumerate[2, 4, m]},
     check["(2,4) method " <> m, AssociationQ[r] && r["method"] === m &&
