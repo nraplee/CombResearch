@@ -92,6 +92,8 @@ combECGravCheck[] := Module[{missing, passed},
       " lacks functions this repo calls: ", missing,
       ". Upstream renamed or removed them; update the callers in pipeline/ and ",
       "$CombECGravSymbols."];
+    (* not loaded: a second Get must check again, not take the no-op path *)
+    $CombECGravDir =.;
     Abort[]];
   passed = Quiet @ Get[combECGravRegressionFile[]];
   If[$CombECGravCommit =!= "installed" &&
