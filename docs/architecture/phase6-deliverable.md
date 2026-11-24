@@ -117,9 +117,67 @@ caveat. It stays optional until Betre says IS is in scope.
 
 ## Open choices for us
 
-- Scope for the first meeting: panels 1-3 only, or all five.
-- Whether `demo/` is tracked here or lives only in the fork branch for
-  ECGrav.
+- Scope for the first meeting: panels 1-3 only (decided 2026-11-23).
+- `demo/` is tracked in this repo (decided 2026-11-23: it is private and
+  Betre is a collaborator).
+- Whether to send Betre the 9 truth files (about 3 MB, gitignored). Panel 1
+  compares with them and panel 3 reads them. Dropped into `data/`, or into
+  a folder `data` next to the notebook, they are found.
+
+## As built: panels 1-3 (2026-11-23)
+
+`demo/CombResearchExplorer.nb`, written by `demo/build_explorer.wl`. The
+notebook holds text and one line per panel; the code is in
+`demo/explorer_core.wl` (no front end needed) and
+`demo/explorer_panels.wl`. `demo/README.md` has the instructions, times and
+the list of things to click by hand.
+
+Differences from the plan above:
+
+- It loads through `pipeline/common/combresearch.wl` after all. Betre has
+  the whole repository, so the rule against `pipeline/common/` fell away.
+  `ecgrav.wl` needed no change: `explorer_core.wl` sets `COMB_ECGRAV_DIR`
+  for its own kernel when ECGrav is only next to `run.wl` or only installed
+  as a paclet.
+- The truth files are not shipped (see "Open choices").
+- Enumerations above 3 million facet-labeled complexes are refused, above
+  30,000 they need a checkbox. (4,5) with the Cheap method is refused.
+- Panels 1 and 3 are plain controls with a button, not `Manipulate`: a job
+  can take hours, must not start on a slider move, and needs a Stop button.
+
+`EnumerateUnlabeledPureComplexes` got the option `"Progress" -> f`, because
+progress counted from outside is useless: DFS starts are very unequal
+(McKay at (3,4) spends about 85% of its time in one of 12). With it the bar
+is exact for Cheap and BLISS (leaves visited out of
+`NumFacetLabeledPureComplexes`); for McKay it shows a running count. The
+default path is unchanged.
+
+Subkernels report through small files in a temporary directory, read twice a
+second. Found on the way:
+
+- A shared function (`SetSharedFunction`) is the wrong channel for progress:
+  an abort that finds a subkernel inside a shared call breaks its link, and
+  Parallel then replaces kernels for up to minutes. With files, Stop takes
+  0.05 to 1 s and the kernels survive (16 of 16 tries).
+- `AbortKernels[]` after an aborted `ParallelMap` does the same damage.
+- `LaunchKernels` swallows an abort and returns normally, so the Stop button
+  also sets a flag that is tested after the launch. The menu's Abort
+  Evaluation cannot be noticed at that moment.
+- `ecgrav.wl`: after refusing an ECGrav that lacks functions it kept its
+  "already loaded" mark, so evaluating the cell again accepted it. Fixed.
+- `McKay` at (3,4) is no faster in parallel (24 s against 20 s on one
+  kernel), because of the one large start. Splitting starts deeper is the
+  obvious next step for speed ("as much parallelization as possible").
+
+Checked headless (`demo/explorer_check.wl`, `demo/explorer_fe_check.wl`):
+every panel's code at (2,4), (3,4) and (3,5); (3,5) in parallel and on one
+kernel give the same 445 classes in the same order; live distributions equal
+the stored ones exactly; stopping; every fallback; a hidden front end
+evaluating the notebook with its own kernel; a copy without git, data and
+ECGrav-upstream, using an installed ECGrav 1.17. Reviewed by six independent
+reviewers with a second one per finding trying to refute it (31 confirmed
+and fixed). Not checked: mouse clicks, macOS, a window refreshing by itself
+on screen. `demo/README.md` lists what to click.
 
 ## End goal (2026-11-23): the notebook as the project's front end
 
