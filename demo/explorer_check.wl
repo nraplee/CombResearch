@@ -98,7 +98,8 @@ Do[Module[{c = run[[1]], par = run[[2]], r, rows, name, cpu},
       r["totalEmitted"] === ExplorerCost[Sequence @@ c]["leaves"]];
     check[name <> ": ran on the subkernels if and only if parallel (" <>
         ToString[Round[cpu, 0.1]] <> " CPU s there)",
-      (r["kernels"] > 0) === par && If[par, cpu > 0.1, cpu < 0.1]];
+      (r["kernels"] > 0) === par && If[par, cpu > r["seconds"]/2,
+        cpu < Max[1.5, r["seconds"]/5]]];
     check[name <> ": progress ended at 1", $ExplorerProgress["fraction"] === 1.];
     check[name <> ": not running any more", $ExplorerRunning === False]],
   {run, runs}];
@@ -296,6 +297,11 @@ check["every panel evaluates to controls", !FreeQ[ExplorerStatusPanel[], _Button
 check["both progress bars typeset as bars", AllTrue[{True, False}, Function[known,
   With[{b = CombExplorer`Private`progressBar[known] /. Dynamic[Refresh[x_, ___], ___] :> x},
     !FreeQ[ToBoxes[b], AnimatorBox | ProgressIndicatorBox]]]]];
+Block[{$ExplorerRunning = True, CombExplorer`Private`$jobPanel = "statistics"},
+  check["progress shows only in the panel that started the job", Map[
+    Head[First[CombExplorer`Private`progressView[#] /. Dynamic[x_, ___] :> {x}]] &,
+    {"status", "enumerate", "statistics", "distributions"}] ===
+    {String, String, Panel, String}]];
 check["Stop button aborts preemptively", MatchQ[
   Cases[CombExplorer`Private`progressBox[], b : Button["Stop", __] :> Hold[b], Infinity],
   {h_} /; !FreeQ[h, "EvaluatorAbort"] && !FreeQ[h, Method -> "Preemptive"]]];

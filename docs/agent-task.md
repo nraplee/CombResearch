@@ -11,7 +11,8 @@
   `ecgrav.wl`: a refused ECGrav is checked again on the next `Get`.
 - Nothing written to the main checkout's `data/`, `figures/`, `logs/`,
   `results/` (the check compares them before and after).
-- Next: the user clicks through it (list in `demo/README.md`), then Betre
+- The user clicked through it on Windows 2026-11-23/24 (works; progress boxes
+  now show only in the panel that started the job). Next: Betre
   opens it on the Mac with the questions in `phase6-deliverable.md`. Panels
   4-5 wait for his feedback.
 - The 9 truth files (3 MB) are tracked in `demo/data/` (user's decision,

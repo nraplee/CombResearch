@@ -68,7 +68,7 @@ UsingFrontEnd[
   check["panel 1: (3,4) in parallel gives 66 classes", feValue["enum34"] === "{66, True}"];
   picture[nb, "2_enumerated"];
 
-  job[helper, "stop", "CombExplorer`Private`runEnumeration[3, 5, Automatic]; " <>
+  job[helper, "stop", "CombExplorer`Private`$jobPanel = \"enumerate\"; CombExplorer`Private`runEnumeration[3, 5, Automatic]; " <>
     "CombExplorer`Private`$view1 === CombExplorer`Private`note[\"Stopped.\"]"];
   (* only the progress boxes change while the job runs *)
   Pause[6];

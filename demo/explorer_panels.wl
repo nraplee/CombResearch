@@ -99,13 +99,15 @@ progressBox[] := Panel[Column[{
       Method -> "Preemptive", ImageSize -> Automatic]}],
   every[Style[Lookup[$ExplorerProgress, "detail", ""], Small]]}]];
 
-progressView[] := Dynamic[
-  If[TrueQ[$ExplorerRunning], progressBox[], ""],
-  TrackedSymbols :> {$ExplorerRunning}];
+(* Only in the panel whose button started the job ($jobPanel). *)
+$jobPanel = None;
+progressView[panel_] := Dynamic[
+  If[TrueQ[$ExplorerRunning] && $jobPanel === panel, progressBox[], ""],
+  TrackedSymbols :> {$ExplorerRunning, $jobPanel}];
 
 (* A button whose action may take long; off while something runs. *)
 SetAttributes[jobButton, HoldRest];
-jobButton[label_, action_] := Button[label, action, Method -> "Queued",
+jobButton[label_, panel_, action_] := Button[label, $jobPanel = panel; action, Method -> "Queued",
   Enabled -> Dynamic[TrueQ[$ExplorerReady] && !TrueQ[$ExplorerRunning]],
   ImageSize -> Automatic];
 
@@ -130,15 +132,15 @@ ExplorerStatusPanel[] := box["Status", Column[{
         TrackedSymbols :> {$ExplorerKernelNote, $ExplorerReady}]}},
     Alignment -> Left, Spacings -> {2, 0.6}],
   Row[{parallelCheckbox[], "     ",
-    jobButton["Start kernels now",
+    jobButton["Start kernels now", "status",
       ExplorerRun["Starting parallel kernels", ExplorerKernels[]]], "  ",
-    jobButton["Restart kernels",
+    jobButton["Restart kernels", "status",
       ExplorerRun["Restarting parallel kernels", ExplorerResetKernels[]]]}],
   If[$ExplorerLoadLog === {}, Nothing,
     OpenerView[{If[AnyTrue[$ExplorerLoadLog, StringContainsQ["WARNING"]],
         Style["Loader messages (with a warning)", badColor], "Loader messages"],
       Column[Style[#, Small] & /@ $ExplorerLoadLog]}]],
-  progressView[]}]];
+  progressView["status"]}]];
 
 
 (* ----- drawing ----- *)
@@ -241,6 +243,7 @@ exampleButton[k_, c_, n_] := Button[
   Tooltip[Framed[ExplorerDraw[c, 110], FrameStyle -> GrayLevel[0.8],
     RoundingRadius -> 4, FrameMargins -> 1],
     Column[{Row[{"class ", k, " of ", n}], facetsText[c]}]],
+  $jobPanel = "statistics";
   select[c, "class " <> ToString[k] <> " of " <> ToString[n] <> " from panel 1"],
   Appearance -> "Frameless", Method -> "Queued", ImageSize -> Automatic];
 
@@ -267,10 +270,10 @@ ExplorerEnumeratePanel[] := DynamicModule[{p = 3, q = 4, m = Automatic},
       "    method ", PopupMenu[Dynamic[m], {Automatic, "Cheap", "BLISS", "McKay"}]}],
     Row[{parallelCheckbox[], "    ",
       Checkbox[Dynamic[$ExplorerAllowLong]], " Allow long runs", "    ",
-      jobButton["Enumerate", runEnumeration[p, q, m]]}],
+      jobButton["Enumerate", "enumerate", runEnumeration[p, q, m]]}],
     live[costLine[p, q], TrackedSymbols :> {p, q, $ExplorerReady},
       SynchronousUpdating -> False],
-    progressView[],
+    progressView["enumerate"],
     live[$view1, TrackedSymbols :> {$view1, $ExplorerReady}]}, Spacings -> 0.8]]];
 
 
@@ -324,16 +327,16 @@ ExplorerStatisticsPanel[] := DynamicModule[
   box["2. Statistics of one complex", Column[{
     Grid[{
         {"From panel 1", Row[{"class number ", InputField[Dynamic[k], Number, FieldSize -> 6],
-          "  ", jobButton["Show", selectClass[k]],
+          "  ", jobButton["Show", "statistics", selectClass[k]],
           "   (or click an example in panel 1)"}]},
         {"Random (ECGrav)", Row[{"p ", PopupMenu[Dynamic[p], {2, 3, 4}],
           "  q ", PopupMenu[Dynamic[q], Range[2, 10]], "  uniform over ",
           PopupMenu[Dynamic[t], Normal[targetNames]], "  ",
-          jobButton["Draw", selectRandom[p, q, t]]}]},
+          jobButton["Draw", "statistics", selectRandom[p, q, t]]}]},
         {"Typed", Row[{InputField[Dynamic[s], String, FieldSize -> 40], "  ",
-          jobButton["Use", selectTyped[s]]}]}},
+          jobButton["Use", "statistics", selectTyped[s]]}]}},
       Alignment -> Left, Spacings -> {2, 0.8}],
-    progressView[],
+    progressView["statistics"],
     live[$view2, TrackedSymbols :> {$view2, $ExplorerReady}]}, Spacings -> 0.8]]];
 
 
@@ -406,14 +409,14 @@ ExplorerDistributionPanel[] := With[{menu = cellMenu[]}, DynamicModule[
   {cell = {3, 4}, stat = "numV"},
   box["3. Exact distributions", Column[{
     Row[{"cell (p, q) ", PopupMenu[Dynamic[cell], menu], "  ",
-      jobButton["Show", showCell[cell]], "    statistic ",
+      jobButton["Show", "distributions", showCell[cell]], "    statistic ",
       live[PopupMenu[Dynamic[stat],
           # -> # <> ": " <> ExplorerStatisticLabel[#] & /@
             ExplorerStatisticNames[If[AssociationQ[$truth], $truth["p"], 4]]],
         TrackedSymbols :> {$truth, $ExplorerReady}]}],
     note["Bars: the exact probability of each value when the complex is uniform over " <>
       "vertex-labeled, facet-labeled or unlabeled complexes. Hover for the exact rational."],
-    progressView[],
+    progressView["distributions"],
     live[$note3, TrackedSymbols :> {$note3, $ExplorerReady}],
     live[ExplorerDistributionView[$truth, stat],
       TrackedSymbols :> {$truth, stat, $ExplorerReady}, SynchronousUpdating -> False]}, Spacings -> 0.8]]]];

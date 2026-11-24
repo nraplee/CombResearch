@@ -176,8 +176,8 @@ the stored ones exactly; stopping; every fallback; a hidden front end
 evaluating the notebook with its own kernel; a copy without git, data and
 ECGrav-upstream, using an installed ECGrav 1.17. Reviewed by six independent
 reviewers with a second one per finding trying to refute it (31 confirmed
-and fixed). Not checked: mouse clicks, macOS, a window refreshing by itself
-on screen. `demo/README.md` lists what to click.
+and fixed). The user clicked through it on Windows
+(2026-11-24); macOS is not checked. `demo/README.md` lists what to click.
 
 ## End goal (2026-11-23): the notebook as the project's front end
 
