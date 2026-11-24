@@ -97,7 +97,7 @@ combECGravCheck[] := Module[{missing, passed},
   If[$CombECGravCommit =!= "installed" &&
       !(AssociationQ[passed] && passed["commit"] === $CombECGravCommit),
     Print["load_ecgrav: WARNING ECGrav ", $CombECGravVersion,
-      " has not passed tests\\ecgrav_regression.wl yet",
+      " has not passed tests/ecgrav_regression.wl yet",
       If[AssociationQ[passed], " (last pass: " <> passed["version"] <> ")", ""],
       "."]]];
 
@@ -124,7 +124,7 @@ Module[{env, dir, kernelFile},
       kernelFile = FileNameJoin[{dir, "Kernel", "ECGrav.wl"}];
       If[!FileExistsQ[kernelFile],
         Print["load_ecgrav: no ECGrav at ", dir, ". Run\n",
-          "  wolframscript -file tools\\dev\\update_ecgrav.wl\n",
+          "  wolframscript -file tools/dev/update_ecgrav.wl\n",
           "to clone upstream, or set COMB_ECGRAV_DIR to an ECGrav checkout."];
         Abort[]];
       If[MemberQ[$Packages, "ECGrav`"],

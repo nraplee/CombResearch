@@ -51,10 +51,10 @@ Notes:
 Stages can also be run directly, for example:
 
 ```powershell
-wolframscript -file pipeline\10_truth.wl          # exact truth enumeration
-wolframscript -file pipeline\30_mh.wl             # MH chains
-wolframscript -file pipeline\50_validate.wl samples
-wolframscript -file pipeline\60_figures.wl truth_overlay
+wolframscript -file pipeline/10_truth.wl          # exact truth enumeration
+wolframscript -file pipeline/30_mh.wl             # MH chains
+wolframscript -file pipeline/50_validate.wl samples
+wolframscript -file pipeline/60_figures.wl truth_overlay
 ```
 
 ## Layout

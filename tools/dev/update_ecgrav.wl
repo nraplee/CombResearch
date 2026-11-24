@@ -62,4 +62,4 @@ Module[{dir, before, after, branch, dirty, haveGit},
     StringTake[before, 7] <> " -> "], StringTake[after, 7], "  ",
     git[dir, "log", "-1", "--format=%cs %s"]];
   If[before =!= after,
-    Print["  next: wolframscript -file tests\\ecgrav_regression.wl"]]];
+    Print["  next: wolframscript -file tests/ecgrav_regression.wl"]]];

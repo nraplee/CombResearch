@@ -629,7 +629,7 @@ startJob[j_] := Module[{env, proc, expect},
     ProcessEnvironment -> env, ProcessDirectory -> $code];
   AppendTo[$children, proc];
   Print["  [", DateString[{"Hour", ":", "Minute", ":", "Second"}], "] start ", j["label"],
-    "  -> logs\\", FileNameTake[j["log"]]];
+    "  -> logs/", FileNameTake[j["log"]]];
   <|"job" -> j, "proc" -> proc, "t0" -> AbsoluteTime[], "expect" -> expect|>];
 
 (* Remove the lock only if this run.wl took it. *)

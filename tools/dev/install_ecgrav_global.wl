@@ -19,7 +19,7 @@ Module[{env, src, commit, archive, installed},
     ExpandFileName[env], FileNameJoin[{$CombRoot, "ECGrav-upstream"}]];
   If[!FileExistsQ[FileNameJoin[{src, "PacletInfo.wl"}]],
     Print["install_ecgrav_global: no ECGrav at ", src,
-      "; run tools\\dev\\update_ecgrav.wl first"]; Abort[]];
+      "; run tools/dev/update_ecgrav.wl first"]; Abort[]];
   commit = Quiet @ RunProcess[{"git", "-C", src, "rev-parse", "HEAD"},
     "StandardOutput"];
   commit = If[StringQ[commit], StringTrim[commit], "unknown"];
