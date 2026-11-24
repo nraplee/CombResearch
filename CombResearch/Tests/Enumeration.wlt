@@ -26,6 +26,33 @@ VerificationTest[
   EnumerateUnlabeledPureComplexes[3, 4, Method -> "BLISS", "Parallel" -> False]["totalEmitted"],
   666, TestID -> "totalEmitted-bliss-34"];
 
+(* ----- Progress reports: same result, last report complete ----- *)
+Do[With[{m = method, par = parallel},
+    VerificationTest[
+      Module[{log = {}, opts = {Method -> m, "Parallel" -> par}, r},
+        r = EnumerateUnlabeledPureComplexes[2, 4, opts, "Progress" -> (AppendTo[log, #] &)];
+        {r === EnumerateUnlabeledPureComplexes[2, 4, opts],
+         Lookup[Last[log], {"starts", "startsDone"}] === {12, 12},
+         Last[log]["leaves"] === r["totalEmitted"],
+         OrderedQ[Lookup[log, "leaves"]]}],
+      {True, True, True, True},
+      TestID -> "progress-" <> m <> If[par, "-parallel", "-serial"]]],
+  {method, {"Cheap", "BLISS", "McKay"}}, {parallel, {False, True}}];
+
+(* reports also come from inside a start, not only when one is done
+   (McKay: one start runs for most of the time); no task is left behind *)
+Do[With[{par = parallel},
+    VerificationTest[
+      Module[{log = {}},
+        EnumerateUnlabeledPureComplexes[3, 4, Method -> "McKay", "Parallel" -> par,
+          "Progress" -> (AppendTo[log, #] &)];
+        {MemberQ[Partition[log, 2, 1], {a_, b_} /; a["startsDone"] === b["startsDone"] &&
+            a["leaves"] < b["leaves"]],
+         Last[log]["leaves"], Tasks[]}],
+      {True, 417, {}},
+      TestID -> "progress-inside-starts" <> If[par, "-parallel", "-serial"]]],
+  {parallel, {False, True}}];
+
 (* ----- Automatic method choice ----- *)
 VerificationTest[
   EnumerateUnlabeledPureComplexes[2, 4, "Parallel" -> False]["method"],

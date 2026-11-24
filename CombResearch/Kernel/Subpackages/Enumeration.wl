@@ -107,6 +107,80 @@ ChooseNonIsomorphicPureComplexesBucketed[allLab_List] := chooseNonIsoBucketed[al
 
 
 (* ============================================================
+   Running the starts, with optional progress reports
+   ============================================================ *)
+
+(* Called by the workers at each leaf as $enumerationReport[leaves, keys]
+   when it is not None (only inside enumerationReported). *)
+$enumerationReport = None;
+
+(* One start with reports: report[i, leaves, keys, done] at most every half
+   second, plus once when the start is done. job = {start, index}. *)
+enumerationReported[worker_, {start_, i_}, args_List, report_] := Module[
+  {last = AbsoluteTime[], r},
+  r = Block[{$enumerationReport = Function[{leaves, keys},
+      If[AbsoluteTime[] - last > 0.5,
+        last = AbsoluteTime[];
+        report[i, leaves, keys, 0]]]},
+    worker[start, Sequence @@ args]];
+  report[i, r["count"], Length[r["map"]], 1];
+  r];
+
+(* Subkernels report through small files in a temporary directory (one per
+   start), and the master reads them twice a second. Not through a shared
+   function: an abort that finds a subkernel inside a shared call breaks its
+   link, and Parallel then spends minutes replacing kernels. *)
+enumerationFileReport[dir_][i_, leaves_, keys_, done_] := Quiet @ AbortProtect @ Module[
+  {s = OpenWrite[FileNameJoin[{dir, ToString[i] <> ".txt"}]]},
+  WriteString[s, StringRiffle[{leaves, keys, done}, " "], "\n"];
+  Close[s];];
+
+(* file -> {leaves, keys, done}; a file caught while being written is left out *)
+enumerationReadReports[dir_] := Select[
+  AssociationMap[Quiet[ReadList[#, Number]] &, FileNames["*.txt", dir]],
+  MatchQ[{_Integer, _Integer, _Integer}]];
+
+enumerationProgressRow[nStarts_, rows_] := <|"starts" -> nStarts,
+  "startsDone" -> Total[rows[[All, 3]]], "leaves" -> Total[rows[[All, 1]]],
+  "classesSeen" -> Max[0, rows[[All, 2]]]|>;
+
+(* worker[start, args...] over the starts, results in start order.
+   progress: None, or a function called on the master with
+   <|"starts", "startsDone", "leaves", "classesSeen"|>. *)
+enumerationMap[worker_, starts_List, args_List, par_, None] := If[par,
+  ParallelMap[worker[#, Sequence @@ args] &, starts,
+    Method -> "FinestGrained", DistributedContexts -> Automatic],
+  worker[#, Sequence @@ args] & /@ starts];
+
+enumerationMap[worker_, starts_List, args_List, False, progress_] := Module[
+  {rows = <||>, n = Length[starts]},
+  MapIndexed[
+    enumerationReported[worker, {#1, First[#2]}, args,
+      Function[{i, leaves, keys, done},
+        rows[i] = {leaves, keys, done};
+        progress[enumerationProgressRow[n, Values[rows]]]]] &,
+    starts]];
+
+enumerationMap[worker_, starts_List, args_List, True, progress_] := Module[
+  {dir = CreateDirectory[], n = Length[starts], rows = <||>, tick, task, result},
+  tick[] := (
+    rows = Join[rows, enumerationReadReports[dir]];
+    If[rows =!= <||>, progress[enumerationProgressRow[n, Values[rows]]]]);
+  task = SessionSubmit[ScheduledTask[tick[], Quantity[0.5, "Seconds"]]];
+  WithCleanup[
+    DistributeDefinitions[enumerationReported, enumerationFileReport];
+    result = With[{dir = dir},
+      ParallelMap[enumerationReported[worker, #, args, enumerationFileReport[dir]] &,
+        MapIndexed[{#1, First[#2]} &, starts],
+        Method -> "FinestGrained", DistributedContexts -> Automatic]];
+    TaskRemove[task];
+    tick[];
+    result,
+    Quiet[TaskRemove[task]];
+    Quiet[DeleteDirectory[dir, DeleteContents -> True]]]];
+
+
+(* ============================================================
    Cheap enumerator: single-start worker + driver
    ============================================================ *)
 
@@ -154,6 +228,8 @@ streamingFromStart[v0_List, p_Integer, q_Integer, target_Integer,
         IsomorphicSimplicialComplexQ[cmplx, #] &];
       If[!isoFound, localMap[key] = Append[bucket, cmplx]];
       localCount++;
+      If[$enumerationReport =!= None,
+        $enumerationReport[localCount, Length[localMap]]];
     ];
 
     dfs[state_List, currTotal_Integer] := If[
@@ -172,7 +248,7 @@ streamingFromStart[v0_List, p_Integer, q_Integer, target_Integer,
 (* Merge bucket-rep lists for the same canonical key (Merge combiner). *)
 mergeBucketReps[lists_List] := chooseNonIsoBucketWithin[Flatten[lists, 1]];
 
-Options[streamingEnumeratePure] = {"Parallel" -> True};
+Options[streamingEnumeratePure] = {"Parallel" -> True, "Progress" -> None};
 
 streamingEnumeratePure[purity_Integer, facetOrder_Integer,
                        OptionsPattern[]] := Module[
@@ -190,17 +266,10 @@ streamingEnumeratePure[purity_Integer, facetOrder_Integer,
     $CombResearchSubkernelSetup[];
     ParallelEvaluate[ClearSystemCache[]];
     DistributeDefinitions[
-      canonicalKey, streamingFromStart, chooseNonIsoBucketWithin];
+      canonicalKey, streamingFromStart, chooseNonIsoBucketWithin]];
 
-    localResults = ParallelMap[
-      streamingFromStart[#, p, q, target, facetSubsets] &,
-      starts,
-      Method -> "FinestGrained",
-      DistributedContexts -> Automatic
-    ],
-
-    localResults = streamingFromStart[#, p, q, target, facetSubsets] & /@ starts
-  ];
+  localResults = enumerationMap[streamingFromStart, starts,
+    {p, q, target, facetSubsets}, TrueQ[useParallel], OptionValue["Progress"]];
 
   totalEmitted = Total[#["count"] & /@ localResults];
   mergedMap = Merge[#["map"] & /@ localResults, mergeBucketReps];
@@ -293,6 +362,8 @@ streamingFromStartBLISS[v0_List, p_Integer, q_Integer,
       key = blissCanonicalKey[cmplx];
       If[!KeyExistsQ[localMap, key], localMap[key] = cmplx];
       localCount++;
+      If[$enumerationReport =!= None,
+        $enumerationReport[localCount, Length[localMap]]];
     ];
 
     dfs[state_List, currTotal_Integer] := If[
@@ -308,7 +379,7 @@ streamingFromStartBLISS[v0_List, p_Integer, q_Integer,
   ]
 ];
 
-Options[streamingEnumeratePureBLISS] = {"Parallel" -> True};
+Options[streamingEnumeratePureBLISS] = {"Parallel" -> True, "Progress" -> None};
 
 streamingEnumeratePureBLISS[purity_Integer, facetOrder_Integer,
                             OptionsPattern[]] := Module[
@@ -324,16 +395,10 @@ streamingEnumeratePureBLISS[purity_Integer, facetOrder_Integer,
     (* CanonicalGraph is built in; ECGrav is not needed on the workers. *)
     DistributeDefinitions[
       bipartiteIncidenceGraph, blissCanonicalKey,
-      streamingFromStartBLISS];
+      streamingFromStartBLISS]];
 
-    localResults = ParallelMap[
-      streamingFromStartBLISS[#, p, q, target, facetSubsets] &,
-      starts,
-      Method -> "FinestGrained",
-      DistributedContexts -> Automatic],
-
-    localResults = streamingFromStartBLISS[#, p, q, target, facetSubsets] & /@ starts
-  ];
+  localResults = enumerationMap[streamingFromStartBLISS, starts,
+    {p, q, target, facetSubsets}, TrueQ[useParallel], OptionValue["Progress"]];
 
   totalEmitted = Total[#["count"] & /@ localResults];
   (* A key may appear in several kernels (same class from different
@@ -425,6 +490,8 @@ streamingFromStartMcKay[v0_List, p_Integer, q_Integer,
       key = blissCanonicalKey[cmplx];
       If[!KeyExistsQ[localMap, key], localMap[key] = cmplx];
       localCount++;
+      If[$enumerationReport =!= None,
+        $enumerationReport[localCount, Length[localMap]]];
     ];
 
     dfs[state_List, currTotal_Integer] := If[
@@ -443,7 +510,7 @@ streamingFromStartMcKay[v0_List, p_Integer, q_Integer,
   ]
 ];
 
-Options[streamingEnumeratePureMcKay] = {"Parallel" -> True};
+Options[streamingEnumeratePureMcKay] = {"Parallel" -> True, "Progress" -> None};
 
 streamingEnumeratePureMcKay[purity_Integer, facetOrder_Integer,
                             OptionsPattern[]] := Module[
@@ -459,16 +526,10 @@ streamingEnumeratePureMcKay[purity_Integer, facetOrder_Integer,
     DistributeDefinitions[
       bipartiteIncidenceGraph, blissCanonicalKey,
       canonicalRemovalVSide, isInCanonicalRemovalOrbit,
-      streamingFromStartMcKay];
+      streamingFromStartMcKay]];
 
-    localResults = ParallelMap[
-      streamingFromStartMcKay[#, p, q, target, facetSubsets] &,
-      starts,
-      Method -> "FinestGrained",
-      DistributedContexts -> Automatic],
-
-    localResults = streamingFromStartMcKay[#, p, q, target, facetSubsets] & /@ starts
-  ];
+  localResults = enumerationMap[streamingFromStartMcKay, starts,
+    {p, q, target, facetSubsets}, TrueQ[useParallel], OptionValue["Progress"]];
 
   totalEmitted = Total[#["count"] & /@ localResults];
   mergedMap = Merge[#["map"] & /@ localResults, First];
@@ -491,17 +552,19 @@ enumerationMethod[m_String, p_, q_] /;
     "mckay" -> "McKay"}, p, q];
 enumerationMethod[m_, _, _] := $Failed;
 
-Options[EnumerateUnlabeledPureComplexes] = {Method -> Automatic, "Parallel" -> True};
+Options[EnumerateUnlabeledPureComplexes] = {Method -> Automatic, "Parallel" -> True,
+  "Progress" -> None};
 
 EnumerateUnlabeledPureComplexes[p_Integer?Positive, q_Integer?Positive,
-    OptionsPattern[]] := Module[{m, par = TrueQ[OptionValue["Parallel"]]},
+    OptionsPattern[]] := Module[{m, par = TrueQ[OptionValue["Parallel"]],
+    prog = OptionValue["Progress"]},
   m = enumerationMethod[OptionValue[Method], p, q];
   If[m === $Failed,
     Message[EnumerateUnlabeledPureComplexes::method, OptionValue[Method]];
     Return[$Failed]];
   Append[
     Switch[m,
-      "Cheap", streamingEnumeratePure[p, q, "Parallel" -> par],
-      "BLISS", streamingEnumeratePureBLISS[p, q, "Parallel" -> par],
-      "McKay", streamingEnumeratePureMcKay[p, q, "Parallel" -> par]],
+      "Cheap", streamingEnumeratePure[p, q, "Parallel" -> par, "Progress" -> prog],
+      "BLISS", streamingEnumeratePureBLISS[p, q, "Parallel" -> par, "Progress" -> prog],
+      "McKay", streamingEnumeratePureMcKay[p, q, "Parallel" -> par, "Progress" -> prog]],
     "method" -> m]];
