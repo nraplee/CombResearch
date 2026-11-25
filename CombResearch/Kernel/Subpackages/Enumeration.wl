@@ -314,10 +314,12 @@ streamingEnumeratePure[purity_Integer, facetOrder_Integer,
 
   If[useParallel,
     (* Subkernels need ECGrav (for IsomorphicSimplicialComplexQ) and our
-       definitions. *)
+       definitions. Parallel replaces a subkernel that dies, and replays only
+       distributed definitions there: without IsomorphicSimplicialComplexQ among
+       them the replacement would silently drop classes. *)
     $CombResearchSubkernelSetup[];
     ParallelEvaluate[ClearSystemCache[]];
-    DistributeDefinitions[streamingJob, mergeBucketReps]];
+    DistributeDefinitions[streamingJob, mergeBucketReps, IsomorphicSimplicialComplexQ]];
 
   localResults = enumerationMap[streamingJob, lexChildren, starts,
     {p, q, facetSubsets}, useParallel, OptionValue["Progress"]];

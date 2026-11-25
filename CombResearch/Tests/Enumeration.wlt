@@ -113,15 +113,17 @@ VerificationTest[
 
 (* ----- parallel path ----- *)
 (* the same result, in the same order, for every way to cut the tree *)
-Do[With[{m = method, k = jobs},
-    VerificationTest[
-      Block[{CombResearch`Private`$enumerationJobsPerKernel = k},
-        EnumerateUnlabeledPureComplexes[#1, #2, Method -> m, "Parallel" -> True] ===
-          EnumerateUnlabeledPureComplexes[#1, #2, Method -> m, "Parallel" -> False]] & @@@
-        {{2, 4}, {3, 3}, {4, 2}, {2, 1}},
-      {True, True, True, True},
-      TestID -> "parallel-same-as-serial-" <> m <> "-" <> ToString[k]]],
-  {method, {"Cheap", "BLISS", "McKay"}}, {jobs, {1, 4, 1000}}];
+Do[With[{m = method, cells = {{2, 4}, {3, 3}, {4, 2}, {2, 1}}},
+    Module[{run, serial},
+      run[par_] := EnumerateUnlabeledPureComplexes[#1, #2, Method -> m, "Parallel" -> par] & @@@
+        cells;
+      serial = run[False];
+      Do[With[{k = jobs},
+          VerificationTest[
+            Block[{CombResearch`Private`$enumerationJobsPerKernel = k}, run[True] === serial],
+            True, TestID -> "parallel-same-as-serial-" <> m <> "-" <> ToString[k]]],
+        {jobs, {1, 4, 1000}}]]],
+  {method, {"Cheap", "BLISS", "McKay"}}];
 
 VerificationTest[
   Length[EnumerateUnlabeledPureComplexes[2, 5, Method -> #, "Parallel" -> True]["isoReps"]] & /@
