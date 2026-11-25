@@ -38,17 +38,17 @@ checkout's own `data/` has one, that one is used instead.
 | Cell | Classes | Automatic |
 |---|---|---|
 | (2,4), (3,3), (4,2) | 11, 12, 4 | about 1 s |
-| (3,4) | 66 | 5 s; 29 s on one kernel |
-| (2,6) | 68 | 4 min |
-| (3,5) | 445 | 6 min; 35 min on one kernel |
-| (4,4) | 278 | 4 min on one kernel (McKay) |
+| (3,4) | 66 | 4 s; 29 s on one kernel |
+| (2,6) | 68 | 2.6 min |
+| (3,5) | 445 | 4.5 min; 35 min on one kernel |
+| (4,4) | 278 | 34 s (McKay); 4 min on one kernel |
 | (2,7) | 177 | 3.7 h |
 | (3,6) | 4279 | 17 h |
 | (4,5) | 5532 | 17 h on one kernel (McKay), 8 GB of memory |
 
-The first job also starts the parallel kernels (about 10 s). McKay
-(Automatic at p = 4) gains little from them, because one branch holds most
-of its work; untick Parallel for (4,5). Cells above 30,000 facet-labeled
+The first job also starts the parallel kernels (about 10 s). The
+times up to (4,4) are on an otherwise idle machine (2026-11-24); the last
+three rows are older runs, and (4,5) has not been tried in parallel. Cells above 30,000 facet-labeled
 complexes only start with "Allow long runs", and above 3 million never.
 
 ## Files

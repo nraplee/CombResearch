@@ -32,8 +32,7 @@ Get[FileNameJoin[{NotebookDirectory[], \"explorer_panels.wl\"}]];"],
 
     text["1. Enumerate", "Section"],
     text["EnumerateUnlabeledPureComplexes[p, q] lists one complex of every isomorphism \
-class. Automatic is the McKay method for p \[GreaterEqual] 4 and Cheap below that; McKay \
-gains little from parallel kernels, because one branch holds most of its work. The table \
+class. Automatic is the McKay method for p \[GreaterEqual] 4 and Cheap below that. The table \
 compares the number of classes with n vertices with ECGrav's NumUnlabeledPureComplexes \
 and, where we have it, our stored truth. Start with (3, 4): 66 classes in a few seconds; \
 (3, 5) takes minutes."],
