@@ -26,6 +26,30 @@ VerificationTest[
   EnumerateUnlabeledPureComplexes[3, 4, Method -> "BLISS", "Parallel" -> False]["totalEmitted"],
   666, TestID -> "totalEmitted-bliss-34"];
 
+(* extendingSubsets (packed arrays) equals the list-matching definition it
+   replaced, on every state of the lex DFS and on all states up to 3 vertices
+   without lex *)
+With[{old = Function[{state, p, fs}, Module[{deg, unavail},
+      deg = Association @ Table[i -> Count[state, _List?(SubsetQ[#, i] &)], {i, fs}];
+      unavail = Cases[fs, i_ /; (Length[i] == 1 && deg[i] == p) ||
+        (Length[i] > 1 && deg[i] == p - 1)];
+      Fold[Function[{x, y}, Select[x, ! SubsetQ[#, y] &]], fs, unavail]]]},
+  Do[With[{p = cell[[1]], q = cell[[2]]},
+      VerificationTest[
+        Module[{fs = Subsets[Range[q]][[2 ;;]], states = {}, walk},
+          walk[s_, lex_] := If[Total[Length /@ s] < p q && (lex || Length[s] < 3),
+            AppendTo[states, s];
+            Scan[walk[Append[s, #], lex] &,
+              With[{a = old[s, p, fs]}, If[lex, Select[a, Order[#, Last[s]] >= 0 &], a]]]];
+          Scan[walk[{#}, True] &, fs[[q ;;]]];
+          Scan[walk[{#}, False] &, fs[[q ;;]]];
+          {Length[states] > 0,
+           AllTrue[states, CombResearch`Private`extendingSubsets[#, p, fs] ===
+             old[#, p, fs] &]}],
+        {True, True},
+        TestID -> "extendingSubsets-" <> ToString[p] <> ToString[q]]],
+    {cell, {{1, 3}, {2, 1}, {2, 3}, {2, 4}, {3, 3}, {4, 2}, {4, 3}}}]];
+
 (* ----- Progress reports: same result, last report complete ----- *)
 Do[With[{m = method, par = parallel},
     VerificationTest[

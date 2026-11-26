@@ -110,19 +110,27 @@ ChooseNonIsomorphicPureComplexesBucketed[allLab_List] := chooseNonIsoBucketed[al
    The DFS: extending a state, and cutting the tree into jobs
    ============================================================ *)
 
-(* Membership subsets that a vertex added to state may have. *)
-extendingSubsets[state_List, p_Integer, facetSubsets_List] := Module[
-  {vertexDegree, unavail},
-  vertexDegree = Association @ Table[
-    i -> Count[state, _List?(SubsetQ[#, i] &)],
-    {i, facetSubsets}];
-  unavail = Cases[facetSubsets,
-    i_ /; (Length[i] == 1 && vertexDegree[i] == p)
-       || (Length[i] > 1 && vertexDegree[i] == p - 1)];
-  Fold[
-    Function[{x, y}, Select[x, ! SubsetQ[#, y] &]],
-    facetSubsets, unavail]
-];
+(* Tables for extendingSubsets, once per (p, facetSubsets):
+     index   subset -> its position in facetSubsets
+     within  within[[x, i]] = 1 if facetSubsets[[i]] is a subset of
+             facetSubsets[[x]], else 0 (packed)
+     limit   the degree at which subset i becomes unavailable: p for a
+             singleton (the facet is full), p - 1 otherwise *)
+extendingTables[p_Integer, facetSubsets_List] := extendingTables[p, facetSubsets] =
+  <|"index" -> First /@ PositionIndex[facetSubsets],
+    "within" -> Developer`ToPackedArray @ Outer[Boole[SubsetQ[#1, #2]] &,
+      facetSubsets, facetSubsets, 1],
+    "limit" -> Developer`ToPackedArray[If[Length[#] == 1, p, p - 1] & /@ facetSubsets]|>;
+
+(* Membership subsets that a vertex added to state may have, in facetSubsets
+   order: the subsets x that contain no unavailable subset i. The degree of i
+   is the number of vertices of state whose subset contains i, the sum of the
+   rows of within for the subsets of state. Was list matching (addOneVertex,
+   2.6 ms a call at q = 4); this is the same function on packed arrays. *)
+extendingSubsets[state_List, p_Integer, facetSubsets_List] := With[
+  {t = extendingTables[p, facetSubsets]},
+  With[{degree = Total[t["within"][[Lookup[t["index"], state]]]]},
+    Pick[facetSubsets, Unitize[t["within"] . (1 - Unitize[degree - t["limit"]])], 0]]];
 
 stateToFacets[state_List, q_Integer] := With[{n = Length[state]},
   Reverse @ Table[
