@@ -25,8 +25,30 @@
   0.1), iso tests 1.2 s (925). It is 2.6 ms a call, all list matching. A
   prototype with packed arrays (degree vector + subset matrix) walked the
   (3,5) tree (465,812 states, same leaf count) in 28 s on one kernel and the
-  (2,6) tree in 12 s. That is the next step, before any FunctionCompile.
+  (2,6) tree in 12 s.
 - Checks: package tests, `explorer_check.wl`, `explorer_fe_check.wl`.
+
+## `extendingSubsets` on packed arrays (2026-11-25, Ryzen, same branch, pushed to main)
+
+- `extendingTables[p, facetSubsets]` (memoized): subset index, the 0/1
+  matrix within[[x, i]] = i subset of x, and the limits (p for singletons,
+  p - 1 otherwise). Degrees are the sum of within's rows for the state; x is
+  available if within[[x]] . unavailable == 0. Same function: equal to the
+  old list-matching code on 139k DFS states (lex trees up to (3,4) and
+  (2,5), all states up to 4 vertices at (3,4), (4,4), (2,5)); test
+  `extendingSubsets-*` in `Enumeration.wlt`. 2-4 ms -> 0.03 ms a call.
+- Times (16 kernels unless "serial"; same SHA-256 as before in every run):
+  (3,4) Cheap 3.6 -> 1.6 s, serial 39 -> 1.8 s; BLISS 3.3 -> 1.4 s, serial
+  0.6 s; McKay 3.9 -> 3.5 s, serial 14 s; (4,4) McKay 34 -> 25 s, serial 141 s;
+  (2,6) Cheap 153 -> 7 s, serial 30 s; (3,5) Cheap 272 -> 19 s, serial
+  35 min -> 101 s; (3,5) McKay 275 -> 120 s; (2,7) Cheap 3.7 h (old store run)
+  -> 124 s, 177 classes, 233,238 leaves, 54 buckets as stored.
+- What is left, (3,4) on one kernel: Cheap/BLISS DFS 0.7 s, then ECGrav's
+  `IsomorphicSimplicialComplexQ` 1.6 s (925 tests; it lists every graph
+  isomorphism, so symmetric classes are slow and (4,5) runs out of memory).
+  McKay 14 s, nearly all `canonicalRemovalVSide` (0.56 ms for each of 26,638
+  candidates: graph 3.5 s, CanonicalGraph 3.9 s, FindGraphIsomorphism 4.5 s).
+  So McKay is now the slow method, and Cheap is limited by the iso tests.
 
 ## Phase 6: Explorer notebook, panels 1-3 (2026-11-23, Ryzen, branch `claude/brave-wright-360a84`, pushed to main)
 

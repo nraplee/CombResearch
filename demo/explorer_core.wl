@@ -258,7 +258,7 @@ ExplorerRefusal[p_Integer, q_Integer, method_] := Module[{cost = ExplorerCost[p,
         "Use Automatic or McKay.",
     cost["leaves"] > $ExplorerLeafLimit && !TrueQ[$ExplorerAllowLong],
       "This cell has " <> ToString[cost["leaves"]] <> " facet-labeled complexes, " <>
-        "which takes hours. Tick \"Allow long runs\" in panel 1 to start it anyway.",
+        "which can take minutes to hours. Tick \"Allow long runs\" in panel 1 to start it anyway.",
     True, None]];
 
 (* Progress of EnumerateUnlabeledPureComplexes. Cheap and BLISS visit every

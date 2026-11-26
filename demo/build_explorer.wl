@@ -35,7 +35,7 @@ Get[FileNameJoin[{NotebookDirectory[], \"explorer_panels.wl\"}]];"],
 class. Automatic is the McKay method for p \[GreaterEqual] 4 and Cheap below that. The table \
 compares the number of classes with n vertices with ECGrav's NumUnlabeledPureComplexes \
 and, where we have it, our stored truth. Start with (3, 4): 66 classes in a few seconds; \
-(3, 5) takes minutes."],
+(3, 5) takes about 20 s on parallel kernels."],
     code["ExplorerEnumeratePanel[]"],
 
     text["2. Statistics", "Section"],
