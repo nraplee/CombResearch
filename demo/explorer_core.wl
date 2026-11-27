@@ -216,7 +216,12 @@ ExplorerResetKernels[] := (Quiet[CloseKernels[]]; ExplorerKernels[]);
    Indeterminate), "detail"|>. The panels show it with a Dynamic; nothing here
    needs a front end. *)
 
+(* Parallel loses an abort that arrives while a ParallelMap collects its last
+   results. So while Stop has been pressed and the job still runs, every
+   progress report (twice a second) sends the abort again. *)
 progress[assoc_] := (
+  If[TrueQ[$ExplorerStop] && TrueQ[$ExplorerRunning] && TrueQ[$Notebooks],
+    FrontEndTokenExecute["EvaluatorAbort"]];
   $ExplorerProgress = Join[$ExplorerProgress, assoc];
   With[{known = NumberQ[Lookup[$ExplorerProgress, "fraction"]]},
     If[$ExplorerFractionKnown =!= known, $ExplorerFractionKnown = known]];);
@@ -230,9 +235,11 @@ ExplorerRun[label_String, body_] := (
   $ExplorerRunning = True;
   (* No AbortKernels[] here: ParallelMap has already stopped its subkernels,
      and a second abort makes Parallel close and relaunch them (25 s).
-     Running out of memory throws a SystemException. *)
+     Running out of memory throws a SystemException. A job that returns
+     after Stop (its abort was lost) counts as stopped. *)
   WithCleanup[
-    Catch[CheckAbort[body, $Aborted], _SystemException,
+    Catch[CheckAbort[With[{r = body}, If[TrueQ[$ExplorerStop], $Aborted, r]], $Aborted],
+      _SystemException,
       Function["Stopped by the system (" <> ToString[#2[[1]]] <> ")."]],
     $ExplorerRunning = False]);
 

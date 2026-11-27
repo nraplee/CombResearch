@@ -181,6 +181,20 @@ If[StringQ[kernelFile] && FileExistsQ[kernelFile], Module[
       With[{e = ExplorerEnumerate[2, 4]}, {Length[e["reps"]], e["kernels"] > 0}]] ===
       {11, par}],
     {par, {True, True, True, True, False}}, {wait, {RandomReal[{0, 4}]}}];
+  (* Stop right after the start, while the tree is cut into jobs: Parallel
+     loses an abort that arrives as a ParallelMap collects its last results,
+     and the cut used to be many short ones. *)
+  remote[link, $ExplorerParallel = True; ExplorerKernels[]];
+  Do[
+    LinkWrite[link, Unevaluated[EvaluatePacket[ExplorerEnumerate[3, 5]]]];
+    reply[link, wait];
+    t0 = AbsoluteTime[];
+    LinkInterrupt[link, 3];
+    r = reply[link, 60];
+    dt = AbsoluteTime[] - t0;
+    check["Stop " <> ToString[wait] <> " s after the start: $Aborted within 5 s",
+      r === $Aborted && dt < 5],
+    {wait, {0.15, 0.3}}];
   (* Stop while kernels start: the button sets the flag (here a task does) and
      sends the abort, which LaunchKernels swallows *)
   remote[link, CloseKernels[]; $ExplorerParallel = True; 1];

@@ -159,16 +159,28 @@ enumerationDFS[children_, emit_, args : {p_, q_, facetSubsets_}][state_List] :=
    in DFS order, so the merged result is the same for every cut. *)
 $enumerationJobsPerKernel = 32;
 
+(* Where the cut is computed. lexChildren costs about 30 us a state, so the
+   master cuts (3,6) in 0.12 s, faster than parallel rounds (0.66 s).
+   mckayChildren costs about 1 ms a state ((3,5): 7 s on the master, 1.3 s
+   in parallel), so subkernels compute it. Parallel loses an abort that
+   arrives while a ParallelMap collects its last results (checked
+   2026-11-27, 15.0.1, also for a plain CPU loop); the cut's rounds are
+   short, so a Stop in the first ~0.3 s often fell there. On the master
+   there is no such window. *)
+enumerationCutInParallel[lexChildren] = False;
+enumerationCutInParallel[_] = True;
+
 (* {state, its children} for each state; a leaf has none *)
-enumerationExpand[children_, states_List, {p_, q_, facetSubsets_}] :=
-  Transpose[{states, ParallelMap[
-    If[Total[Length /@ #] == p q, {}, children[#, p, q, facetSubsets]] &, states,
-    DistributedContexts -> Automatic]}];
+enumerationExpand[children_, states_List, {p_, q_, facetSubsets_}] := Transpose[{states,
+  With[{f = If[Total[Length /@ #] == p q, {}, children[#, p, q, facetSubsets]] &},
+    If[enumerationCutInParallel[children],
+      ParallelMap[f, states, DistributedContexts -> Automatic],
+      f /@ states]]}];
 
 enumerationJobs[children_, starts_List, args : {p_, q_, _}] := Module[
   {nodes, weight, target, big, cut, new},
   weight[{state_, kids_}] := (p q - Total[Length /@ state]) Log[1. + Length[kids]];
-  DistributeDefinitions[children];
+  If[enumerationCutInParallel[children], DistributeDefinitions[children]];
   nodes = enumerationExpand[children, List /@ starts, args];
   target = $enumerationJobsPerKernel Max[1, $KernelCount];
   While[Length[nodes] < target,

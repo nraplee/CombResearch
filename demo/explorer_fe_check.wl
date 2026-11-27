@@ -68,9 +68,10 @@ UsingFrontEnd[
   check["panel 1: (3,4) in parallel gives 66 classes", feValue["enum34"] === "{66, True}"];
   picture[nb, "2_enumerated"];
 
-  job[helper, "stop", "CombExplorer`Private`$jobPanel = \"enumerate\"; CombExplorer`Private`runEnumeration[3, 5, Automatic]; " <>
+  job[helper, "stop", "CombExplorer`Private`$jobPanel = \"enumerate\"; CombExplorer`Private`runEnumeration[3, 5, \"McKay\"]; " <>
     "CombExplorer`Private`$view1 === CombExplorer`Private`note[\"Stopped.\"]"];
-  (* only the progress boxes change while the job runs *)
+  (* (3,5) McKay: about 2 min, so still running after the 15 s below.
+     Only the progress boxes change while the job runs. *)
   Pause[6];
   frames = Table[Pause[3]; ImageData[Rasterize[nb, ImageResolution -> 72], "Byte"], {3}];
   picture[nb, "3_running"];
