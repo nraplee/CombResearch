@@ -24,8 +24,8 @@ COMB_ECGRAV_DIR if set, else ECGrav-upstream next to run.wl, else the installed 
       FrontEndTokenExecute["EvaluateNotebook"], ImageSize -> Automatic]]], "Text"],
     text["The notebook only reads: it never writes into data/, figures/, logs/ or \
 results/. Long jobs run on parallel kernels, show progress, and have a Stop button \
-(Evaluation \[FilledRightTriangle] Abort Evaluation does the same, except while kernels \
-are starting). The first job starts the kernels, which takes some seconds."],
+(Evaluation \[FilledRightTriangle] Abort Evaluation usually does the same; the button also \
+stops a job while kernels are starting, and when Parallel misses the abort). The first job starts the kernels, which takes some seconds."],
     code["Get[FileNameJoin[{NotebookDirectory[], \"explorer_core.wl\"}]];\n\
 Get[FileNameJoin[{NotebookDirectory[], \"explorer_panels.wl\"}]];"],
     code["ExplorerStatusPanel[]"],

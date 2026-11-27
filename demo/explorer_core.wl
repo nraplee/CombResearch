@@ -217,11 +217,20 @@ ExplorerResetKernels[] := (Quiet[CloseKernels[]]; ExplorerKernels[]);
    needs a front end. *)
 
 (* Parallel loses an abort that arrives while a ParallelMap collects its last
-   results. So while Stop has been pressed and the job still runs, every
-   progress report (twice a second) sends the abort again. *)
+   results (checked 2026-11-27, 15.0.1). So a progress report made after Stop
+   while the job still runs stops it again:
+   - on the main evaluation (between Parallel calls): Abort[];
+   - from the enumerators' report task, which runs while a ParallelMap waits:
+     the flag of Parallel's own Stop button, which its wait loop turns into
+     the usual abort. Each Parallel call Blocks that flag, so only a task can
+     set it. At once: an abort that lands in the task's own evaluation is
+     lost too, and the flag then stops the job within a report (0.06-0.14 s
+     in explorer_check). Waiting 1 s first, against a second abort during
+     Parallel's abort handling, made stops slower and once cost a kernel.
+   ExplorerRun clears the flag. *)
 progress[assoc_] := (
-  If[TrueQ[$ExplorerStop] && TrueQ[$ExplorerRunning] && TrueQ[$Notebooks],
-    FrontEndTokenExecute["EvaluatorAbort"]];
+  If[TrueQ[$ExplorerStop] && TrueQ[$ExplorerRunning],
+    If[$CurrentTask === None, Abort[], Parallel`Protected`$progressStop = True]];
   $ExplorerProgress = Join[$ExplorerProgress, assoc];
   With[{known = NumberQ[Lookup[$ExplorerProgress, "fraction"]]},
     If[$ExplorerFractionKnown =!= known, $ExplorerFractionKnown = known]];);
@@ -232,6 +241,7 @@ ExplorerRun[label_String, body_] := (
   progress[<|"label" -> label, "start" -> AbsoluteTime[],
     "fraction" -> Indeterminate, "detail" -> ""|>];
   $ExplorerStop = False;
+  Parallel`Protected`$progressStop = False;
   $ExplorerRunning = True;
   (* No AbortKernels[] here: ParallelMap has already stopped its subkernels,
      and a second abort makes Parallel close and relaunch them (25 s).
@@ -241,6 +251,7 @@ ExplorerRun[label_String, body_] := (
     Catch[CheckAbort[With[{r = body}, If[TrueQ[$ExplorerStop], $Aborted, r]], $Aborted],
       _SystemException,
       Function["Stopped by the system (" <> ToString[#2[[1]]] <> ")."]],
+    Parallel`Protected`$progressStop = False;
     $ExplorerRunning = False]);
 
 

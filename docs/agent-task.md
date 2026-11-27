@@ -28,6 +28,45 @@
   (2,6) tree in 12 s.
 - Checks: package tests, `explorer_check.wl`, `explorer_fe_check.wl`.
 
+## Stop at the start of a parallel enumeration (2026-11-27, Ryzen, same branch)
+
+- Found by `explorer_check`/`explorer_fe_check` after the rewrite: a Stop in
+  the first ~0.5 s of a parallel run was ignored. Cause, in Parallel itself
+  (15.0.1, `listRun`/`receive` in `Concurrency.m`/`Kernels.m`): an abort that
+  arrives while a ParallelMap collects its last results is lost and the full
+  result comes back (also for a plain CPU loop). The job cut ran several
+  short ParallelMap rounds then; sometimes the lost abort also cost a
+  subkernel (6.5 s to replace).
+- Fix: `enumerationCutInParallel`: Cheap and BLISS cut on the master (faster:
+  (3,5) 0.06 s vs 0.28 s, (3,6) 0.12 s vs 0.66 s; same jobs). McKay still
+  cuts in parallel (master: (3,5) 7 s vs 1.3 s), so a menu Abort there can
+  still be lost in a rare window. The Explorer covers its Stop button: while
+  `$ExplorerStop` is set and the job runs, a progress report on the main
+  evaluation calls `Abort[]`, and one from the enumerators' report task
+  (`$CurrentTask` =!= None) sets `Parallel`Protected`$progressStop`, the flag
+  of Parallel's own Stop button, which its wait loop turns into the usual
+  abort. Every Parallel call Blocks that flag to False, so only a task inside
+  a ParallelMap can set it. `ExplorerRun` clears it, and a job that returns
+  after Stop gives $Aborted. Tried and dropped: resending `EvaluatorAbort`
+  from the task (did nothing in the front end), and waiting 1 s before
+  setting the flag (against a second abort during Parallel's abort handling,
+  found by review): stops took 1-2 s and once cost a kernel. An interrupt
+  can also land in a task's own evaluation and be lost; the flag covers it.
+  Abort Evaluation from the menu sets no flag, so it can still miss rarely.
+- Stress test, 30 Stops at random times in (3,5) Cheap: flag + abort (the
+  button) 15 of 15 in 0.03-0.11 s; the flag alone (a lost abort) 0.1-0.5 s,
+  except in the last ~4 s (the bucket merge has no report task) 2.8-4.9 s;
+  no kernel replaced. Once in four explorer_check runs a flag-only Stop at
+  0.3 s took 3.7 s and Parallel replaced a subkernel (its 3 s abort timeout);
+  not reproduced since. Same symptom as the 13 s Stop seen before this fix.
+- Checks: package tests, `explorer_check.wl` (stops now set the flag 0.1 s
+  before the abort, as the button does; new: stops 0.15 s and 0.3 s after the
+  start, and the flag alone at 0.3 s and 3 s: stopped 0.2-0.5 s later; all
+  stops 0.06-0.14 s), `explorer_fe_check.wl` (now stops
+  (3,5) McKay, 2 min, since Cheap (3,5) ends before it looks; new: the flag
+  alone stops it 0.3 s later): all pass. Hashes at
+  (3,4) x3, (2,6), (3,5), (4,4) equal to before; times unchanged.
+
 ## `extendingSubsets` on packed arrays (2026-11-25, Ryzen, same branch, pushed to main)
 
 - `extendingTables[p, facetSubsets]` (memoized): subset index, the 0/1

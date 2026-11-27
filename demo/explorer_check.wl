@@ -141,8 +141,10 @@ check["examples: 12, spread over the vertex counts",
 section["stop: a real interrupt, as the front end sends it"];
 (* A second kernel runs the explorer and gets LinkInterrupt[link, 3] (abort)
    some seconds into a (3,5) enumeration, four times in parallel and once
-   serially. Its subkernels must survive: an abort must never find one inside
-   a shared function call. *)
+   serially, and sets $ExplorerStop 0.1 s before, as the Stop button does
+   (a task in that kernel sets it; at the same instant the abort would stop
+   the task instead of the job). Its subkernels must survive: an
+   abort must never find one inside a shared function call. *)
 CloseKernels[];
 reply[link_, seconds_] := Module[{r, t0 = AbsoluteTime[]},
   While[AbsoluteTime[] - t0 < seconds,
@@ -165,7 +167,8 @@ If[StringQ[kernelFile] && FileExistsQ[kernelFile], Module[
   Do[
     With[{par = par}, remote[link, $ExplorerParallel = par; ExplorerKernels[]]];
     pids = remote[link, Sort[ParallelEvaluate[$ProcessID]]];
-    LinkWrite[link, Unevaluated[EvaluatePacket[ExplorerEnumerate[3, 5]]]];
+    With[{at = 3 + wait - 0.1}, LinkWrite[link, Unevaluated[EvaluatePacket[
+      SessionSubmit[ScheduledTask[$ExplorerStop = True, {at}]]; ExplorerEnumerate[3, 5]]]]];
     check["(3,5) still running when stopped" <> If[par, ", parallel", ", serial"],
       reply[link, 3 + wait] === "no reply"];
     t0 = AbsoluteTime[];
@@ -186,7 +189,8 @@ If[StringQ[kernelFile] && FileExistsQ[kernelFile], Module[
      and the cut used to be many short ones. *)
   remote[link, $ExplorerParallel = True; ExplorerKernels[]];
   Do[
-    LinkWrite[link, Unevaluated[EvaluatePacket[ExplorerEnumerate[3, 5]]]];
+    With[{at = wait - 0.1}, LinkWrite[link, Unevaluated[EvaluatePacket[
+      SessionSubmit[ScheduledTask[$ExplorerStop = True, {at}]]; ExplorerEnumerate[3, 5]]]]];
     reply[link, wait];
     t0 = AbsoluteTime[];
     LinkInterrupt[link, 3];
@@ -195,6 +199,21 @@ If[StringQ[kernelFile] && FileExistsQ[kernelFile], Module[
     check["Stop " <> ToString[wait] <> " s after the start: $Aborted within 5 s",
       r === $Aborted && dt < 5],
     {wait, {0.15, 0.3}}];
+  (* a Stop whose abort Parallel lost: only the flag, no interrupt. The
+     progress reports pass it to Parallel, which stops the job. *)
+  pids = remote[link, Sort[ParallelEvaluate[$ProcessID]]];
+  Do[
+    With[{at = at0}, LinkWrite[link, Unevaluated[EvaluatePacket[
+      SessionSubmit[ScheduledTask[$ExplorerStop = True, {at}]]; ExplorerEnumerate[3, 5]]]]];
+    t0 = AbsoluteTime[];
+    r = reply[link, 60];
+    dt = AbsoluteTime[] - t0 - at0;
+    Print["  flag only: stopped ", Round[dt, 0.01], " s after the flag"];
+    check["flag only, at " <> ToString[at0] <> " s: $Aborted within 3 s (the job runs 13 s)",
+      r === $Aborted && dt < 3];
+    check["flag only: the same subkernels are still there",
+      remote[link, Sort[ParallelEvaluate[$ProcessID]]] === pids],
+    {at0, {0.3, 3}}];
   (* Stop while kernels start: the button sets the flag (here a task does) and
      sends the abort, which LaunchKernels swallows *)
   remote[link, CloseKernels[]; $ExplorerParallel = True; 1];

@@ -83,6 +83,17 @@ UsingFrontEnd[
     feValue["stop"] === "True"];
   Print["  stopped after ", Round[AbsoluteTime[] - t0, 0.1], " s"];
 
+  (* a Stop whose abort Parallel lost: the flag is set as the button sets it,
+     but no abort is sent, so only the progress reports' resend can stop it *)
+  job[helper, "lost", "CombExplorer`Private`$jobPanel = \"enumerate\"; " <>
+    "SessionSubmit[ScheduledTask[CombExplorer`$ExplorerStop = True, {5}]]; " <>
+    "CombExplorer`Private`runEnumeration[3, 5, \"McKay\"]; " <>
+    "CombExplorer`Private`$view1 === CombExplorer`Private`note[\"Stopped.\"]"];
+  t0 = AbsoluteTime[];
+  check["lost abort: the resend stops the job", waitFor[feValue["lost"] =!= "waiting" &, 40] &&
+    feValue["lost"] === "True"];
+  Print["  stopped after ", Round[AbsoluteTime[] - t0, 0.1], " s (flag set at 5 s)"];
+
   check["parallel off: (2,4) on one kernel", result[helper, "serial",
     "CombExplorer`$ExplorerParallel = False; CombExplorer`Private`runEnumeration[2, 4, Automatic]; " <>
       "CombExplorer`$ExplorerParallel = True; " <>
