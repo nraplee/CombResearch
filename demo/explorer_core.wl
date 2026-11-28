@@ -270,7 +270,8 @@ ExplorerRefusal[p_Integer, q_Integer, method_] := Module[{cost = ExplorerCost[p,
     cost["leaves"] > $ExplorerHardLimit,
       "This cell has " <> ToString[cost["leaves"]] <> " facet-labeled complexes: " <>
         "months or more, with every class kept in memory. The largest cells done " <>
-        "so far, (3,6) and (4,5), took 17 hours each.",
+        "so far, (3,6) and (4,5), took 17 hours each on one kernel; (4,5) takes " <>
+        "54 minutes on 16 parallel kernels.",
     resolveMethod[method, p] === "Cheap" && p >= 4 && cost["leaves"] > 400000,
       "The Cheap method runs out of memory here (measured at (4,5)). " <>
         "Use Automatic or McKay.",

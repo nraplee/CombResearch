@@ -28,6 +28,18 @@
   (2,6) tree in 12 s.
 - Checks: package tests, `explorer_check.wl`, `explorer_fe_check.wl`.
 
+## (4,5) in parallel (2026-11-27, Ryzen, 16 kernels, main @ ff31ad6)
+
+- `EnumerateUnlabeledPureComplexes[4, 5]` (McKay): 53.5 min (3211 s), against
+  17.1 h on one kernel for the stored truth (2026-09-25). 5532 classes,
+  241,742 leaves, and the same 5532 representatives in the same order as
+  `p4q5_truth.wxf` (`complexes[[All, "facets"]]`). Memory at the end: 9.0 GB
+  over master and kernels (stored run: 7.9 GB peak on one kernel). Written
+  only to the scratchpad; the store is unchanged.
+- Load balance: 530 jobs; 523 were done at 40 min, and the last 6 ran on
+  their own for 13 min. Cutting more finely where the tree is deep (more
+  jobs per kernel, or a weight that sees depth better) would cut that tail.
+
 ## Stop at the start of a parallel enumeration (2026-11-27, Ryzen, same branch)
 
 - Found by `explorer_check`/`explorer_fe_check` after the rewrite: a Stop in

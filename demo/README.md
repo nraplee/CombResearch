@@ -44,11 +44,11 @@ checkout's own `data/` has one, that one is used instead.
 | (4,4) | 278 | 25 s (McKay); 2.3 min on one kernel |
 | (2,7) | 177 | 2 min |
 | (3,6) | 4279 | 17 h (before 2026-11-24; not timed since) |
-| (4,5) | 5532 | 17 h on one kernel (McKay, before 2026-11-24), 8 GB of memory |
+| (4,5) | 5532 | 54 min (McKay), 9 GB over all kernels; 17 h on one kernel before 2026-11-24 |
 
 The first job also starts the parallel kernels (about 10 s). Times measured
-2026-11-25 on an otherwise idle machine, except the last two rows; (4,5) has
-not been tried in parallel. Cells above 30,000 facet-labeled
+2026-11-25 on an otherwise idle machine, (4,5) on 2026-11-27, (3,6) not since
+2026-11-24. Cells above 30,000 facet-labeled
 complexes only start with "Allow long runs", and above 3 million never.
 
 ## Files
